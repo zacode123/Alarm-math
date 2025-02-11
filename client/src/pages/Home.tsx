@@ -16,9 +16,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, Plus, Trash2, Check, History, Bell, Moon } from "lucide-react";
 import { format } from "date-fns";
+
+const DAYS = [
+  { value: "sun", label: "Sunday" },
+  { value: "mon", label: "Monday" },
+  { value: "tue", label: "Tuesday" },
+  { value: "wed", label: "Wednesday" },
+  { value: "thu", label: "Thursday" },
+  { value: "fri", label: "Friday" },
+  { value: "sat", label: "Saturday" },
+];
 
 export default function Home() {
   const { toast } = useToast();
@@ -32,12 +43,22 @@ export default function Home() {
     resolver: zodResolver(insertAlarmSchema),
     defaultValues: {
       time: "",
-      days: ["mon", "tue", "wed", "thu", "fri"],
+      days: DAYS.map(day => day.value),
       difficulty: "easy",
       sound: "default",
       enabled: true,
     },
   });
+
+  const watchDays = form.watch("days");
+
+  const handleSelectAllDays = () => {
+    form.setValue("days", DAYS.map(day => day.value));
+  };
+
+  const handleDeselectAllDays = () => {
+    form.setValue("days", []);
+  };
 
   useEffect(() => {
     const checkAlarms = () => {
@@ -59,6 +80,15 @@ export default function Home() {
   }, [alarms, activeAlarm, generateProblem, play]);
 
   const onSubmit = (data: InsertAlarm) => {
+    if (data.days.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one day",
+        variant: "destructive",
+      });
+      return;
+    }
+
     createAlarm.mutate(data, {
       onSuccess: () => {
         form.reset();
@@ -84,6 +114,7 @@ export default function Home() {
         }, ...prev.slice(0, 9)]);
       }
       setActiveAlarm(null);
+      (e.target as HTMLFormElement).reset();
       toast({
         title: "Alarm completed",
         description: "Great job solving the math problem!",
@@ -123,6 +154,7 @@ export default function Home() {
                   name="answer" 
                   placeholder="Enter your answer" 
                   className="text-center text-xl" 
+                  autoFocus
                 />
                 <Button type="submit" size="lg" className="w-full">
                   Check Answer
@@ -150,8 +182,75 @@ export default function Home() {
                       <FormItem>
                         <FormLabel>Time</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <Input 
+                            type="time" 
+                            placeholder="Select time" 
+                            {...field} 
+                          />
                         </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="days"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Repeat Days</FormLabel>
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleSelectAllDays}
+                            >
+                              Select All
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDeselectAllDays}
+                            >
+                              Deselect All
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {DAYS.map((day) => (
+                              <FormField
+                                key={day.value}
+                                control={form.control}
+                                name="days"
+                                render={({ field }) => (
+                                  <FormItem
+                                    key={day.value}
+                                    className="flex flex-row items-center space-x-2 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(day.value)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, day.value])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== day.value
+                                                )
+                                              );
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      {day.label}
+                                    </FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
