@@ -70,7 +70,12 @@ export default function Home() {
         if (alarm.enabled && alarm.time === currentTime && alarm.days.includes(currentDay) && !activeAlarm) {
           setActiveAlarm(alarm.id);
           generateProblem();
-          play(alarm.sound as any);
+          // Only try to play sound if supported
+          try {
+            play(alarm.sound as any);
+          } catch (error) {
+            console.warn('Sound playback not supported:', error);
+          }
         }
       });
     };
@@ -104,7 +109,12 @@ export default function Home() {
     e.preventDefault();
     const answer = parseFloat((e.target as any).answer.value);
     if (checkAnswer(answer)) {
-      stop();
+      // Try to stop sound if it's playing
+      try {
+        stop();
+      } catch (error) {
+        console.warn('Could not stop sound:', error);
+      }
       const completedAlarm = alarms.find(a => a.id === activeAlarm);
       if (completedAlarm) {
         setCompletedAlarms(prev => [{
@@ -149,11 +159,11 @@ export default function Home() {
                 <div className="text-2xl font-mono bg-secondary/10 p-4 rounded-lg text-center">
                   {problem.question}
                 </div>
-                <Input 
-                  type="number" 
-                  name="answer" 
-                  placeholder="Enter your answer" 
-                  className="text-center text-xl" 
+                <Input
+                  type="number"
+                  name="answer"
+                  placeholder="Enter your answer"
+                  className="text-center text-xl"
                   autoFocus
                 />
                 <Button type="submit" size="lg" className="w-full">
@@ -182,10 +192,10 @@ export default function Home() {
                       <FormItem>
                         <FormLabel>Time</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="time" 
-                            placeholder="Select time" 
-                            {...field} 
+                          <Input
+                            type="time"
+                            placeholder="Select time"
+                            {...field}
                           />
                         </FormControl>
                       </FormItem>
@@ -282,7 +292,7 @@ export default function Home() {
                     name="sound"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Sound</FormLabel>
+                        <FormLabel>Sound (Optional - may not work in all browsers)</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
