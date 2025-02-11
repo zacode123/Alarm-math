@@ -1,9 +1,9 @@
 import { useCallback, useRef } from "react";
 
 const SOUNDS = {
-  default: "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg",
-  digital: "https://actions.google.com/sounds/v1/alarms/digital_timer.ogg",
-  beep: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+  default: "/sounds/alarm_clock.mp3",
+  digital: "/sounds/digital_alarm.mp3",
+  beep: "/sounds/beep.mp3"
 };
 
 export function useSound() {
@@ -17,8 +17,15 @@ export function useSound() {
 
     const audio = new Audio(SOUNDS[sound]);
     audio.loop = true;
+    audio.volume = 1.0;
     audioRef.current = audio;
-    audio.play().catch(console.error);
+
+    // Ensure audio is loaded before playing
+    audio.addEventListener('canplaythrough', () => {
+      audio.play().catch(error => {
+        console.error('Error playing sound:', error);
+      });
+    });
   }, []);
 
   const stop = useCallback(() => {

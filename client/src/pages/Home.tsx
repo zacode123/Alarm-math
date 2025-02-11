@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, Plus, Trash2, Check, History, Bell, Moon } from "lucide-react";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DAYS = [
   { value: "sun", label: "Sunday" },
@@ -70,7 +71,6 @@ export default function Home() {
         if (alarm.enabled && alarm.time === currentTime && alarm.days.includes(currentDay) && !activeAlarm) {
           setActiveAlarm(alarm.id);
           generateProblem();
-          // Only try to play sound if supported
           try {
             play(alarm.sound as any);
           } catch (error) {
@@ -109,7 +109,6 @@ export default function Home() {
     e.preventDefault();
     const answer = parseFloat((e.target as any).answer.value);
     if (checkAnswer(answer)) {
-      // Try to stop sound if it's playing
       try {
         stop();
       } catch (error) {
@@ -140,185 +139,212 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-6xl mx-auto space-y-8"
+      >
         <header className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
+          >
             <Clock className="h-10 w-10 text-primary" />
             <div>
               <h1 className="text-3xl font-bold">Math Alarm</h1>
               <p className="text-muted-foreground">Stay sharp, wake up smart</p>
             </div>
-          </div>
+          </motion.div>
         </header>
 
-        {activeAlarm && problem && (
-          <Card className="border-primary animate-pulse">
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold mb-6">Wake Up Challenge</h2>
-              <form onSubmit={handleAnswerSubmit} className="space-y-6">
-                <div className="text-2xl font-mono bg-secondary/10 p-4 rounded-lg text-center">
-                  {problem.question}
-                </div>
-                <Input
-                  type="number"
-                  name="answer"
-                  placeholder="Enter your answer"
-                  className="text-center text-xl"
-                  autoFocus
-                />
-                <Button type="submit" size="lg" className="w-full">
-                  Check Answer
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        )}
+        <AnimatePresence>
+          {activeAlarm && problem && (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+            >
+              <Card className="border-primary animate-pulse">
+                <CardContent className="p-8">
+                  <h2 className="text-2xl font-bold mb-6">Wake Up Challenge</h2>
+                  <form onSubmit={handleAnswerSubmit} className="space-y-6">
+                    <div className="text-2xl font-mono bg-secondary/10 p-4 rounded-lg text-center">
+                      {problem.question}
+                    </div>
+                    <Input
+                      type="number"
+                      name="answer"
+                      placeholder="Enter your answer"
+                      className="text-center text-xl"
+                      autoFocus
+                    />
+                    <Button type="submit" size="lg" className="w-full">
+                      Check Answer
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Set New Alarm
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Time</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="time"
-                            placeholder="Select time"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="days"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>Repeat Days</FormLabel>
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleSelectAllDays}
-                            >
-                              Select All
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleDeselectAllDays}
-                            >
-                              Deselect All
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {DAYS.map((day) => (
-                              <FormField
-                                key={day.value}
-                                control={form.control}
-                                name="days"
-                                render={({ field }) => (
-                                  <FormItem
-                                    key={day.value}
-                                    className="flex flex-row items-center space-x-2 space-y-0"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(day.value)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value, day.value])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) => value !== day.value
-                                                )
-                                              );
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                      {day.label}
-                                    </FormLabel>
-                                  </FormItem>
-                                )}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="difficulty"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Challenge Difficulty</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Set New Alarm
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="time"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Time</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select difficulty" />
-                            </SelectTrigger>
+                            <Input
+                              type="time"
+                              placeholder="HH:MM"
+                              className="text-xl font-mono tracking-wider"
+                              {...field}
+                            />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="easy">Easy</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="hard">Hard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="days"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Repeat Days</FormLabel>
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleSelectAllDays}
+                              >
+                                Select All
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleDeselectAllDays}
+                              >
+                                Deselect All
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {DAYS.map((day) => (
+                                <FormField
+                                  key={day.value}
+                                  control={form.control}
+                                  name="days"
+                                  render={({ field }) => (
+                                    <FormItem
+                                      key={day.value}
+                                      className="flex flex-row items-center space-x-2 space-y-0"
+                                    >
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(day.value)}
+                                          onCheckedChange={(checked) => {
+                                            return checked
+                                              ? field.onChange([...field.value, day.value])
+                                              : field.onChange(
+                                                  field.value?.filter(
+                                                    (value) => value !== day.value
+                                                  )
+                                                );
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        {day.label}
+                                      </FormLabel>
+                                    </FormItem>
+                                  )}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="difficulty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Challenge Difficulty</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select difficulty" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="easy">Easy</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="hard">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="sound"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sound (Optional - may not work in all browsers)</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select sound" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="default">Default</SelectItem>
+                              <SelectItem value="digital">Digital</SelectItem>
+                              <SelectItem value="beep">Beep</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button type="submit" className="w-full" disabled={createAlarm.isPending}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Alarm
+                      </Button>
+                    </motion.div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-                  <FormField
-                    control={form.control}
-                    name="sound"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sound (Optional - may not work in all browsers)</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select sound" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="default">Default</SelectItem>
-                            <SelectItem value="digital">Digital</SelectItem>
-                            <SelectItem value="beep">Beep</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button type="submit" className="w-full" disabled={createAlarm.isPending}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Alarm
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-8">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-8"
+          >
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -354,7 +380,6 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -380,9 +405,9 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
