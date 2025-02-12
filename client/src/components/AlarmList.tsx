@@ -255,15 +255,15 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed bottom-0 left-0 right-0 bg-background border-t p-4"
           >
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-center items-center gap-4">
               {selectedAlarms.size === 1 && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleRename}
-                  className="h-10 w-10"
+                  className="h-12 w-12"
                 >
-                  <Pencil className="h-5 w-5" />
+                  <Pencil className="h-6 w-6" />
                 </Button>
               )}
               <Button
@@ -271,11 +271,11 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
                 size="icon"
                 onClick={handleDelete}
                 disabled={selectedAlarms.size === 0}
-                className={`h-10 w-10 ${
+                className={`h-12 w-12 ${
                   selectedAlarms.size === 0 ? 'text-muted-foreground' : 'text-destructive'
                 }`}
               >
-                <Trash2 className="h-5 w-5" />
+                <Trash2 className="h-6 w-6" />
               </Button>
             </div>
           </motion.div>
