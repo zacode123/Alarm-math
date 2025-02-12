@@ -96,7 +96,7 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  const [selectedId] = selectedAlarms;
+                  const selectedId = Array.from(selectedAlarms)[0];
                   if (selectedId && selectedAlarms.size === 1) {
                     onRename(selectedId);
                   }
