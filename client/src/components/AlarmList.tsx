@@ -1,33 +1,50 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { type Alarm } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NewAlarmForm } from "./NewAlarmForm";
 import { Button } from "@/components/ui/button";
-import { Trash2, Check, X, Pencil } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trash2, Pencil } from "lucide-react";
+import { useAlarms } from "@/lib/useAlarms";
 
 interface AlarmListProps {
   alarms: Alarm[];
   onDelete: (ids: number[]) => void;
-  onRename?: (id: number) => void;
   onSelectionModeChange?: (isSelectionMode: boolean) => void;
 }
 
-export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }: AlarmListProps) {
+export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmListProps) {
+  const { updateAlarm } = useAlarms();
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedAlarms, setSelectedAlarms] = useState<Set<number>>(new Set());
   const [longPressTimeout, setLongPressTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Clear selection mode when component unmounts
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isSelectionMode && containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsSelectionMode(false);
+        setSelectedAlarms(new Set());
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSelectionMode]);
+
   useEffect(() => {
     return () => {
       if (longPressTimeout) clearTimeout(longPressTimeout);
     };
   }, [longPressTimeout]);
 
-  // Notify parent of selection mode changes
   useEffect(() => {
     onSelectionModeChange?.(isSelectionMode);
   }, [isSelectionMode, onSelectionModeChange]);
@@ -80,11 +97,21 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
 
   const handleRename = () => {
     const selectedId = Array.from(selectedAlarms)[0];
-    if (selectedId && onRename) {
-      onRename(selectedId);
+    const selectedAlarm = alarms.find(a => a.id === selectedId);
+    if (selectedId && selectedAlarm) {
+      setNewLabel(selectedAlarm.label || "");
+      setIsRenaming(true);
     }
-    setIsSelectionMode(false);
-    setSelectedAlarms(new Set());
+  };
+
+  const handleRenameSubmit = async () => {
+    const selectedId = Array.from(selectedAlarms)[0];
+    if (selectedId) {
+      await updateAlarm.mutateAsync({ id: selectedId, label: newLabel });
+      setIsRenaming(false);
+      setIsSelectionMode(false);
+      setSelectedAlarms(new Set());
+    }
   };
 
   const exitSelectionMode = () => {
@@ -105,7 +132,7 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
   }
 
   return (
-    <>
+    <div ref={containerRef}>
       <div className="space-y-4 pb-16">      
         {isSelectionMode && (
           <div className="flex items-center justify-between px-4 py-2 bg-muted/50">
@@ -157,6 +184,9 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
               >
                 <div className="p-4 flex items-center gap-4">
                   <div className="flex-1">
+                    {alarm.label ? (
+                      <div className="text-xl font-bold mb-1">{alarm.label}</div>
+                    ) : null}
                     <div className="text-2xl font-bold">{alarm.time}</div>
                     <div className="text-sm text-muted-foreground">
                       {alarm.days.join(", ")} • {alarm.difficulty}
@@ -189,7 +219,33 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
         </DialogContent>
       </Dialog>
 
-      {/* Bottom Selection Mode Actions */}
+      <Dialog
+        open={isRenaming}
+        onOpenChange={(open) => !open && setIsRenaming(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Alarm</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Enter alarm name"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsRenaming(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRenameSubmit}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AnimatePresence>
         {isSelectionMode && (
           <motion.div
@@ -199,16 +255,8 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed bottom-0 left-0 right-0 bg-background border-t"
           >
-            <div className="grid grid-cols-3 divide-x">
-              <Button
-                variant="ghost"
-                className="flex flex-col items-center gap-1 py-4 rounded-none h-auto"
-                onClick={exitSelectionMode}
-              >
-                <X className="h-5 w-5" />
-                <span className="text-xs">Cancel</span>
-              </Button>
-              {selectedAlarms.size === 1 && onRename && (
+            <div className="grid grid-cols-2 divide-x">
+              {selectedAlarms.size === 1 && (
                 <Button
                   variant="ghost"
                   className="flex flex-col items-center gap-1 py-4 rounded-none h-auto"
@@ -233,6 +281,6 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

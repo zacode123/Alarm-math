@@ -53,7 +53,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
       volume: 100,
       enabled: true,
       autoDelete: false,
-      vibration: vibrationEnabled
+      vibration: vibrationEnabled,
+      label: "" // Added default value for label
     },
   });
 
@@ -107,6 +108,21 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
       <div className="container mx-auto max-w-md px-4 py-4 flex-1 overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="label"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Label</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter alarm name"
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="time"

@@ -51,7 +51,7 @@ export default function Home() {
   const [previewVolume, setPreviewVolume] = useState(100);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   const [vibrationEnabled, setVibrationEnabled] = useState("vibrate" in navigator);
-  
+
 
   // Request notification permission on mount
   useEffect(() => {
@@ -78,7 +78,8 @@ export default function Home() {
       volume: 100,
       enabled: true,
       autoDelete: false,
-      vibration: vibrationEnabled, // Added vibration default value
+      vibration: vibrationEnabled,
+      label: "", // Add default empty label
     },
   });
 
@@ -133,7 +134,7 @@ export default function Home() {
             const alarmTime = new Date();
             const [hours, minutes] = alarm.time.split(':').map(Number);
             alarmTime.setHours(hours, minutes, 0);
-            
+
             // Only show notification if we're within 1 minute of alarm time
             if (Math.abs(now.getTime() - alarmTime.getTime()) <= 60000) {
               const notification = new Notification("Math Alarm", {
@@ -604,7 +605,7 @@ export default function Home() {
                       });
                     }}
                     onRename={handleRenameAlarm}
-                    
+
                   />
                 )}
               </CardContent>

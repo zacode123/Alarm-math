@@ -7,7 +7,7 @@ export const alarms = pgTable("alarms", {
   time: text("time").notNull(), // HH:mm format
   enabled: boolean("enabled").notNull().default(true),
   days: text("days").array().notNull(), // Array of weekdays
-  label: text("label"),
+  label: text("label").notNull().default(""), // Adding label field with default empty string
   difficulty: text("difficulty").notNull().default("easy"),
   sound: text("sound").notNull().default("default"),
   volume: integer("volume").notNull().default(100),
@@ -25,7 +25,8 @@ export const insertAlarmSchema = createInsertSchema(alarms)
     sound: z.string(),
     volume: z.number().min(0).max(100).default(100),
     autoDelete: z.boolean().default(false),
-    vibration: z.boolean().default(false)
+    vibration: z.boolean().default(false),
+    label: z.string().default("")
   });
 
 export type InsertAlarm = z.infer<typeof insertAlarmSchema>;
