@@ -127,13 +127,20 @@ export default function Home() {
             (window as any).vibrateInterval = vibrateInterval;
           }
 
-          // Show notification only once
-          if (notificationPermission === "granted") {
-            new Notification("Math Alarm", {
+          // Show notification only once and handle click
+          if (notificationPermission === "granted" && !activeAlarm) {
+            const notification = new Notification("Math Alarm", {
               body: "Click here to solve math problems and dismiss the alarm",
               icon: "/alarm-icon.png",
-              requireInteraction: true // Keep notification until user interacts
+              requireInteraction: true,
+              tag: 'math-alarm' // Ensures only one notification is shown
             });
+
+            notification.onclick = () => {
+              window.focus();
+              setActiveAlarm(alarm.id);
+              generateProblem();
+            };
           }
 
           if (alarm.autoDelete) {
