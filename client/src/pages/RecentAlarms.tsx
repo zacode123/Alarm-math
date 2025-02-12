@@ -22,6 +22,7 @@ export default function RecentAlarms() {
   const { toast } = useToast();
   const { alarms, isLoading, deleteAlarm } = useAlarms();
   const [showNewAlarmForm, setShowNewAlarmForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   return (
     <>
