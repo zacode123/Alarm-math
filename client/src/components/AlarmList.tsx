@@ -253,29 +253,29 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
             animate={{ y: 0 }}
             exit={{ y: 100 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 bg-background border-t"
+            className="fixed bottom-0 left-0 right-0 bg-background border-t p-4"
           >
-            <div className="grid grid-cols-2 divide-x">
+            <div className="flex justify-end gap-4">
               {selectedAlarms.size === 1 && (
                 <Button
                   variant="ghost"
-                  className="flex flex-col items-center gap-1 py-4 rounded-none h-auto"
+                  size="icon"
                   onClick={handleRename}
+                  className="h-10 w-10"
                 >
                   <Pencil className="h-5 w-5" />
-                  <span className="text-xs">Rename</span>
                 </Button>
               )}
               <Button
-                variant={selectedAlarms.size > 0 ? "ghost" : "ghost"}
-                className={`flex flex-col items-center gap-1 py-4 rounded-none h-auto ${
-                  selectedAlarms.size === 0 ? 'text-muted-foreground' : 'text-destructive'
-                }`}
+                variant="ghost"
+                size="icon"
                 onClick={handleDelete}
                 disabled={selectedAlarms.size === 0}
+                className={`h-10 w-10 ${
+                  selectedAlarms.size === 0 ? 'text-muted-foreground' : 'text-destructive'
+                }`}
               >
                 <Trash2 className="h-5 w-5" />
-                <span className="text-xs">Delete ({selectedAlarms.size})</span>
               </Button>
             </div>
           </motion.div>
