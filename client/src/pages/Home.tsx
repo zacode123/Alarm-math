@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Plus, Trash2, Check, History, Bell, Moon } from "lucide-react";
+import { Clock, Plus, Trash2, Check, History, Bell, Moon, Trash, Vibrate, BellRing } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
@@ -48,16 +48,33 @@ export default function Home() {
   const { play, stop, preview } = useSound();
   const [completedAlarms, setCompletedAlarms] = useState<Array<{ id: number, time: string, date: string }>>([]);
   const [previewVolume, setPreviewVolume] = useState(100);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission().then(permission => {
+        setNotificationPermission(permission);
+        if (permission === "granted") {
+          toast({
+            title: "Notifications enabled",
+            description: "You'll receive notifications when alarms go off.",
+          });
+        }
+      });
+    }
+  }, [toast]);
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
     defaultValues: {
       time: "",
-      days: DAYS.map(day => day.value),
+      days: DAYS.map(day => day.value as "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"),
       difficulty: "easy",
       sound: "default",
       volume: 100,
       enabled: true,
+      autoDelete: false,
     },
   });
 
@@ -82,20 +99,40 @@ export default function Home() {
           setActiveAlarm(alarm.id);
           setSolvedCount(0);
           generateProblem();
+
+          // Play sound
           try {
             play(alarm.sound as any, alarm.volume / 100);
           } catch (error) {
             console.warn('Sound playback not supported:', error);
           }
-          // Disable the alarm after triggering
-          updateAlarm.mutate({ id: alarm.id, enabled: false });
+
+          // Vibrate if supported
+          if ("vibrate" in navigator) {
+            navigator.vibrate([200, 100, 200]);
+          }
+
+          // Show notification if permission granted
+          if (notificationPermission === "granted") {
+            new Notification("Math Alarm", {
+              body: "Time to wake up and solve some math problems!",
+              icon: "/alarm-icon.png",
+            });
+          }
+
+          if (alarm.autoDelete) {
+            deleteAlarm.mutate(alarm.id);
+          } else {
+            // Disable the alarm after triggering if not set to auto-delete
+            updateAlarm.mutate({ id: alarm.id, enabled: false });
+          }
         }
       });
     };
 
     const interval = setInterval(checkAlarms, 1000);
     return () => clearInterval(interval);
-  }, [alarms, activeAlarm, generateProblem, play, updateAlarm]);
+  }, [alarms, activeAlarm, generateProblem, play, updateAlarm, deleteAlarm, notificationPermission]);
 
   const onSubmit = (data: InsertAlarm) => {
     if (data.days.length === 0) {
@@ -396,6 +433,59 @@ export default function Home() {
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="autoDelete"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Auto Delete
+                            </FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Delete alarm after it goes off
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {notificationPermission === "granted" ? (
+                        <div className="flex items-center gap-2">
+                          <BellRing className="h-4 w-4" />
+                          <span>Notifications enabled</span>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if ("Notification" in window) {
+                              Notification.requestPermission().then(setNotificationPermission);
+                            }
+                          }}
+                        >
+                          <BellRing className="h-4 w-4 mr-2" />
+                          Enable notifications
+                        </Button>
+                      )}
+
+                      {"vibrate" in navigator && (
+                        <div className="flex items-center gap-2">
+                          <Vibrate className="h-4 w-4" />
+                          <span>Vibration enabled</span>
+                        </div>
+                      )}
+                    </div>
+
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}

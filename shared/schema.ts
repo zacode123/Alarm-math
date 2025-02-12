@@ -11,6 +11,7 @@ export const alarms = pgTable("alarms", {
   difficulty: text("difficulty").notNull().default("easy"),
   sound: text("sound").notNull().default("default"),
   volume: integer("volume").notNull().default(100),
+  autoDelete: boolean("autoDelete").notNull().default(false),
   created: integer("created").notNull()
 });
 
@@ -21,7 +22,8 @@ export const insertAlarmSchema = createInsertSchema(alarms)
     days: z.array(z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])),
     difficulty: z.enum(['easy', 'medium', 'hard']),
     sound: z.string(),
-    volume: z.number().min(0).max(100).default(100)
+    volume: z.number().min(0).max(100).default(100),
+    autoDelete: z.boolean().default(false)
   });
 
 export type InsertAlarm = z.infer<typeof insertAlarmSchema>;
