@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAlarmSchema, type InsertAlarm } from "@shared/schema";
@@ -41,18 +42,17 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
     resolver: zodResolver(insertAlarmSchema),
     defaultValues: {
       time: "",
-      days: DAYS.map(day => day.value as "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"),
+      days: DAYS.map(day => day.value),
       difficulty: "easy",
       sound: "default",
       volume: 100,
       enabled: true,
-      autoDelete: false,
-      vibration: vibrationEnabled,
+      autoDelete: false
     },
   });
 
   const handleSelectAllDays = () => {
-    form.setValue("days", DAYS.map(day => day.value as "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"));
+    form.setValue("days", DAYS.map(day => day.value));
   };
 
   const handleDeselectAllDays = () => {
@@ -69,7 +69,13 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
       return;
     }
 
-    createAlarm.mutate(data, {
+    // Add vibration setting to the alarm data
+    const alarmData = {
+      ...data,
+      vibration: vibrationEnabled
+    };
+
+    createAlarm.mutate(alarmData, {
       onSuccess: () => {
         form.reset();
         toast({
@@ -140,7 +146,7 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
                         >
                           <FormControl>
                             <Switch
-                              checked={field.value?.includes(day.value as any)}
+                              checked={field.value?.includes(day.value)}
                               onCheckedChange={(checked) => {
                                 return checked
                                   ? field.onChange([...field.value, day.value])
@@ -197,7 +203,7 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value);
-                    preview(value as any);
+                    preview(value as "default" | "digital" | "beep");
                   }}
                   defaultValue={field.value}
                 >
@@ -229,7 +235,7 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
                           onValueChange={([value]) => {
                             field.onChange(value);
                             // Preview the sound whenever volume changes
-                            preview(form.getValues("sound"), value / 100);
+                            preview(form.getValues("sound") as "default" | "digital" | "beep", value / 100);
                           }}
                         />
                         <span className="w-12 text-right">{field.value ?? 100}%</span>

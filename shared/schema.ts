@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,6 +12,7 @@ export const alarms = pgTable("alarms", {
   sound: text("sound").notNull().default("default"),
   volume: integer("volume").notNull().default(100),
   autoDelete: boolean("autoDelete").notNull().default(false),
+  vibration: boolean("vibration").notNull().default(false),
   created: integer("created").notNull()
 });
 
@@ -23,7 +24,8 @@ export const insertAlarmSchema = createInsertSchema(alarms)
     difficulty: z.enum(['easy', 'medium', 'hard']),
     sound: z.string(),
     volume: z.number().min(0).max(100).default(100),
-    autoDelete: z.boolean().default(false)
+    autoDelete: z.boolean().default(false),
+    vibration: z.boolean().default(false)
   });
 
 export type InsertAlarm = z.infer<typeof insertAlarmSchema>;
