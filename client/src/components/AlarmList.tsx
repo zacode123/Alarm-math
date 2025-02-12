@@ -1,9 +1,11 @@
+
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { type Alarm } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { Check, Trash2, X } from "lucide-react";
 
 interface AlarmListProps {
   alarms: Alarm[];
@@ -44,8 +46,21 @@ export function AlarmList({ alarms, onDelete }: AlarmListProps) {
     });
   };
 
+  const handleSelectAll = () => {
+    if (selectedAlarms.size === alarms.length) {
+      setSelectedAlarms(new Set());
+    } else {
+      setSelectedAlarms(new Set(alarms.map(alarm => alarm.id)));
+    }
+  };
+
   const handleDelete = () => {
     onDelete(Array.from(selectedAlarms));
+    setSelectMode(false);
+    setSelectedAlarms(new Set());
+  };
+
+  const handleExitSelectMode = () => {
     setSelectMode(false);
     setSelectedAlarms(new Set());
   };
@@ -56,6 +71,35 @@ export function AlarmList({ alarms, onDelete }: AlarmListProps) {
 
   return (
     <div className="space-y-4">
+      {selectMode && (
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSelectAll}
+          >
+            {selectedAlarms.size === alarms.length ? "Deselect All" : "Select All"}
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExitSelectMode}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={selectedAlarms.size === 0}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      
       <div className="space-y-2">
         {alarms.map((alarm) => (
           <motion.div key={alarm.id}>
@@ -79,18 +123,6 @@ export function AlarmList({ alarms, onDelete }: AlarmListProps) {
           </motion.div>
         ))}
       </div>
-
-      {selectMode && selectedAlarms.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={handleDelete}
-          >
-            Delete Selected ({selectedAlarms.size})
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
