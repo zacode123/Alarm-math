@@ -22,6 +22,7 @@ import { Clock, Plus, Trash2, Check, History, Bell, Moon, BellRing, Vibrate } fr
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
+import { AlarmList } from "@/components/AlarmList";
 
 const DAYS = [
   { value: "sun", label: "Sunday" },
@@ -554,31 +555,20 @@ export default function Home() {
                   Active Alarms
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 {isLoading ? (
                   <div className="text-muted-foreground">Loading alarms...</div>
-                ) : alarms.length === 0 ? (
-                  <div className="text-muted-foreground">No active alarms</div>
                 ) : (
-                  alarms.map((alarm) => (
-                    <Card key={alarm.id} className="bg-card/50">
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div>
-                          <div className="text-2xl font-bold">{alarm.time}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {alarm.days.join(", ")} • {alarm.difficulty}
-                          </div>
-                        </div>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => deleteAlarm.mutate(alarm.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))
+                  <AlarmList
+                    alarms={alarms}
+                    onDelete={(ids) => {
+                      ids.forEach(id => deleteAlarm.mutate(id));
+                      toast({
+                        title: ids.length > 1 ? "Alarms deleted" : "Alarm deleted",
+                        description: `Successfully deleted ${ids.length} alarm${ids.length > 1 ? 's' : ''}.`
+                      });
+                    }}
+                  />
                 )}
               </CardContent>
             </Card>
