@@ -307,7 +307,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
           </form>
         </Form>
       </div>
-      <div className="sticky bottom-0 pt-4 bg-background space-y-2">
+      <div className="sticky bottom-0 pt-4 bg-white space-y-2">
         <Button
           type="submit"
           className="w-full"
@@ -315,7 +315,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
           onClick={form.handleSubmit(onSubmit)}
           disabled={createAlarm.isPending}
         >
-          Set Alarm
+          {defaultValues ? 'Edit Alarm' : 'Set Alarm'}
         </Button>
         <Button
           type="button"
