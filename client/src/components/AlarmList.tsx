@@ -34,14 +34,7 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
     if (longPressTimeoutRef.current) {
       clearTimeout(longPressTimeoutRef.current);
     }
-    const touchDuration = Date.now() - touchStartTimeRef.current;
     setLongPressActive(false);
-
-    // If it was a short tap and we're in select mode, toggle selection
-    if (touchDuration < 500 && selectMode) {
-      const alarmId = Number(e.currentTarget.getAttribute('data-alarm-id'));
-      toggleAlarmSelection(alarmId);
-    }
   };
 
   const toggleAlarmSelection = (alarmId: number) => {
@@ -56,12 +49,6 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
       }
       return newSelection;
     });
-  };
-
-  const handleClick = (alarmId: number) => {
-    if (selectMode) {
-      toggleAlarmSelection(alarmId);
-    }
   };
 
   const handleSelectAll = () => {
@@ -137,12 +124,11 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
             <Card
               data-alarm-id={alarm.id}
               className={cn(
-                "transition-colors cursor-pointer",
+                "transition-colors",
                 selectedAlarms.has(alarm.id) ? "bg-primary/20 border-primary" : "bg-card/50"
               )}
               onTouchStart={(e) => handleTouchStart(alarm.id, e)}
               onTouchEnd={handleTouchEnd}
-              onClick={() => handleClick(alarm.id)}
             >
               <div className="p-4">
                 <div className="text-2xl font-bold">{alarm.time}</div>
