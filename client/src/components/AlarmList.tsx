@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit2 } from "lucide-react";
 import { type Alarm } from "@shared/schema";
@@ -15,22 +15,33 @@ interface AlarmListProps {
 export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedAlarms, setSelectedAlarms] = useState<Set<number>>(new Set());
-  const longPressTimer = useRef<NodeJS.Timeout>();
+  const longPressTimeoutRef = useRef<NodeJS.Timeout>();
   const [longPressActive, setLongPressActive] = useState(false);
+  const touchStartTimeRef = useRef<number>(0);
 
-  const handleTouchStart = (alarmId: number) => {
-    longPressTimer.current = setTimeout(() => {
+  const handleTouchStart = (alarmId: number, e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent default touch behavior
+    touchStartTimeRef.current = Date.now();
+    longPressTimeoutRef.current = setTimeout(() => {
       setSelectMode(true);
       setSelectedAlarms(new Set([alarmId]));
       setLongPressActive(true);
     }, 500); // 500ms for long press
   };
 
-  const handleTouchEnd = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
     }
+    const touchDuration = Date.now() - touchStartTimeRef.current;
     setLongPressActive(false);
+
+    // If it was a short tap and we're in select mode, toggle selection
+    if (touchDuration < 500 && selectMode) {
+      const alarmId = Number(e.currentTarget.getAttribute('data-alarm-id'));
+      toggleAlarmSelection(alarmId);
+    }
   };
 
   const toggleAlarmSelection = (alarmId: number) => {
@@ -45,6 +56,12 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
       }
       return newSelection;
     });
+  };
+
+  const handleClick = (alarmId: number) => {
+    if (selectMode) {
+      toggleAlarmSelection(alarmId);
+    }
   };
 
   const handleSelectAll = () => {
@@ -66,11 +83,11 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
     setSelectedAlarms(new Set());
   };
 
-  const isAllSelected = selectedAlarms.size === alarms.length;
-
   if (alarms.length === 0) {
     return <div className="text-muted-foreground">No active alarms</div>;
   }
+
+  const isAllSelected = selectedAlarms.size === alarms.length;
 
   return (
     <div className="space-y-4">
@@ -110,30 +127,33 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
         </div>
       )}
 
-      {alarms.map((alarm) => (
-        <motion.div
-          key={alarm.id}
-          initial={false}
-          animate={{ scale: longPressActive ? 0.95 : 1 }}
-        >
-          <Card
-            className={cn(
-              "bg-card/50 transition-colors",
-              selectedAlarms.has(alarm.id) && "bg-primary/20 border-primary"
-            )}
-            onTouchStart={() => handleTouchStart(alarm.id)}
-            onTouchEnd={handleTouchEnd}
-            onClick={() => toggleAlarmSelection(alarm.id)}
+      <div className="space-y-2">
+        {alarms.map((alarm) => (
+          <motion.div
+            key={alarm.id}
+            initial={false}
+            animate={{ scale: longPressActive ? 0.95 : 1 }}
           >
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{alarm.time}</div>
-              <div className="text-sm text-muted-foreground">
-                {alarm.days.join(", ")} • {alarm.difficulty}
+            <Card
+              data-alarm-id={alarm.id}
+              className={cn(
+                "transition-colors cursor-pointer",
+                selectedAlarms.has(alarm.id) ? "bg-primary/20 border-primary" : "bg-card/50"
+              )}
+              onTouchStart={(e) => handleTouchStart(alarm.id, e)}
+              onTouchEnd={handleTouchEnd}
+              onClick={() => handleClick(alarm.id)}
+            >
+              <div className="p-4">
+                <div className="text-2xl font-bold">{alarm.time}</div>
+                <div className="text-sm text-muted-foreground">
+                  {alarm.days.join(", ")} • {alarm.difficulty}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
+            </Card>
+          </motion.div>
+        ))}
+      </div>
 
       {selectMode && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
