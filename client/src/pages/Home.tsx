@@ -51,7 +51,7 @@ export default function Home() {
   const [previewVolume, setPreviewVolume] = useState(100);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   const [vibrationEnabled, setVibrationEnabled] = useState("vibrate" in navigator);
-  const [selectMode, setSelectMode] = useState(false); // Added state for selection mode
+  
 
   // Request notification permission on mount
   useEffect(() => {
@@ -578,8 +578,7 @@ export default function Home() {
                       });
                     }}
                     onRename={handleRenameAlarm}
-                    selectMode={selectMode} // Pass selection mode to AlarmList
-                    onSelectModeChange={setSelectMode} // Pass function to change selection mode
+                    
                   />
                 )}
               </CardContent>
