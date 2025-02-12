@@ -88,11 +88,11 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="container mx-auto max-w-md px-4 py-8">
+    <div className="flex flex-col h-full">
+      <div className="container mx-auto max-w-md px-4 py-8 flex-1 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-6 text-center">Set up alarm</h1>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="time"
@@ -289,11 +289,19 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={createAlarm.isPending}>
-              Set Alarm
-            </Button>
           </form>
         </Form>
+      </div>
+      <div className="sticky bottom-0 pt-4 bg-background">
+        <Button
+          type="submit"
+          className="w-full"
+          size="lg"
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={createAlarm.isPending}
+        >
+          Set Alarm
+        </Button>
       </div>
     </div>
   );

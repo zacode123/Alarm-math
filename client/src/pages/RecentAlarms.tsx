@@ -125,7 +125,7 @@ export default function RecentAlarms() {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Alarm{selectedAlarms.length > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Alarm{selectedAlarms.length > 1 ? 's' : ''}</AlertDialogTitle>
             <AlertDialogDescription>
               Do you want to delete the selected alarm{selectedAlarms.length > 1 ? 's' : ''}?
               This action cannot be undone.
@@ -142,14 +142,16 @@ export default function RecentAlarms() {
 
       {/* New Alarm Dialog */}
       <AlertDialog open={showNewAlarmForm} onOpenChange={setShowNewAlarmForm}>
-        <AlertDialogContent className="max-w-2xl">
+        <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl">Set New Alarm</AlertDialogTitle>
             <AlertDialogDescription>
               Configure your new alarm with the settings below
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <NewAlarmForm onSuccess={() => setShowNewAlarmForm(false)} />
+          <div className="flex-1 overflow-y-auto">
+            <NewAlarmForm onSuccess={() => setShowNewAlarmForm(false)} />
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>
