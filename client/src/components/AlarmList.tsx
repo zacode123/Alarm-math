@@ -5,7 +5,6 @@ import { type Alarm } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NewAlarmForm } from "./NewAlarmForm";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Check, X, Pencil } from "lucide-react";
 
 interface AlarmListProps {
@@ -157,20 +156,6 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
                 onMouseLeave={handleTouchEnd}
               >
                 <div className="p-4 flex items-center gap-4">
-                  {isSelectionMode && (
-                    <Checkbox
-                      checked={selectedAlarms.has(alarm.id)}
-                      onCheckedChange={(checked) => {
-                        const newSelected = new Set(selectedAlarms);
-                        if (checked) {
-                          newSelected.add(alarm.id);
-                        } else {
-                          newSelected.delete(alarm.id);
-                        }
-                        setSelectedAlarms(newSelected);
-                      }}
-                    />
-                  )}
                   <div className="flex-1">
                     <div className="text-2xl font-bold">{alarm.time}</div>
                     <div className="text-sm text-muted-foreground">
