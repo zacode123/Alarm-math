@@ -129,18 +129,37 @@ export default function Home() {
 
           // Show notification only once and handle click
           if (notificationPermission === "granted" && !activeAlarm) {
-            const notification = new Notification("Math Alarm", {
-              body: "Click here to solve math problems and dismiss the alarm",
-              icon: "/alarm-icon.png",
-              requireInteraction: true,
-              tag: 'math-alarm' // Ensures only one notification is shown
-            });
+            const now = new Date();
+            const alarmTime = new Date();
+            const [hours, minutes] = alarm.time.split(':').map(Number);
+            alarmTime.setHours(hours, minutes, 0);
+            
+            // Only show notification if we're within 1 minute of alarm time
+            if (Math.abs(now.getTime() - alarmTime.getTime()) <= 60000) {
+              const notification = new Notification("Math Alarm", {
+                body: "Click here to solve math problems and dismiss the alarm",
+                icon: "/alarm-icon.png",
+                requireInteraction: true,
+                tag: 'math-alarm' // Ensures only one notification is shown
+              });
 
-            notification.onclick = () => {
-              window.focus();
-              setActiveAlarm(alarm.id);
-              generateProblem();
-            };
+              notification.onclick = () => {
+                window.focus();
+                setActiveAlarm(alarm.id);
+                generateProblem();
+              };
+
+              // Auto-close notification after 1 minute
+              setTimeout(() => {
+                notification.close();
+                if (alarm.autoDelete) {
+                  deleteAlarm.mutate(alarm.id);
+                } else {
+                  updateAlarm.mutate({ id: alarm.id, enabled: false });
+                }
+                stop();
+              }, 60000);
+            }
           }
 
           if (alarm.autoDelete) {
