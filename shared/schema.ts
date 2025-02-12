@@ -10,6 +10,7 @@ export const alarms = pgTable("alarms", {
   label: text("label"),
   difficulty: text("difficulty").notNull().default("easy"),
   sound: text("sound").notNull().default("default"),
+  volume: integer("volume").notNull().default(100),
   created: integer("created").notNull()
 });
 
@@ -19,7 +20,8 @@ export const insertAlarmSchema = createInsertSchema(alarms)
     time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
     days: z.array(z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])),
     difficulty: z.enum(['easy', 'medium', 'hard']),
-    sound: z.string()
+    sound: z.string(),
+    volume: z.number().min(0).max(100).default(100)
   });
 
 export type InsertAlarm = z.infer<typeof insertAlarmSchema>;

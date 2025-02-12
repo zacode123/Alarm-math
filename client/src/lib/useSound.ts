@@ -9,7 +9,7 @@ const SOUNDS = {
 export function useSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const play = useCallback((sound: keyof typeof SOUNDS = "default") => {
+  const play = useCallback((sound: keyof typeof SOUNDS = "default", volume: number = 1.0) => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -17,13 +17,25 @@ export function useSound() {
 
     const audio = new Audio(SOUNDS[sound]);
     audio.loop = true;
-    audio.volume = 1.0;
+    audio.volume = Math.max(0, Math.min(1, volume));
     audioRef.current = audio;
 
     // Ensure audio is loaded before playing
     audio.addEventListener('canplaythrough', () => {
       audio.play().catch(error => {
         console.error('Error playing sound:', error);
+      });
+    });
+  }, []);
+
+  const preview = useCallback((sound: keyof typeof SOUNDS, volume: number = 1.0) => {
+    const audio = new Audio(SOUNDS[sound]);
+    audio.loop = false;
+    audio.volume = Math.max(0, Math.min(1, volume));
+
+    audio.addEventListener('canplaythrough', () => {
+      audio.play().catch(error => {
+        console.error('Error playing preview sound:', error);
       });
     });
   }, []);
@@ -35,5 +47,5 @@ export function useSound() {
     }
   }, []);
 
-  return { play, stop };
+  return { play, stop, preview };
 }

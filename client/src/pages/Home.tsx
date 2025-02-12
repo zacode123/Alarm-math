@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Clock, Plus, Trash2, Check, History, Bell, Moon } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { Slider } from "@/components/ui/slider";
 
 const DAYS = [
   { value: "sun", label: "Sunday" },
@@ -32,14 +33,21 @@ const DAYS = [
   { value: "sat", label: "Saturday" },
 ];
 
+const SOUNDS = {
+  default: "default",
+  digital: "digital",
+  beep: "beep",
+};
+
 export default function Home() {
   const { toast } = useToast();
   const { alarms, isLoading, createAlarm, deleteAlarm, updateAlarm } = useAlarms();
   const [activeAlarm, setActiveAlarm] = useState<number | null>(null);
   const [solvedCount, setSolvedCount] = useState(0);
   const { problem, generateProblem, checkAnswer } = useMathProblem("easy");
-  const { play, stop } = useSound();
+  const { play, stop, preview } = useSound();
   const [completedAlarms, setCompletedAlarms] = useState<Array<{ id: number, time: string, date: string }>>([]);
+  const [previewVolume, setPreviewVolume] = useState(100);
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
@@ -48,6 +56,7 @@ export default function Home() {
       days: DAYS.map(day => day.value),
       difficulty: "easy",
       sound: "default",
+      volume: 100,
       enabled: true,
     },
   });
@@ -74,7 +83,7 @@ export default function Home() {
           setSolvedCount(0);
           generateProblem();
           try {
-            play(alarm.sound as any);
+            play(alarm.sound as any, alarm.volume / 100);
           } catch (error) {
             console.warn('Sound playback not supported:', error);
           }
@@ -138,9 +147,10 @@ export default function Home() {
         });
       } else {
         generateProblem();
+        const remainingProblems = 3 - newSolvedCount;
         toast({
           title: `${newSolvedCount}/3 completed`,
-          description: "Keep going! Solve two more problems.",
+          description: `Keep going! ${remainingProblems === 1 ? 'One more problem' : `${remainingProblems} more problems`} to solve.`,
         });
       }
       (e.target as HTMLFormElement).reset();
@@ -151,6 +161,11 @@ export default function Home() {
         variant: "destructive",
       });
     }
+  };
+
+  // Add preview sound handler
+  const handlePreviewSound = (sound: string, volume?: number) => {
+    preview(sound as keyof typeof SOUNDS, volume ?? previewVolume / 100);
   };
 
   return (
@@ -326,18 +341,58 @@ export default function Home() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Sound</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select sound" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="default">Default</SelectItem>
-                              <SelectItem value="digital">Digital</SelectItem>
-                              <SelectItem value="beep">Beep</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="space-y-4">
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                handlePreviewSound(value);
+                              }}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select sound" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="default">Default</SelectItem>
+                                <SelectItem value="digital">Digital</SelectItem>
+                                <SelectItem value="beep">Beep</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <FormField
+                              control={form.control}
+                              name="volume"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Volume</FormLabel>
+                                  <div className="flex items-center gap-4">
+                                    <Slider
+                                      className="flex-1"
+                                      min={0}
+                                      max={100}
+                                      step={1}
+                                      value={[field.value ?? 100]}
+                                      onValueChange={([value]) => {
+                                        field.onChange(value);
+                                        setPreviewVolume(value);
+                                      }}
+                                    />
+                                    <span className="w-12 text-right">{field.value ?? 100}%</span>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      onClick={() => handlePreviewSound(form.getValues("sound"), field.value)}
+                                    >
+                                      <Bell className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </FormItem>
                       )}
                     />
