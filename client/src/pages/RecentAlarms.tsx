@@ -74,9 +74,6 @@ export default function RecentAlarms() {
         </Button>
       </motion.div>
 
-      
-      )}
-
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
