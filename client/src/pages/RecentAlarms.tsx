@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { NewAlarmForm } from "@/components/NewAlarmForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added import
+
 
 export default function RecentAlarms() {
   const { toast } = useToast();
@@ -24,6 +26,7 @@ export default function RecentAlarms() {
   const [showNewAlarmForm, setShowNewAlarmForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedAlarms, setSelectedAlarms] = useState<number[]>([]);
+  const [editingAlarm, setEditingAlarm] = useState<any | null>(null); // Added state for editing
 
   const handleDelete = () => {
     selectedAlarms.forEach(id => deleteAlarm.mutate(id));
@@ -48,7 +51,8 @@ export default function RecentAlarms() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <Card
-                  className="relative"
+                  className="relative cursor-pointer hover:bg-card/70 transition-colors"
+                  onClick={() => setEditingAlarm(alarm)}
                 >
                   <CardContent className="p-4">
                     <div className="flex justify-between items-center">
@@ -118,6 +122,22 @@ export default function RecentAlarms() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Alarm Dialog */}
+      <Dialog open={!!editingAlarm} onOpenChange={(open) => !open && setEditingAlarm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Alarm</DialogTitle>
+          </DialogHeader>
+          {editingAlarm && (
+            <NewAlarmForm
+              defaultValues={editingAlarm}
+              onSuccess={() => setEditingAlarm(null)}
+              onCancel={() => setEditingAlarm(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
