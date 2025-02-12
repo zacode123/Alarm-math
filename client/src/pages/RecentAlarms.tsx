@@ -21,32 +21,7 @@ import { NewAlarmForm } from "@/components/NewAlarmForm";
 export default function RecentAlarms() {
   const { toast } = useToast();
   const { alarms, isLoading, deleteAlarm } = useAlarms();
-  const [selectedAlarms, setSelectedAlarms] = useState<number[]>([]);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showNewAlarmForm, setShowNewAlarmForm] = useState(false);
-
-  const handleDelete = () => {
-    selectedAlarms.forEach((id) => {
-      deleteAlarm.mutate(id, {
-        onSuccess: () => {
-          toast({
-            title: "Alarm deleted",
-            description: "The selected alarm has been removed.",
-          });
-        },
-      });
-    });
-    setSelectedAlarms([]);
-    setShowDeleteDialog(false);
-  };
-
-  const toggleAlarmSelection = (id: number) => {
-    setSelectedAlarms((current) =>
-      current.includes(id)
-        ? current.filter((alarmId) => alarmId !== id)
-        : [...current, id]
-    );
-  };
 
   return (
     <>
@@ -65,10 +40,7 @@ export default function RecentAlarms() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <Card
-                  className={`relative ${
-                    selectedAlarms.includes(alarm.id) ? "border-primary" : ""
-                  }`}
-                  onClick={() => toggleAlarmSelection(alarm.id)}
+                  className="relative"
                 >
                   <CardContent className="p-4">
                     <div className="flex justify-between items-center">
@@ -102,23 +74,7 @@ export default function RecentAlarms() {
         </Button>
       </motion.div>
 
-      {/* Delete button (shows when alarms are selected) */}
-      {selectedAlarms.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-20 left-1/2 transform -translate-x-1/2"
-        >
-          <Button
-            variant="destructive"
-            onClick={() => setShowDeleteDialog(true)}
-            className="shadow-lg"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Selected ({selectedAlarms.length})
-          </Button>
-        </motion.div>
+      
       )}
 
       {/* Delete confirmation dialog */}
