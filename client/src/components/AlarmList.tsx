@@ -6,15 +6,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { NewAlarmForm } from "./NewAlarmForm";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Check, X } from "lucide-react";
+import { Trash2, Check, X, Pencil } from "lucide-react";
 
 interface AlarmListProps {
   alarms: Alarm[];
   onDelete: (ids: number[]) => void;
+  onRename?: (id: number) => void;
   onSelectionModeChange?: (isSelectionMode: boolean) => void;
 }
 
-export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmListProps) {
+export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }: AlarmListProps) {
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedAlarms, setSelectedAlarms] = useState<Set<number>>(new Set());
@@ -78,6 +79,15 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
     setSelectedAlarms(new Set());
   };
 
+  const handleRename = () => {
+    const selectedId = Array.from(selectedAlarms)[0];
+    if (selectedId && onRename) {
+      onRename(selectedId);
+    }
+    setIsSelectionMode(false);
+    setSelectedAlarms(new Set());
+  };
+
   const exitSelectionMode = () => {
     setIsSelectionMode(false);
     setSelectedAlarms(new Set());
@@ -97,19 +107,13 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
 
   return (
     <>
-      {isSelectionMode && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b p-4 space-y-2"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">
-                {selectedAlarms.size} selected
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
+      <div className="space-y-4 pb-16">      
+        {isSelectionMode && (
+          <div className="flex items-center justify-between px-4 py-2 bg-muted/50">
+            <span className="text-sm text-muted-foreground">
+              {selectedAlarms.size} selected
+            </span>
+            <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -124,28 +128,9 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
               >
                 Deselect All
               </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                className="gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={exitSelectionMode}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
-        </motion.div>
-      )}
-
-      <div className="space-y-4">      
+        )}
         <AnimatePresence mode="popLayout">
           {alarms.map((alarm) => (
             <motion.div
@@ -222,6 +207,51 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bottom Selection Mode Actions */}
+      <AnimatePresence>
+        {isSelectionMode && (
+          <motion.div
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            exit={{ y: 100 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-0 left-0 right-0 bg-background border-t"
+          >
+            <div className="grid grid-cols-3 divide-x">
+              <Button
+                variant="ghost"
+                className="flex flex-col items-center gap-1 py-4 rounded-none h-auto"
+                onClick={exitSelectionMode}
+              >
+                <X className="h-5 w-5" />
+                <span className="text-xs">Cancel</span>
+              </Button>
+              {selectedAlarms.size === 1 && onRename && (
+                <Button
+                  variant="ghost"
+                  className="flex flex-col items-center gap-1 py-4 rounded-none h-auto"
+                  onClick={handleRename}
+                >
+                  <Pencil className="h-5 w-5" />
+                  <span className="text-xs">Rename</span>
+                </Button>
+              )}
+              <Button
+                variant={selectedAlarms.size > 0 ? "ghost" : "ghost"}
+                className={`flex flex-col items-center gap-1 py-4 rounded-none h-auto ${
+                  selectedAlarms.size === 0 ? 'text-muted-foreground' : 'text-destructive'
+                }`}
+                onClick={handleDelete}
+                disabled={selectedAlarms.size === 0}
+              >
+                <Trash2 className="h-5 w-5" />
+                <span className="text-xs">Delete ({selectedAlarms.size})</span>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
