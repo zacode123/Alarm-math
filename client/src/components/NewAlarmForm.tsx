@@ -106,7 +106,11 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
   return (
     <div className="flex flex-col h-full">
       <div className="container mx-auto max-w-md px-4 py-8 flex-1 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">Set up alarm</h1>
+        {defaultValues ? (
+          <h1 className="text-4xl font-extrabold mb-6 text-center">Edit Alarm</h1>
+        ) : (
+          <h1 className="text-3xl font-bold mb-6 text-center">Set up alarm</h1>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
