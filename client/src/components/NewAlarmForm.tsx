@@ -18,7 +18,6 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { X } from "lucide-react";
-import { useLocation } from "wouter";
 
 const DAYS = [
   { value: "sun", label: "Sunday" },
@@ -34,14 +33,14 @@ type Day = typeof DAYS[number]['value'];
 
 interface NewAlarmFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void; 
 }
 
-export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
+export function NewAlarmForm({ onSuccess, onCancel }: NewAlarmFormProps) {
   const { toast } = useToast();
   const { createAlarm } = useAlarms();
   const { preview } = useSound();
   const [vibrationEnabled, setVibrationEnabled] = useState("vibrate" in navigator);
-  const [, setLocation] = useLocation();
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
@@ -74,7 +73,6 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
       return;
     }
 
-    // Add vibration setting to the alarm data
     const alarmData = {
       ...data,
       vibration: vibrationEnabled
@@ -242,7 +240,6 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
                               value={[field.value ?? 100]}
                               onValueChange={([value]) => {
                                 field.onChange(value);
-                                // Preview the sound whenever volume changes
                                 preview(form.getValues("sound") as "default" | "digital" | "beep", value / 100);
                               }}
                             />
@@ -311,7 +308,7 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => setLocation('/')}
+          onClick={onCancel} 
         >
           <X className="w-4 h-4 mr-2" />
           Cancel

@@ -150,7 +150,10 @@ export default function RecentAlarms() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex-1 overflow-y-auto">
-            <NewAlarmForm onSuccess={() => setShowNewAlarmForm(false)} />
+            <NewAlarmForm
+              onSuccess={() => setShowNewAlarmForm(false)}
+              onCancel={() => setShowNewAlarmForm(false)}
+            />
           </div>
         </AlertDialogContent>
       </AlertDialog>
