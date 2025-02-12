@@ -2,10 +2,20 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { type Alarm, type InsertAlarm } from "@shared/schema";
 import { apiRequest } from "./queryClient";
 import { queryClient } from "./queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function useAlarms() {
-  const { data: alarms = [], isLoading } = useQuery<Alarm[]>({
+  const { toast } = useToast();
+
+  const { data: alarms = [], isLoading, error } = useQuery<Alarm[]>({
     queryKey: ["/api/alarms"],
+    onError: (err) => {
+      toast({
+        title: "Error fetching alarms",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const createAlarm = useMutation({
@@ -15,6 +25,17 @@ export function useAlarms() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alarms"] });
+      toast({
+        title: "Alarm created",
+        description: "Your new alarm has been set successfully.",
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: "Failed to create alarm",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -25,6 +46,17 @@ export function useAlarms() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alarms"] });
+      toast({
+        title: "Alarm updated",
+        description: "Your alarm has been updated successfully.",
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: "Failed to update alarm",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -34,12 +66,24 @@ export function useAlarms() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alarms"] });
+      toast({
+        title: "Alarm deleted",
+        description: "Your alarm has been deleted successfully.",
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: "Failed to delete alarm",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
   return {
     alarms,
     isLoading,
+    error,
     createAlarm,
     updateAlarm,
     deleteAlarm,
