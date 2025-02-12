@@ -314,15 +314,17 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
         >
           {defaultValues ? 'Save Changes' : 'Set Alarm'}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={onCancel}
-        >
-          <X className="w-4 h-4 mr-2" />
-          Cancel
-        </Button>
+        {!defaultValues && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={onCancel}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
+        )}
       </div>
     </div>
   );
