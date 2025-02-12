@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { TabsLayout } from "@/components/layout/TabsLayout";
+import { useAlarmWorker } from "@/lib/useAlarmWorker";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,22 @@ function MainApp() {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [permissionStep, setPermissionStep] = useState<'notifications' | 'vibration' | 'complete' | null>('notifications');
 
+  // Initialize alarm worker
+  useAlarmWorker();
+
+  // Register service worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful');
+        })
+        .catch(err => {
+          console.error('ServiceWorker registration failed:', err);
+        });
+    }
+  }, []);
+
   // Handle back button and exit dialog
   useEffect(() => {
     const handleBackButton = (event: PopStateEvent) => {
@@ -35,6 +51,20 @@ function MainApp() {
     window.addEventListener('popstate', handleBackButton);
     return () => window.removeEventListener('popstate', handleBackButton);
   }, []);
+
+  // Handle alarm triggers from worker
+  useEffect(() => {
+    const handleAlarmTrigger = (event: CustomEvent) => {
+      const alarm = event.detail;
+      toast({
+        title: "Alarm Triggered",
+        description: `Time to wake up! ${alarm.time}`,
+      });
+    };
+
+    window.addEventListener('alarmTriggered' as any, handleAlarmTrigger);
+    return () => window.removeEventListener('alarmTriggered' as any, handleAlarmTrigger);
+  }, [toast]);
 
   // Handle permissions flow
   useEffect(() => {
@@ -75,7 +105,7 @@ function MainApp() {
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold">Setting up your alarm app</h2>
           <p className="text-muted-foreground">
-            {permissionStep === 'notifications' 
+            {permissionStep === 'notifications'
               ? "Please allow notifications to get alarm alerts"
               : "Enabling vibration for alarm alerts"}
           </p>
