@@ -111,14 +111,26 @@ export default function Home() {
 
           // Vibrate if supported and enabled
           if ("vibrate" in navigator && alarm.vibration) {
-            navigator.vibrate([200, 100, 200]);
+            // Start continuous vibration pattern
+            const startVibratePattern = () => {
+              navigator.vibrate([200, 100, 200]);
+              return setInterval(() => {
+                navigator.vibrate([200, 100, 200]);
+              }, 1000);
+            };
+
+            const vibrateInterval = startVibratePattern();
+
+            // Store the interval ID to clear it when alarm is dismissed
+            (window as any).vibrateInterval = vibrateInterval;
           }
 
-          // Show notification if permission granted
+          // Show notification only once
           if (notificationPermission === "granted") {
             new Notification("Math Alarm", {
-              body: "Time to wake up and solve some math problems!",
+              body: "Click here to solve math problems and dismiss the alarm",
               icon: "/alarm-icon.png",
+              requireInteraction: true // Keep notification until user interacts
             });
           }
 
@@ -133,8 +145,40 @@ export default function Home() {
     };
 
     const interval = setInterval(checkAlarms, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Clear vibration interval if it exists
+      if ((window as any).vibrateInterval) {
+        clearInterval((window as any).vibrateInterval);
+        navigator.vibrate(0); // Stop vibration
+      }
+    };
   }, [alarms, activeAlarm, generateProblem, play, updateAlarm, deleteAlarm, notificationPermission]);
+
+  // Add notification click handler
+  useEffect(() => {
+    const handleNotificationClick = () => {
+      if (activeAlarm) {
+        // Focus or open the window
+        window.focus();
+        // The math problems are already visible when activeAlarm is set
+      }
+    };
+
+    if ("Notification" in window) {
+      navigator.serviceWorker?.addEventListener('message', (event) => {
+        if (event.data.type === 'NOTIFICATION_CLICK') {
+          handleNotificationClick();
+        }
+      });
+    }
+
+    return () => {
+      if ("Notification" in window) {
+        navigator.serviceWorker?.removeEventListener('message', handleNotificationClick);
+      }
+    };
+  }, [activeAlarm]);
 
   const onSubmit = (data: InsertAlarm) => {
     if (data.days.length === 0) {

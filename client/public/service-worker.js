@@ -30,7 +30,19 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/')
-  );
+
+  // Send message to client that notification was clicked
+  self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true
+  }).then((clients) => {
+    if (clients.length > 0) {
+      clients[0].postMessage({
+        type: 'NOTIFICATION_CLICK'
+      });
+      clients[0].focus();
+    } else {
+      self.clients.openWindow('/');
+    }
+  });
 });

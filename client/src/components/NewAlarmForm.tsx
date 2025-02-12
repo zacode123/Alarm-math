@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import { X } from "lucide-react";
+import { useLocation } from "wouter";
 
 const DAYS = [
   { value: "sun", label: "Sunday" },
@@ -26,7 +28,9 @@ const DAYS = [
   { value: "thu", label: "Thursday" },
   { value: "fri", label: "Friday" },
   { value: "sat", label: "Saturday" },
-];
+] as const;
+
+type Day = typeof DAYS[number]['value'];
 
 interface NewAlarmFormProps {
   onSuccess?: () => void;
@@ -37,6 +41,7 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
   const { createAlarm } = useAlarms();
   const { preview } = useSound();
   const [vibrationEnabled, setVibrationEnabled] = useState("vibrate" in navigator);
+  const [, setLocation] = useLocation();
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
@@ -292,7 +297,7 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
           </form>
         </Form>
       </div>
-      <div className="sticky bottom-0 pt-4 bg-background">
+      <div className="sticky bottom-0 pt-4 bg-background space-y-2">
         <Button
           type="submit"
           className="w-full"
@@ -301,6 +306,15 @@ export function NewAlarmForm({ onSuccess }: NewAlarmFormProps) {
           disabled={createAlarm.isPending}
         >
           Set Alarm
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => setLocation('/')}
+        >
+          <X className="w-4 h-4 mr-2" />
+          Cancel
         </Button>
       </div>
     </div>
