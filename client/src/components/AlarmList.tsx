@@ -148,8 +148,7 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
               <Card
                 data-alarm-id={alarm.id}
                 className={`bg-card/50 cursor-pointer hover:bg-card/70 transition-colors duration-200 
-                  ${isSelectionMode ? 'ring-primary' : ''} 
-                  ${selectedAlarms.has(alarm.id) ? 'ring-2' : ''}`}
+                  ${selectedAlarms.has(alarm.id) ? 'ring-2 ring-primary bg-primary/5' : ''}`}
                 onClick={() => handleClick(alarm)}
                 onTouchStart={() => handleTouchStart(alarm.id)}
                 onTouchEnd={handleTouchEnd}
@@ -178,9 +177,6 @@ export function AlarmList({ alarms, onDelete, onRename, onSelectionModeChange }:
                       {alarm.days.join(", ")} • {alarm.difficulty}
                     </div>
                   </div>
-                  {isSelectionMode && selectedAlarms.has(alarm.id) && (
-                    <Check className="h-4 w-4 text-primary" />
-                  )}
                 </div>
               </Card>
             </motion.div>
