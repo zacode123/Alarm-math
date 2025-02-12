@@ -125,17 +125,19 @@ export default function RecentAlarms() {
 
       {/* Edit Alarm Dialog */}
       <Dialog open={!!editingAlarm} onOpenChange={(open) => !open && setEditingAlarm(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Alarm</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogTitle className="text-xl font-semibold">Edit Alarm</DialogTitle>
           </DialogHeader>
-          {editingAlarm && (
-            <NewAlarmForm
-              defaultValues={editingAlarm}
-              onSuccess={() => setEditingAlarm(null)}
-              onCancel={() => setEditingAlarm(null)}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto px-6 pb-6">
+            {editingAlarm && (
+              <NewAlarmForm
+                defaultValues={editingAlarm}
+                onSuccess={() => setEditingAlarm(null)}
+                onCancel={() => setEditingAlarm(null)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
