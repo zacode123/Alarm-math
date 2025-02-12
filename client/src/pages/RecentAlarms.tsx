@@ -144,7 +144,10 @@ export default function RecentAlarms() {
       <AlertDialog open={showNewAlarmForm} onOpenChange={setShowNewAlarmForm}>
         <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Set New Alarm</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl">Set New Alarm</AlertDialogTitle>
+            <AlertDialogDescription>
+              Configure your new alarm with the settings below
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <NewAlarmForm onSuccess={() => setShowNewAlarmForm(false)} />
         </AlertDialogContent>
