@@ -136,13 +136,40 @@ export function AlarmList({ alarms, onDelete, onRename }: AlarmListProps) {
       ))}
 
       {selectMode && (
-        <Button
-          variant="outline"
-          className="w-full mt-4"
-          onClick={exitSelectMode}
-        >
-          Cancel
-        </Button>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
+          <div className="flex gap-2 max-w-6xl mx-auto">
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={handleDelete}
+              disabled={selectedAlarms.size === 0}
+            >
+              Delete ({selectedAlarms.size})
+            </Button>
+            {onRename && (
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  const selectedId = Array.from(selectedAlarms)[0];
+                  if (selectedId && selectedAlarms.size === 1) {
+                    onRename(selectedId);
+                  }
+                }}
+                disabled={selectedAlarms.size !== 1}
+              >
+                Rename
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={exitSelectMode}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

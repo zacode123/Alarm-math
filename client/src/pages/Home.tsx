@@ -252,6 +252,14 @@ export default function Home() {
     preview(sound as keyof typeof SOUNDS, volume ?? previewVolume / 100);
   };
 
+  const handleRenameAlarm = (id: number) => {
+    // TODO: Implement rename functionality when requested
+    toast({
+      title: "Coming soon",
+      description: "Rename functionality will be added in a future update.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <motion.div
@@ -568,6 +576,7 @@ export default function Home() {
                         description: `Successfully deleted ${ids.length} alarm${ids.length > 1 ? 's' : ''}.`
                       });
                     }}
+                    onRename={handleRenameAlarm}
                   />
                 )}
               </CardContent>
