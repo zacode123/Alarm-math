@@ -1,4 +1,5 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, CheckSquare, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -15,15 +16,16 @@ export function TabsLayout({ children, activeTab, onTabChange, hideNavigation }:
       <div className="pb-16">
         {children}
       </div>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {!hideNavigation && (
           <motion.div
             initial={{ y: 100 }}
             animate={{ y: 0 }}
             exit={{ y: 100 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-0 left-0 right-0 bg-background"
           >
-            <TabsList className="fixed bottom-0 left-0 right-0 grid w-full grid-cols-3 bg-background border-t">
+            <TabsList className="grid w-full grid-cols-3 border-t">
               <TabsTrigger value="recent" className="flex flex-col gap-1 py-2">
                 <Clock className="h-5 w-5" />
                 <span className="text-xs">Recent</span>
