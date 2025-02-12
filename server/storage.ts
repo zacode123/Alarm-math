@@ -19,7 +19,7 @@ export class DatabaseStorage implements IStorage {
       .insert(alarms)
       .values({
         ...insertAlarm,
-        created: Date.now()
+        created: Math.floor(Date.now() / 1000) // Convert to Unix timestamp (seconds)
       })
       .returning();
     return alarm;
