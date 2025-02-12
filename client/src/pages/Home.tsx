@@ -34,8 +34,9 @@ const DAYS = [
 
 export default function Home() {
   const { toast } = useToast();
-  const { alarms, isLoading, createAlarm, deleteAlarm } = useAlarms();
+  const { alarms, isLoading, createAlarm, deleteAlarm, updateAlarm } = useAlarms();
   const [activeAlarm, setActiveAlarm] = useState<number | null>(null);
+  const [solvedCount, setSolvedCount] = useState(0);
   const { problem, generateProblem, checkAnswer } = useMathProblem("easy");
   const { play, stop } = useSound();
   const [completedAlarms, setCompletedAlarms] = useState<Array<{ id: number, time: string, date: string }>>([]);
@@ -70,19 +71,22 @@ export default function Home() {
       alarms.forEach(alarm => {
         if (alarm.enabled && alarm.time === currentTime && alarm.days.includes(currentDay) && !activeAlarm) {
           setActiveAlarm(alarm.id);
+          setSolvedCount(0);
           generateProblem();
           try {
             play(alarm.sound as any);
           } catch (error) {
             console.warn('Sound playback not supported:', error);
           }
+          // Disable the alarm after triggering
+          updateAlarm.mutate({ id: alarm.id, enabled: false });
         }
       });
     };
 
     const interval = setInterval(checkAlarms, 1000);
     return () => clearInterval(interval);
-  }, [alarms, activeAlarm, generateProblem, play]);
+  }, [alarms, activeAlarm, generateProblem, play, updateAlarm]);
 
   const onSubmit = (data: InsertAlarm) => {
     if (data.days.length === 0) {
@@ -109,25 +113,37 @@ export default function Home() {
     e.preventDefault();
     const answer = parseFloat((e.target as any).answer.value);
     if (checkAnswer(answer)) {
-      try {
-        stop();
-      } catch (error) {
-        console.warn('Could not stop sound:', error);
+      const newSolvedCount = solvedCount + 1;
+      setSolvedCount(newSolvedCount);
+
+      if (newSolvedCount >= 3) {
+        try {
+          stop();
+        } catch (error) {
+          console.warn('Could not stop sound:', error);
+        }
+        const completedAlarm = alarms.find(a => a.id === activeAlarm);
+        if (completedAlarm) {
+          setCompletedAlarms(prev => [{
+            id: completedAlarm.id,
+            time: completedAlarm.time,
+            date: format(new Date(), "MMM dd, yyyy")
+          }, ...prev.slice(0, 9)]);
+        }
+        setActiveAlarm(null);
+        setSolvedCount(0);
+        toast({
+          title: "Alarm completed",
+          description: "Great job solving all math problems!",
+        });
+      } else {
+        generateProblem();
+        toast({
+          title: `${newSolvedCount}/3 completed`,
+          description: "Keep going! Solve two more problems.",
+        });
       }
-      const completedAlarm = alarms.find(a => a.id === activeAlarm);
-      if (completedAlarm) {
-        setCompletedAlarms(prev => [{
-          id: completedAlarm.id,
-          time: completedAlarm.time,
-          date: format(new Date(), "MMM dd, yyyy")
-        }, ...prev.slice(0, 9)]);
-      }
-      setActiveAlarm(null);
       (e.target as HTMLFormElement).reset();
-      toast({
-        title: "Alarm completed",
-        description: "Great job solving the math problem!",
-      });
     } else {
       toast({
         title: "Wrong answer",
@@ -167,7 +183,7 @@ export default function Home() {
             >
               <Card className="border-primary animate-pulse">
                 <CardContent className="p-8">
-                  <h2 className="text-2xl font-bold mb-6">Wake Up Challenge</h2>
+                  <h2 className="text-2xl font-bold mb-6">Wake Up Challenge ({solvedCount + 1}/3)</h2>
                   <form onSubmit={handleAnswerSubmit} className="space-y-6">
                     <div className="text-2xl font-mono bg-secondary/10 p-4 rounded-lg text-center">
                       {problem.question}
@@ -309,7 +325,7 @@ export default function Home() {
                       name="sound"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Sound (Optional - may not work in all browsers)</FormLabel>
+                          <FormLabel>Sound</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>

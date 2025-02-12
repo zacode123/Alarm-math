@@ -32,6 +32,10 @@ export function useMathProblem(difficulty: Difficulty) {
         answer = a + b;
         break;
       case "-":
+        // Ensure subtraction results in positive numbers
+        if (b > a) {
+          [a, b] = [b, a];
+        }
         answer = a - b;
         break;
       case "*":
