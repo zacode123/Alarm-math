@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Plus, Trash2, Check, History, Bell, Moon, Trash, Vibrate, BellRing } from "lucide-react";
+import { Clock, Plus, Trash2, Check, History, Bell, Moon, BellRing, Vibrate } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
@@ -49,6 +49,7 @@ export default function Home() {
   const [completedAlarms, setCompletedAlarms] = useState<Array<{ id: number, time: string, date: string }>>([]);
   const [previewVolume, setPreviewVolume] = useState(100);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+  const [vibrationEnabled, setVibrationEnabled] = useState("vibrate" in navigator);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -75,6 +76,7 @@ export default function Home() {
       volume: 100,
       enabled: true,
       autoDelete: false,
+      vibration: vibrationEnabled, // Added vibration default value
     },
   });
 
@@ -107,8 +109,8 @@ export default function Home() {
             console.warn('Sound playback not supported:', error);
           }
 
-          // Vibrate if supported
-          if ("vibrate" in navigator) {
+          // Vibrate if supported and enabled
+          if ("vibrate" in navigator && alarm.vibration) {
             navigator.vibrate([200, 100, 200]);
           }
 
@@ -326,7 +328,7 @@ export default function Home() {
                                       className="flex flex-row items-center space-x-2 space-y-0"
                                     >
                                       <FormControl>
-                                        <Checkbox
+                                        <Switch
                                           checked={field.value?.includes(day.value)}
                                           onCheckedChange={(checked) => {
                                             return checked
@@ -433,40 +435,48 @@ export default function Home() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="autoDelete"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Auto Delete
-                            </FormLabel>
-                            <div className="text-sm text-muted-foreground">
-                              Delete alarm after it goes off
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="autoDelete"
+                        render={({ field }) => (
+                          <div className="flex items-center justify-between py-2">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">Auto Delete</FormLabel>
+                              <p className="text-sm text-muted-foreground">
+                                Delete alarm after it goes off
+                              </p>
                             </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
                           </div>
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                        )}
+                      />
 
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      {notificationPermission === "granted" ? (
-                        <div className="flex items-center gap-2">
-                          <BellRing className="h-4 w-4" />
-                          <span>Notifications enabled</span>
+                      {"vibrate" in navigator && (
+                        <div className="flex items-center justify-between py-2">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Vibration</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Vibrate when alarm goes off
+                            </p>
+                          </div>
+                          <Switch
+                            checked={vibrationEnabled}
+                            onCheckedChange={setVibrationEnabled}
+                          />
                         </div>
-                      ) : (
+                      )}
+
+                      {notificationPermission !== "granted" && (
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
+                          className="w-full"
                           onClick={() => {
                             if ("Notification" in window) {
                               Notification.requestPermission().then(setNotificationPermission);
@@ -476,13 +486,6 @@ export default function Home() {
                           <BellRing className="h-4 w-4 mr-2" />
                           Enable notifications
                         </Button>
-                      )}
-
-                      {"vibrate" in navigator && (
-                        <div className="flex items-center gap-2">
-                          <Vibrate className="h-4 w-4" />
-                          <span>Vibration enabled</span>
-                        </div>
                       )}
                     </div>
 
