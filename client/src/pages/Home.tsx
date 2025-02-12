@@ -416,17 +416,11 @@ export default function Home() {
                                       onValueChange={([value]) => {
                                         field.onChange(value);
                                         setPreviewVolume(value);
+                                        // Preview the sound whenever volume changes
+                                        handlePreviewSound(form.getValues("sound"), value / 100);
                                       }}
                                     />
                                     <span className="w-12 text-right">{field.value ?? 100}%</span>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() => handlePreviewSound(form.getValues("sound"), field.value)}
-                                    >
-                                      <Bell className="h-4 w-4" />
-                                    </Button>
                                   </div>
                                 </FormItem>
                               )}
