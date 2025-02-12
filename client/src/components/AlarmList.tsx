@@ -1,12 +1,9 @@
-
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { type Alarm } from "@shared/schema";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NewAlarmForm } from "./NewAlarmForm";
-import { cn } from "@/lib/utils";
 
 interface AlarmListProps {
   alarms: Alarm[];
@@ -17,18 +14,37 @@ export function AlarmList({ alarms, onDelete }: AlarmListProps) {
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
 
   if (alarms.length === 0) {
-    return <div className="text-muted-foreground">No active alarms</div>;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-center text-muted-foreground"
+      >
+        No active alarms
+      </motion.div>
+    );
   }
 
   return (
     <>
       <div className="space-y-4">      
-        <div className="space-y-2">
+        <AnimatePresence mode="popLayout">
           {alarms.map((alarm) => (
-            <motion.div key={alarm.id}>
+            <motion.div
+              key={alarm.id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{
+                type: "spring",
+                stiffness: 500,
+                damping: 30
+              }}
+            >
               <Card
                 data-alarm-id={alarm.id}
-                className="bg-card/50 cursor-pointer hover:bg-card/70 transition-colors"
+                className="bg-card/50 cursor-pointer hover:bg-card/70 transition-colors duration-200"
                 onClick={() => setEditingAlarm(alarm)}
               >
                 <div className="p-4">
@@ -40,21 +56,26 @@ export function AlarmList({ alarms, onDelete }: AlarmListProps) {
               </Card>
             </motion.div>
           ))}
-        </div>
+        </AnimatePresence>
       </div>
 
-      <Dialog open={!!editingAlarm} onOpenChange={(open) => !open && setEditingAlarm(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Alarm</DialogTitle>
+      <Dialog 
+        open={!!editingAlarm} 
+        onOpenChange={(open) => !open && setEditingAlarm(null)}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogTitle className="text-xl font-semibold">Edit Alarm</DialogTitle>
           </DialogHeader>
-          {editingAlarm && (
-            <NewAlarmForm
-              defaultValues={editingAlarm}
-              onSuccess={() => setEditingAlarm(null)}
-              onCancel={() => setEditingAlarm(null)}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto">
+            {editingAlarm && (
+              <NewAlarmForm
+                defaultValues={editingAlarm}
+                onSuccess={() => setEditingAlarm(null)}
+                onCancel={() => setEditingAlarm(null)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>

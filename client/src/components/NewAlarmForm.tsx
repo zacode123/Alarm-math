@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAlarmSchema, type InsertAlarm } from "@shared/schema";
+import { insertAlarmSchema, type InsertAlarm, type Alarm } from "@shared/schema";
 import { useAlarms } from "@/lib/useAlarms";
 import { useSound } from "@/lib/useSound";
 import {
@@ -31,18 +31,6 @@ const DAYS = [
 
 type Day = typeof DAYS[number]['value'];
 
-interface Alarm {
-  time: string;
-  days: Day[];
-  difficulty: "easy" | "medium" | "hard";
-  sound: "default" | "digital" | "beep";
-  volume: number;
-  enabled: boolean;
-  autoDelete: boolean;
-  vibration: boolean;
-}
-
-
 interface NewAlarmFormProps {
   onSuccess: () => void;
   onCancel: () => void;
@@ -51,7 +39,7 @@ interface NewAlarmFormProps {
 
 export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFormProps) {
   const { toast } = useToast();
-  const { createAlarm } = useAlarms();
+  const { createAlarm, updateAlarm } = useAlarms();
   const { preview } = useSound();
   const [vibrationEnabled, setVibrationEnabled] = useState(defaultValues?.vibration ?? ("vibrate" in navigator));
 
@@ -64,7 +52,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
       sound: "default",
       volume: 100,
       enabled: true,
-      autoDelete: false
+      autoDelete: false,
+      vibration: vibrationEnabled
     },
   });
 
@@ -91,16 +80,26 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
       vibration: vibrationEnabled
     };
 
-    createAlarm.mutate(alarmData, {
-      onSuccess: () => {
-        form.reset();
-        toast({
-          title: "Alarm created",
-          description: "Your alarm has been set successfully.",
+    const mutation = defaultValues
+      ? updateAlarm.mutate({ id: defaultValues.id, ...alarmData }, {
+          onSuccess: () => {
+            toast({
+              title: "Alarm updated",
+              description: "Your alarm has been updated successfully.",
+            });
+            onSuccess?.();
+          },
+        })
+      : createAlarm.mutate(alarmData, {
+          onSuccess: () => {
+            form.reset();
+            toast({
+              title: "Alarm created",
+              description: "Your alarm has been set successfully.",
+            });
+            onSuccess?.();
+          },
         });
-        onSuccess?.();
-      },
-    });
   };
 
   return (
@@ -302,31 +301,28 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFor
                 </div>
               )}
             </div>
-
           </form>
         </Form>
       </div>
-      <div className="sticky bottom-0 pt-4 bg-white space-y-2">
+      <div className="sticky bottom-0 py-4 bg-background border-t space-y-2">
         <Button
           type="submit"
           className="w-full"
           size="lg"
           onClick={form.handleSubmit(onSubmit)}
-          disabled={createAlarm.isPending}
+          disabled={createAlarm.isPending || updateAlarm.isPending}
         >
-          {defaultValues ? 'Edit Alarm' : 'Set Alarm'}
+          {defaultValues ? 'Save Changes' : 'Set Alarm'}
         </Button>
-        {!defaultValues && (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={onCancel}
-          >
-            <X className="w-4 h-4 mr-2" />
-            Cancel
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={onCancel}
+        >
+          <X className="w-4 h-4 mr-2" />
+          Cancel
+        </Button>
       </div>
     </div>
   );
