@@ -31,20 +31,33 @@ const DAYS = [
 
 type Day = typeof DAYS[number]['value'];
 
-interface NewAlarmFormProps {
-  onSuccess?: () => void;
-  onCancel?: () => void; 
+interface Alarm {
+  time: string;
+  days: Day[];
+  difficulty: "easy" | "medium" | "hard";
+  sound: "default" | "digital" | "beep";
+  volume: number;
+  enabled: boolean;
+  autoDelete: boolean;
+  vibration: boolean;
 }
 
-export function NewAlarmForm({ onSuccess, onCancel }: NewAlarmFormProps) {
+
+interface NewAlarmFormProps {
+  onSuccess: () => void;
+  onCancel: () => void;
+  defaultValues?: Alarm;
+}
+
+export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: NewAlarmFormProps) {
   const { toast } = useToast();
   const { createAlarm } = useAlarms();
   const { preview } = useSound();
-  const [vibrationEnabled, setVibrationEnabled] = useState("vibrate" in navigator);
+  const [vibrationEnabled, setVibrationEnabled] = useState(defaultValues?.vibration ?? ("vibrate" in navigator));
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
-    defaultValues: {
+    defaultValues: defaultValues ?? {
       time: "",
       days: DAYS.map(day => day.value),
       difficulty: "easy",
