@@ -15,8 +15,8 @@ export function TabsLayout({ children, activeTab, onTabChange, hideNavigation }:
       <div className="pb-16">
         {children}
       </div>
-      <AnimatePresence>
-        {!hideNavigation && (
+      {!hideNavigation && (
+        <AnimatePresence>
           <motion.div
             initial={{ y: 100 }}
             animate={{ y: 0 }}
@@ -38,8 +38,8 @@ export function TabsLayout({ children, activeTab, onTabChange, hideNavigation }:
               </TabsTrigger>
             </TabsList>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      )}
     </Tabs>
   );
 }
