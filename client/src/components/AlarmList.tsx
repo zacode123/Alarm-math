@@ -76,7 +76,13 @@ export function AlarmList({ alarms, onDelete }: AlarmListProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleSelectAll}
+            onClick={() => {
+              if (selectedAlarms.size === alarms.length) {
+                setSelectedAlarms(new Set());
+              } else {
+                setSelectedAlarms(new Set(alarms.map(alarm => alarm.id)));
+              }
+            }}
           >
             {selectedAlarms.size === alarms.length ? "Deselect All" : "Select All"}
           </Button>
