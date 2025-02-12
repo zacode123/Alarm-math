@@ -16,14 +16,15 @@ export function TabsLayout({ children, activeTab, onTabChange, hideNavigation }:
       <div className="pb-16">
         {children}
       </div>
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false}>
         {!hideNavigation && (
           <motion.div
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            exit={{ y: 100 }}
+            key="navigation"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 bg-background"
+            className="fixed bottom-0 left-0 right-0 bg-background z-50"
           >
             <TabsList className="grid w-full grid-cols-3 border-t">
               <TabsTrigger value="recent" className="flex flex-col gap-1 py-2">
