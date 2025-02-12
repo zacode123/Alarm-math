@@ -23,6 +23,13 @@ export default function RecentAlarms() {
   const { alarms, isLoading, deleteAlarm } = useAlarms();
   const [showNewAlarmForm, setShowNewAlarmForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedAlarms, setSelectedAlarms] = useState<number[]>([]);
+
+  const handleDelete = () => {
+    selectedAlarms.forEach(id => deleteAlarm.mutate(id));
+    setShowDeleteDialog(false);
+    setSelectedAlarms([]);
+  };
 
   return (
     <>
