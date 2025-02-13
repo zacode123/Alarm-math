@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { X, Check } from "lucide-react";
+import { X, Check, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
 export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
@@ -126,15 +126,17 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           <form className="space-y-4">
             <div className="flex items-center justify-between py-4 border-t">
               <span>Ringtone</span>
-              <Button variant="ghost" className="text-primary">
+              <Button variant="ghost" className="text-primary flex items-center gap-2">
                 Default ringtone (Morning dew)
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
 
             <div className="flex items-center justify-between py-4 border-t">
               <span>Repeat</span>
-              <Button variant="ghost" className="text-primary">
+              <Button variant="ghost" className="text-primary flex items-center gap-2">
                 Once
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
 
