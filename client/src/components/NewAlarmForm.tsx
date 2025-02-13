@@ -9,13 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { X, Check, ChevronRight, ChevronDown } from "lucide-react";
+import { X, Check, ChevronRight, Calendar, RepeatIcon, Repeat1, CalendarDays, Settings2 } from "lucide-react";
 import { format } from "date-fns";
 import { TimePicker } from "@/components/ui/time-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RingtoneCard } from "@/components/ui/ringtone-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 const RINGTONES = [
   { id: 'default', name: 'Morning dew' },
@@ -24,11 +25,11 @@ const RINGTONES = [
 ];
 
 const REPEAT_OPTIONS = [
-  { id: 'once', name: 'Once' },
-  { id: 'daily', name: 'Daily' },
-  { id: 'weekdays', name: 'Weekdays' },
-  { id: 'weekends', name: 'Weekends' },
-  { id: 'custom', name: 'Custom' },
+  { id: 'once', name: 'Once', icon: Calendar },
+  { id: 'daily', name: 'Daily', icon: RepeatIcon },
+  { id: 'weekdays', name: 'Weekdays', icon: Repeat1 },
+  { id: 'weekends', name: 'Weekends', icon: CalendarDays },
+  { id: 'custom', name: 'Custom', icon: Settings2 },
 ];
 
 export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
@@ -315,7 +316,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             <DialogHeader>
               <DialogTitle>Repeat</DialogTitle>
             </DialogHeader>
-            <div className="space-y-2">
+            <div className="grid gap-4 py-4">
               <AnimatePresence>
                 {REPEAT_OPTIONS.map((option) => (
                   <motion.div
@@ -323,14 +324,14 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="flex flex-col"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
-                    <Button
-                      type="button"
-                      variant="ghost"
+                    <Card
                       className={cn(
-                        "w-full justify-between text-sm py-6 relative overflow-hidden",
-                        expandedOption === option.id && "bg-primary/5"
+                        "p-4 cursor-pointer border-2 transition-colors duration-200",
+                        (expandedOption === option.id || selectedRepeat.id === option.id)
+                          ? "border-primary bg-primary/10"
+                          : "hover:border-primary/50"
                       )}
                       onClick={() => {
                         if (option.id === 'custom') {
@@ -341,23 +342,56 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                         }
                       }}
                     >
-                      <span className={cn(
-                        "transition-colors duration-200",
-                        expandedOption === option.id ? "text-primary font-medium" : ""
-                      )}>
-                        {option.name}
-                      </span>
-                      {option.id === 'custom' && (
-                        <motion.div
-                          animate={{
-                            rotate: expandedOption === 'custom' ? 90 : 0
-                          }}
-                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </motion.div>
-                      )}
-                    </Button>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <motion.div
+                            className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
+                              (expandedOption === option.id || selectedRepeat.id === option.id)
+                                ? "bg-primary"
+                                : "bg-muted"
+                            )}
+                            animate={{
+                              rotate: (expandedOption === option.id || selectedRepeat.id === option.id) ? [0, 360] : 0,
+                              scale: (expandedOption === option.id || selectedRepeat.id === option.id) ? [1, 1.1, 1] : 1
+                            }}
+                            transition={{
+                              duration: 0.5,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            {option.icon && (
+                              <option.icon
+                                className={cn(
+                                  "h-5 w-5 transition-colors duration-200",
+                                  (expandedOption === option.id || selectedRepeat.id === option.id)
+                                    ? "text-primary-foreground"
+                                    : "text-muted-foreground"
+                                )}
+                              />
+                            )}
+                          </motion.div>
+                          <span className={cn(
+                            "text-base transition-colors duration-200",
+                            (expandedOption === option.id || selectedRepeat.id === option.id)
+                              ? "text-primary font-medium"
+                              : "text-foreground"
+                          )}>
+                            {option.name}
+                          </span>
+                        </div>
+                        {option.id === 'custom' && (
+                          <motion.div
+                            animate={{
+                              rotate: expandedOption === 'custom' ? 90 : 0
+                            }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </motion.div>
+                        )}
+                      </div>
+                    </Card>
                     {option.id === 'custom' && (
                       <AnimatePresence>
                         {expandedOption === 'custom' && (
@@ -392,7 +426,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                             }}
                             className="overflow-hidden"
                           >
-                            <div className="px-4 py-2 space-y-3 bg-muted/50 rounded-lg m-2">
+                            <div className="px-4 py-2 space-y-3 bg-muted/50 rounded-lg mt-2">
                               {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
                                 <motion.div
                                   key={day}
