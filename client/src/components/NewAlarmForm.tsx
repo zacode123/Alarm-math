@@ -147,27 +147,6 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between p-4 border-b">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onCancel}
-          type="button"
-          className="hover:bg-transparent"
-        >
-          <X className="h-6 w-6" />
-        </Button>
-        <h1 className="text-base font-normal">Add alarm</h1>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={form.handleSubmit(onSubmit)}
-          type="submit"
-          className="hover:bg-transparent"
-        >
-          <Check className="h-6 w-6" />
-        </Button>
-      </div>
 
       <div className="p-4">
         <p className="text-sm text-muted-foreground text-center mb-8">

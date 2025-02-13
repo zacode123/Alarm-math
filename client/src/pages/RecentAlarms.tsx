@@ -59,8 +59,25 @@ export default function RecentAlarms() {
       {/* New Alarm Dialog */}
       <Dialog open={showNewAlarmForm} onOpenChange={setShowNewAlarmForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0">
-          <DialogHeader className="px-6 pt-6 pb-2">
+          <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowNewAlarmForm(false)}
+              className="hover:bg-transparent"
+            >
+              <X className="h-6 w-6" />
+            </Button>
             <DialogTitle className="text-xl font-semibold">Set New Alarm</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              form="new-alarm-form"
+              type="submit"
+              className="hover:bg-transparent"
+            >
+              <Check className="h-6 w-6" />
+            </Button>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <NewAlarmForm
