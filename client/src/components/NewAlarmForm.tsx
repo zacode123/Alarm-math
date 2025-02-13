@@ -35,8 +35,6 @@ function useRingtones() {
   ];
 }
 
-const RINGTONES = useRingtones();
-
 const REPEAT_OPTIONS = [
   { id: 'once', name: 'Once', icon: Calendar },
   { id: 'daily', name: 'Daily', icon: RepeatIcon },
@@ -48,11 +46,11 @@ const REPEAT_OPTIONS = [
 export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   onSuccess: () => void;
   onCancel: () => void;
-  defaultValues?: InsertAlarm;
+  defaultValues?: Alarm;
 }) {
   const { toast } = useToast();
   const { createAlarm, updateAlarm } = useAlarms();
-  const { preview } = useSound();
+  const { preview, customRingtones } = useSound();
   const [vibrationEnabled, setVibrationEnabled] = useState(defaultValues?.vibration ?? ("vibrate" in navigator));
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     if (defaultValues?.time) {
@@ -64,12 +62,19 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     }
     return new Date();
   });
+
+  // Update RINGTONES to include custom ringtones
+  const allRingtones = useRingtones();
+
   const [showRingtones, setShowRingtones] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
-  const [selectedRingtone, setSelectedRingtone] = useState(RINGTONES[0]);
+  const [selectedRingtone, setSelectedRingtone] = useState(() => {
+    const defaultRingtone = allRingtones.find(r => r.id === defaultValues?.sound) || allRingtones[0];
+    return defaultRingtone;
+  });
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
   const [timeRemaining, setTimeRemaining] = useState("");
-  const [showCustomDays, setShowCustomDays] = useState(false);
+  const [expandedOption, setExpandedOption] = useState<string | null>(null);
   const [selectedDays, setSelectedDays] = useState<Record<string, boolean>>({
     mon: true,
     tue: true,
@@ -79,7 +84,6 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     sat: true,
     sun: true
   });
-  const [expandedOption, setExpandedOption] = useState<string | null>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -113,18 +117,21 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   });
 
   const onSubmit = async (data: InsertAlarm) => {
-    const formattedTime = format(selectedDate, "HH:mm");
-
-    const alarmData = {
-      ...data,
-      time: formattedTime,
-      vibration: vibrationEnabled,
-      sound: selectedRingtone.id as "default" | "digital" | "beep"
-    };
-
     try {
+      const formattedTime = format(selectedDate, "HH:mm");
+      const alarmData = {
+        ...data,
+        time: formattedTime,
+        vibration: vibrationEnabled,
+        sound: selectedRingtone.id,
+        created: Math.floor(Date.now() / 1000)
+      };
+
       if (defaultValues?.id) {
-        await updateAlarm.mutateAsync({ id: defaultValues.id, ...alarmData });
+        await updateAlarm.mutateAsync({
+          id: defaultValues.id,
+          ...alarmData
+        });
         toast({
           title: "Alarm updated",
           description: "Your alarm has been updated successfully.",
@@ -138,17 +145,18 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       }
       onSuccess();
     } catch (error) {
+      console.error('Error saving alarm:', error);
       toast({
         title: "Error",
-        description: "Failed to save alarm. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save alarm. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const handleRingtoneSelect = (ringtone: typeof RINGTONES[0]) => {
+  const handleRingtoneSelect = (ringtone: typeof allRingtones[0]) => {
     setSelectedRingtone(ringtone);
-    preview(ringtone.id as "default" | "digital" | "beep");
+    preview(ringtone.id);
   };
 
   const handleDayToggle = (day: string) => {
@@ -276,7 +284,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <AnimatePresence>
-                {RINGTONES.map((ringtone) => (
+                {allRingtones.map((ringtone) => (
                   <motion.div
                     key={ringtone.id}
                     initial={{ opacity: 0, y: 20 }}

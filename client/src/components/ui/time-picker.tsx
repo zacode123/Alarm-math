@@ -25,6 +25,11 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
     period: React.useRef<HTMLDivElement>(null)
   };
   const scrollTimeouts = React.useRef<Record<string, NodeJS.Timeout>>({});
+  const [isScrolling, setIsScrolling] = React.useState<Record<string, boolean>>({
+    hours: false,
+    minutes: false,
+    period: false
+  });
 
   // Initialize audio with lower volume
   React.useEffect(() => {
@@ -37,7 +42,7 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
 
   const playTickSound = React.useCallback(() => {
     const now = Date.now();
-    if (now - lastScrollTime > 25) { // Increased frequency for smoother sound
+    if (now - lastScrollTime > 25) {
       if (audioRef.current) {
         const newAudio = audioRef.current.cloneNode() as HTMLAudioElement;
         newAudio.play().catch(console.error);
@@ -50,6 +55,10 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
   const handleScroll = React.useCallback((element: HTMLDivElement, type: 'hours' | 'minutes' | 'period') => {
     if (scrollTimeouts.current[type]) {
       clearTimeout(scrollTimeouts.current[type]);
+    }
+
+    if (!isScrolling[type]) {
+      setIsScrolling(prev => ({ ...prev, [type]: true }));
     }
 
     playTickSound();
@@ -70,7 +79,7 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
         index = Math.min(1, Math.max(0, index));
       }
 
-      // Force scroll to nearest snap point for perfect alignment
+      // Force scroll to nearest snap point
       element.scrollTo({
         top: index * itemHeight,
         behavior: 'smooth'
@@ -93,10 +102,12 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
           newDate.setHours(currentHour - 12);
         }
       }
+
       setDate(newDate);
       onTimeUpdate?.(newDate.getHours(), newDate.getMinutes());
-    }, 100);
-  }, [date, setDate, onTimeUpdate, playTickSound]);
+      setIsScrolling(prev => ({ ...prev, [type]: false }));
+    }, 150);
+  }, [date, setDate, onTimeUpdate, playTickSound, isScrolling]);
 
   // Initialize scroll positions
   React.useEffect(() => {

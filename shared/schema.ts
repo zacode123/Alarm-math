@@ -24,6 +24,12 @@ export type WeekDay = z.infer<typeof WeekDay>;
 export const Difficulty = z.enum(['easy', 'medium', 'hard']);
 export type Difficulty = z.infer<typeof Difficulty>;
 
+// Define update schema that includes id
+export const updateAlarmSchema = createInsertSchema(alarms)
+  .extend({
+    id: z.number()
+  });
+
 export const insertAlarmSchema = createInsertSchema(alarms)
   .omit({ id: true, created: true })
   .extend({
@@ -38,4 +44,5 @@ export const insertAlarmSchema = createInsertSchema(alarms)
   });
 
 export type InsertAlarm = z.infer<typeof insertAlarmSchema>;
+export type UpdateAlarm = z.infer<typeof updateAlarmSchema>;
 export type Alarm = typeof alarms.$inferSelect;
