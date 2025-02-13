@@ -16,12 +16,20 @@ export const alarms = pgTable("alarms", {
   created: integer("created").notNull()
 });
 
+// Define weekday type
+export const WeekDay = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+export type WeekDay = z.infer<typeof WeekDay>;
+
+// Define difficulty type
+export const Difficulty = z.enum(['easy', 'medium', 'hard']);
+export type Difficulty = z.infer<typeof Difficulty>;
+
 export const insertAlarmSchema = createInsertSchema(alarms)
   .omit({ id: true, created: true })
   .extend({
     time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
-    days: z.array(z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])),
-    difficulty: z.enum(['easy', 'medium', 'hard']),
+    days: z.array(WeekDay),
+    difficulty: Difficulty,
     sound: z.string(),
     volume: z.number().min(0).max(100).default(100),
     autoDelete: z.boolean().default(false),

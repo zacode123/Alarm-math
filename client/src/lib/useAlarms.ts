@@ -9,17 +9,20 @@ export function useAlarms() {
 
   const { data: alarms = [], isLoading, error } = useQuery<Alarm[]>({
     queryKey: ["/api/alarms"],
-    onError: (err) => {
+    retry: 3,
+    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60, // 1 minute
+    onError: (error: Error) => {
       toast({
         title: "Error fetching alarms",
-        description: err.message,
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   const createAlarm = useMutation({
-    mutationFn: async (alarm: InsertAlarm) => {
+    mutationFn: async (alarm: InsertAlarm): Promise<Alarm> => {
       const res = await apiRequest("POST", "/api/alarms", alarm);
       return res.json();
     },
@@ -30,17 +33,17 @@ export function useAlarms() {
         description: "Your new alarm has been set successfully.",
       });
     },
-    onError: (err) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to create alarm",
-        description: err.message,
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   const updateAlarm = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<InsertAlarm> & { id: number }) => {
+    mutationFn: async ({ id, ...updates }: Partial<InsertAlarm> & { id: number }): Promise<Alarm> => {
       const res = await apiRequest("PATCH", `/api/alarms/${id}`, updates);
       return res.json();
     },
@@ -51,17 +54,17 @@ export function useAlarms() {
         description: "Your alarm has been updated successfully.",
       });
     },
-    onError: (err) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to update alarm",
-        description: err.message,
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   const deleteAlarm = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: number): Promise<void> => {
       await apiRequest("DELETE", `/api/alarms/${id}`);
     },
     onSuccess: () => {
@@ -71,10 +74,10 @@ export function useAlarms() {
         description: "Your alarm has been deleted successfully.",
       });
     },
-    onError: (err) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to delete alarm",
-        description: err.message,
+        description: error.message,
         variant: "destructive",
       });
     },

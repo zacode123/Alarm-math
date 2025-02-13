@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { type Alarm } from "@shared/schema";
+import { type Alarm, type WeekDay } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NewAlarmForm } from "./NewAlarmForm";
 import { Button } from "@/components/ui/button";
@@ -119,6 +119,19 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
     setSelectedAlarms(new Set());
   };
 
+  const formatDays = (days: string[]): string => {
+    const dayMap: Record<string, string> = {
+      'mon': 'Monday',
+      'tue': 'Tuesday',
+      'wed': 'Wednesday',
+      'thu': 'Thursday',
+      'fri': 'Friday',
+      'sat': 'Saturday',
+      'sun': 'Sunday'
+    };
+    return days.map(day => dayMap[day] || day).join(", ");
+  };
+
   if (alarms.length === 0) {
     return (
       <motion.div
@@ -184,12 +197,12 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
               >
                 <div className="p-4 flex items-center gap-4">
                   <div className="flex-1">
-                    {alarm.label ? (
+                    {alarm.label && (
                       <div className="text-xl font-bold mb-1">{alarm.label}</div>
-                    ) : null}
+                    )}
                     <div className="text-2xl font-bold">{alarm.time}</div>
                     <div className="text-sm text-muted-foreground">
-                      {alarm.days.join(", ")} • {alarm.difficulty}
+                      {formatDays(alarm.days)} • {alarm.difficulty}
                     </div>
                   </div>
                 </div>
