@@ -25,14 +25,7 @@ const DEFAULT_RINGTONES = [
 ];
 
 function useRingtones() {
-  const { customRingtones } = useSound();
-  return [
-    ...DEFAULT_RINGTONES,
-    ...customRingtones.map((url, index) => ({
-      id: url,
-      name: `Custom Ringtone ${index + 1}`
-    }))
-  ];
+  return DEFAULT_RINGTONES;
 }
 
 const REPEAT_OPTIONS = [
@@ -63,7 +56,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     return new Date();
   });
 
-  // Update RINGTONES to include custom ringtones
+  // Use only default ringtones
   const allRingtones = useRingtones();
 
   const [showRingtones, setShowRingtones] = useState(false);
