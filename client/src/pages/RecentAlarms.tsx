@@ -28,7 +28,7 @@ export default function RecentAlarms() {
       <div className="p-4 pb-20">
         <div className="space-y-4">
           {isLoading ? (
-            <div className="text-center text-muted-foreground">Loading alarms...</div>
+            <div className="h-[80vh] flex items-center justify-center text-center text-muted-foreground">Loading alarms...</div>
           ) : (
             <AlarmList
               alarms={alarms}
