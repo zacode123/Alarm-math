@@ -9,11 +9,21 @@ import { AlarmList } from "@/components/AlarmList";
 import { TabsLayout } from "@/components/layout/TabsLayout";
 import { useToast } from "@/hooks/use-toast";
 
-export default function RecentAlarms() {
+interface RecentAlarmsProps {
+  onSelectionModeChange?: (mode: boolean) => void;
+}
+
+export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProps) {
   const { toast } = useToast();
   const { alarms, isLoading, deleteAlarm } = useAlarms();
   const [showNewAlarmForm, setShowNewAlarmForm] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+
+  // Update parent component's selection mode state
+  const handleSelectionModeChange = (mode: boolean) => {
+    setIsSelectionMode(mode);
+    onSelectionModeChange?.(mode);
+  };
 
   const handleDelete = (ids: number[]) => {
     ids.forEach(id => deleteAlarm.mutate(id));
@@ -33,7 +43,7 @@ export default function RecentAlarms() {
             <AlarmList
               alarms={alarms}
               onDelete={handleDelete}
-              onSelectionModeChange={setIsSelectionMode}
+              onSelectionModeChange={handleSelectionModeChange}
             />
           )}
         </div>
