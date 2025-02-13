@@ -354,7 +354,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                               ease: "easeInOut"
                             }}
                           >
-                            <Volume2
+                            <Music2
                               className={cn(
                                 "h-5 w-5 transition-colors duration-200",
                                 selectedRingtone.id === ringtone.id
