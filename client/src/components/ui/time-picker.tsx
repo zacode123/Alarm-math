@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 interface TimePickerProps {
   date: Date;
   setDate: (date: Date) => void;
+  onTimeUpdate?: (hours: number, minutes: number) => void;
 }
 
 const generateTimeOptions = () => {
@@ -14,16 +15,21 @@ const generateTimeOptions = () => {
   return { hours, minutes, periods };
 };
 
-export function TimePicker({ date, setDate }: TimePickerProps) {
+export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
   const { hours: hourOptions, minutes: minuteOptions, periods } = generateTimeOptions();
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [lastScrollTime, setLastScrollTime] = React.useState(0);
-  const scrollTimeout = React.useRef<NodeJS.Timeout | null>(null);
+  const scrollTimeouts = React.useRef<Record<string, NodeJS.Timeout>>({});
+  const scrollRefs = {
+    hours: React.useRef<HTMLDivElement>(null),
+    minutes: React.useRef<HTMLDivElement>(null),
+    period: React.useRef<HTMLDivElement>(null)
+  };
 
-  // Initialize audio
+  // Initialize audio with lower volume
   React.useEffect(() => {
     audioRef.current = new Audio('/sounds/beep.mp3');
-    audioRef.current.volume = 0.2;
+    audioRef.current.volume = 0.1;
     return () => {
       if (audioRef.current) {
         audioRef.current = null;
@@ -33,7 +39,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
 
   const playTickSound = React.useCallback(() => {
     const now = Date.now();
-    if (now - lastScrollTime > 50) {
+    if (now - lastScrollTime > 30) { // Increased frequency for smoother sound
       if (audioRef.current) {
         const newAudio = audioRef.current.cloneNode() as HTMLAudioElement;
         newAudio.play().catch(console.error);
@@ -44,17 +50,15 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
   }, [lastScrollTime]);
 
   const handleScroll = React.useCallback((element: HTMLDivElement, type: 'hours' | 'minutes' | 'period') => {
-    if (scrollTimeout.current) {
-      clearTimeout(scrollTimeout.current);
+    if (scrollTimeouts.current[type]) {
+      clearTimeout(scrollTimeouts.current[type]);
     }
 
     playTickSound();
 
-    scrollTimeout.current = setTimeout(() => {
-      const containerHeight = element.clientHeight;
-      const scrollPosition = element.scrollTop;
+    scrollTimeouts.current[type] = setTimeout(() => {
       const itemHeight = 72;
-
+      const scrollPosition = element.scrollTop;
       let index = Math.round(scrollPosition / itemHeight);
 
       // Handle infinite scroll wrapping
@@ -65,8 +69,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
         if (index >= 60) index = 0;
         if (index < 0) index = 59;
       } else if (type === 'period') {
-        if (index >= 2) index = 0;
-        if (index < 1) index = 1;
+        index = Math.min(1, Math.max(0, index));
       }
 
       // Smooth scroll to nearest snap point
@@ -93,14 +96,40 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
         }
       }
       setDate(newDate);
-    }, 150);
-  }, [date, setDate, playTickSound]);
+      onTimeUpdate?.(newDate.getHours(), newDate.getMinutes());
+    }, 100);
+  }, [date, setDate, onTimeUpdate, playTickSound]);
+
+  // Initialize scroll positions
+  React.useEffect(() => {
+    const initializeScroll = (type: 'hours' | 'minutes' | 'period') => {
+      const ref = scrollRefs[type];
+      if (!ref.current) return;
+
+      let scrollIndex = 0;
+      if (type === 'hours') {
+        scrollIndex = date.getHours() % 12;
+        if (scrollIndex === 0) scrollIndex = 12;
+      } else if (type === 'minutes') {
+        scrollIndex = date.getMinutes();
+      } else if (type === 'period') {
+        scrollIndex = date.getHours() >= 12 ? 1 : 0;
+      }
+
+      ref.current.scrollTop = scrollIndex * 72;
+    };
+
+    Object.keys(scrollRefs).forEach((type) => {
+      initializeScroll(type as 'hours' | 'minutes' | 'period');
+    });
+  }, [date]);
 
   return (
     <div className="flex items-center gap-8">
       <div className="w-[80px]">
         <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
           <div 
+            ref={scrollRefs.hours}
             className="flex flex-col items-center snap-y snap-mandatory"
             onScroll={(e) => handleScroll(e.currentTarget, 'hours')}
             style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
@@ -128,6 +157,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
       <div className="w-[80px]">
         <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
           <div 
+            ref={scrollRefs.minutes}
             className="flex flex-col items-center snap-y snap-mandatory"
             onScroll={(e) => handleScroll(e.currentTarget, 'minutes')}
             style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
@@ -153,6 +183,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
       <div className="w-[80px]">
         <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
           <div 
+            ref={scrollRefs.period}
             className="flex flex-col items-center snap-y snap-mandatory"
             onScroll={(e) => handleScroll(e.currentTarget, 'period')}
             style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}

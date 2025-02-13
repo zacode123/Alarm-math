@@ -51,6 +51,23 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const [showRepeat, setShowRepeat] = useState(false);
   const [selectedRingtone, setSelectedRingtone] = useState(RINGTONES[0]);
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
+  const [timeRemaining, setTimeRemaining] = useState("");
+
+  useEffect(() => {
+    const now = new Date();
+    const targetTime = new Date(now);
+    targetTime.setHours(selectedDate.getHours());
+    targetTime.setMinutes(selectedDate.getMinutes());
+
+    if (targetTime < now) {
+      targetTime.setDate(targetTime.getDate() + 1);
+    }
+
+    const diffHours = Math.floor((targetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(((targetTime.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
+
+    setTimeRemaining(`Alarm in ${diffHours} hours ${diffMinutes} minutes`);
+  }, [selectedDate]);
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
@@ -133,11 +150,29 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
       <div className="p-4">
         <p className="text-sm text-muted-foreground text-center mb-8">
-          Alarm in {format(selectedDate, "H")} hours {format(selectedDate, "m")} minutes
+          {timeRemaining}
         </p>
 
         <div className="flex justify-center items-center mb-12">
-          <TimePicker date={selectedDate} setDate={setSelectedDate} />
+          <TimePicker 
+            date={selectedDate} 
+            setDate={setSelectedDate}
+            onTimeUpdate={() => {
+              const now = new Date();
+              const targetTime = new Date(now);
+              targetTime.setHours(selectedDate.getHours());
+              targetTime.setMinutes(selectedDate.getMinutes());
+
+              if (targetTime < now) {
+                targetTime.setDate(targetTime.getDate() + 1);
+              }
+
+              const diffHours = Math.floor((targetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+              const diffMinutes = Math.floor(((targetTime.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
+
+              setTimeRemaining(`Alarm in ${diffHours} hours ${diffMinutes} minutes`);
+            }}
+          />
         </div>
 
         <Form {...form}>
