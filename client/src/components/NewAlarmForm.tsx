@@ -412,7 +412,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             <DialogDescription className="text-center pt-2">
               Choose when you want this alarm to repeat.
             </DialogDescription>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
               <AnimatePresence>
                 {REPEAT_OPTIONS.map((option) => (
                   <motion.div
