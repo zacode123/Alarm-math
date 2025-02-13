@@ -426,7 +426,6 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                           setExpandedOption(expandedOption === 'custom' ? null : 'custom');
                         } else {
                           setSelectedRepeat(option);
-                          setShowRepeat(false);
                         }
                       }}
                     >
