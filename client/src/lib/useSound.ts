@@ -10,30 +10,34 @@ type SoundType = keyof typeof SOUNDS;
 
 export function useSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [customRingtones, setCustomRingtones] = useState<string[]>(() => {
+  const [customRingtones, setCustomRingtones] = useState<({ url: string; data: string } | string)[]>(() => {
     try {
       const saved = localStorage.getItem('customRingtones');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? JSON.parse(saved).map(item => ({...item, url: URL.createObjectURL(new Blob([Buffer.from(item.data, 'base64')], {type: 'audio/mpeg'})) })) : [];
     } catch (error) {
       console.error('Error parsing custom ringtones:', error);
       return [];
     }
   });
 
-  const play = useCallback((sound: SoundType | string, volume: number = 1.0) => {
+  const play = useCallback((sound: SoundType | string | { url: string; data: string }, volume: number = 1.0) => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
 
     let audioSrc: string;
-    if (sound in SOUNDS) {
-      audioSrc = SOUNDS[sound as SoundType];
-    } else if (customRingtones.includes(sound)) {
-      audioSrc = sound;
+    if (typeof sound === 'string') {
+      if (sound in SOUNDS) {
+        audioSrc = SOUNDS[sound as SoundType];
+      } else if (customRingtones.some(r => typeof r === 'string' ? r === sound : r.url === sound)) {
+        audioSrc = typeof sound === 'string' ? sound : sound.url;
+      } else {
+        console.error("Invalid sound:", sound);
+        return;
+      }
     } else {
-      console.error("Invalid sound:", sound);
-      return;
+      audioSrc = sound.url;
     }
 
     const audio = new Audio(audioSrc);
@@ -48,15 +52,19 @@ export function useSound() {
     });
   }, [customRingtones]);
 
-  const preview = useCallback((sound: SoundType | string, volume: number = 1.0) => {
+  const preview = useCallback((sound: SoundType | string | { url: string; data: string }, volume: number = 1.0) => {
     let audioSrc: string;
-    if (sound in SOUNDS) {
-      audioSrc = SOUNDS[sound as SoundType];
-    } else if (customRingtones.includes(sound)) {
-      audioSrc = sound;
+    if (typeof sound === 'string') {
+      if (sound in SOUNDS) {
+        audioSrc = SOUNDS[sound as SoundType];
+      } else if (customRingtones.some(r => typeof r === 'string' ? r === sound : r.url === sound)) {
+          audioSrc = typeof sound === 'string' ? sound : sound.url;
+      } else {
+        console.error("Invalid sound for preview:", sound);
+        return;
+      }
     } else {
-      console.error("Invalid sound for preview:", sound);
-      return;
+      audioSrc = sound.url;
     }
 
     const audio = new Audio(audioSrc);
@@ -77,10 +85,10 @@ export function useSound() {
     }
   }, []);
 
-  const updateCustomRingtones = (ringtones: string[]) => {
+  const updateCustomRingtones = (ringtones: ({ url: string; data: string } | string)[]) => {
     try {
       setCustomRingtones(ringtones);
-      localStorage.setItem('customRingtones', JSON.stringify(ringtones));
+      localStorage.setItem('customRingtones', JSON.stringify(ringtones.map(r => typeof r === 'string' ? {data: r} : { data: r.data })));
     } catch (error) {
       console.error('Error saving custom ringtones:', error);
     }
