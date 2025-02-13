@@ -1,23 +1,40 @@
 import { useCallback, useEffect, useState } from "react";
 
-export function useSound(soundName: string, volume: number = 100) {
+type SoundName = "default" | "digital" | "beep";
+
+export interface CustomRingtone {
+  id: string;
+  url: string;
+  name: string;
+}
+
+export function useSound(soundName?: string, defaultVolume: number = 100) {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [customRingtones, setCustomRingtones] = useState<CustomRingtone[]>([]);
 
   useEffect(() => {
-    const newAudio = new Audio(`/sounds/${soundName}.mp3`);
-    newAudio.volume = volume / 100;
-    setAudio(newAudio);
+    if (soundName) {
+      const newAudio = new Audio(`/sounds/${soundName}.mp3`);
+      newAudio.volume = defaultVolume / 100;
+      setAudio(newAudio);
 
-    return () => {
-      if (newAudio) {
-        newAudio.pause();
-        newAudio.src = "";
-      }
-    };
-  }, [soundName, volume]);
+      return () => {
+        if (newAudio) {
+          newAudio.pause();
+          newAudio.src = "";
+        }
+      };
+    }
+  }, [soundName, defaultVolume]);
 
-  const play = useCallback(() => {
+  const play = useCallback((sound?: string, volume?: number) => {
     if (audio) {
+      if (sound) {
+        audio.src = `/sounds/${sound}.mp3`;
+      }
+      if (typeof volume === 'number') {
+        audio.volume = volume;
+      }
       audio.currentTime = 0;
       audio.play().catch(error => {
         console.error('Error playing sound:', error);
@@ -32,5 +49,23 @@ export function useSound(soundName: string, volume: number = 100) {
     }
   }, [audio]);
 
-  return { play, stop };
+  const preview = useCallback((sound: SoundName | string, volume: number = 1) => {
+    const previewAudio = new Audio(
+      sound.startsWith('http') ? sound : `/sounds/${sound}.mp3`
+    );
+    previewAudio.volume = volume;
+    previewAudio.play().catch(error => {
+      console.error('Error playing preview sound:', error);
+    });
+  }, []);
+
+  return { 
+    play, 
+    stop, 
+    preview, 
+    customRingtones,
+    addCustomRingtone: (ringtone: CustomRingtone) => {
+      setCustomRingtones(prev => [...prev, ringtone]);
+    }
+  };
 }
