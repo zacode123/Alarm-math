@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const RINGTONES = [
   { id: 'default', name: 'Morning dew' },
@@ -33,6 +34,12 @@ const REPEAT_OPTIONS = [
   { id: 'weekends', name: 'Weekends' },
   { id: 'custom', name: 'Custom' },
 ];
+
+const generateTimeOptions = () => {
+  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+  return { hours, minutes };
+};
 
 export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   onSuccess: () => void;
@@ -50,6 +57,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const [showRepeat, setShowRepeat] = useState(false);
   const [selectedRingtone, setSelectedRingtone] = useState(RINGTONES[0]);
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
+  const { hours: hourOptions, minutes: minuteOptions } = generateTimeOptions();
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
@@ -67,7 +75,6 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   });
 
   const onSubmit = (data: InsertAlarm) => {
-    const time = `${hours}:${minutes}`;
     const formattedTime = format(new Date(`2000-01-01 ${hours}:${minutes} ${ampm}`), "HH:mm");
 
     const alarmData = {
@@ -113,47 +120,51 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
       <div className="p-4">
         <p className="text-sm text-muted-foreground text-center mb-8">
-          Alarm in {hours} hours {minutes} minutes
+          Alarm in 23 hours 59 minutes
         </p>
 
         <div className="flex justify-center items-center gap-8 mb-12">
-          <button 
-            className="text-4xl font-light text-muted-foreground focus:outline-none"
-            onClick={() => setAmpm(ampm === "AM" ? "PM" : "AM")}
-          >
-            {ampm}
-          </button>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={hours}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (/^\d{0,2}$/.test(val)) {
-                  const num = parseInt(val || "0");
-                  if (num >= 0 && num <= 12) {
-                    setHours(val.padStart(2, '0'));
-                  }
-                }
-              }}
-              className="text-4xl font-light w-24 text-center bg-transparent border-none focus:outline-none"
-            />
-            <span className="text-4xl">:</span>
-            <input
-              type="text"
-              value={minutes}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (/^\d{0,2}$/.test(val)) {
-                  const num = parseInt(val || "0");
-                  if (num >= 0 && num <= 59) {
-                    setMinutes(val.padStart(2, '0'));
-                  }
-                }
-              }}
-              className="text-4xl font-light w-24 text-center bg-transparent border-none focus:outline-none"
-            />
+          <div className="flex items-center">
+            <ScrollArea className="h-[200px] w-[60px] rounded-md">
+              <div className="flex flex-col items-center">
+                {hourOptions.map((h) => (
+                  <button
+                    key={h}
+                    onClick={() => setHours(h)}
+                    className={`w-full py-3 text-xl ${hours === h ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+            <span className="text-4xl mx-2">:</span>
+            <ScrollArea className="h-[200px] w-[60px] rounded-md">
+              <div className="flex flex-col items-center">
+                {minuteOptions.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setMinutes(m)}
+                    className={`w-full py-3 text-xl ${minutes === m ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+            <ScrollArea className="h-[200px] w-[60px] rounded-md ml-4">
+              <div className="flex flex-col items-center">
+                {["AM", "PM"].map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setAmpm(period)}
+                    className={`w-full py-3 text-xl ${ampm === period ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                  >
+                    {period}
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         </div>
 
