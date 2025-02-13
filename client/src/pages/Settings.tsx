@@ -34,16 +34,21 @@ export default function Settings() {
     document.documentElement.classList.toggle('dark');
   };
 
-  const handleRingtoneUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRingtoneUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith('audio/')) {
-        const audioUrl = URL.createObjectURL(file);
-        setCustomRingtones([...customRingtones, audioUrl]);
-        toast({
-          title: "Ringtone added",
-          description: `${file.name} has been added to your custom ringtones.`,
-        });
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64Data = (e.target?.result as string).split(',')[1];
+          const audioUrl = URL.createObjectURL(file);
+          setCustomRingtones([...customRingtones, { url: audioUrl, data: base64Data }]);
+          toast({
+            title: "Ringtone added",
+            description: `${file.name} has been added to your custom ringtones.`,
+          });
+        };
+        reader.readAsDataURL(file);
       } else {
         toast({
           title: "Invalid file",
