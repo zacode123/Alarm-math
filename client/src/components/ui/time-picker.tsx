@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -24,14 +25,7 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
     minutes: React.useRef<HTMLDivElement>(null),
     period: React.useRef<HTMLDivElement>(null)
   };
-  const scrollTimeouts = React.useRef<Record<string, NodeJS.Timeout>>({});
-  const [isScrolling, setIsScrolling] = React.useState<Record<string, boolean>>({
-    hours: false,
-    minutes: false,
-    period: false
-  });
 
-  // Initialize audio with lower volume
   React.useEffect(() => {
     audioRef.current = new Audio('/sounds/beep.mp3');
     audioRef.current.volume = 0.1;
@@ -53,85 +47,66 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
   }, [lastScrollTime]);
 
   const handleScroll = React.useCallback((element: HTMLDivElement, type: 'hours' | 'minutes' | 'period') => {
-    if (scrollTimeouts.current[type]) {
-      clearTimeout(scrollTimeouts.current[type]);
-    }
+    const itemHeight = 72;
+    const scrollPosition = element.scrollTop;
+    let index = Math.round(scrollPosition / itemHeight);
 
-    if (!isScrolling[type]) {
-      setIsScrolling(prev => ({ ...prev, [type]: true }));
+    if (type === 'hours') {
+      index = index % 12;
+      if (index === 0) index = 12;
+    } else if (type === 'minutes') {
+      index = index % 60;
+    } else if (type === 'period') {
+      index = index % 2;
     }
 
     playTickSound();
 
-    scrollTimeouts.current[type] = setTimeout(() => {
-      const itemHeight = 72;
-      const scrollPosition = element.scrollTop;
-      let index = Math.round(scrollPosition / itemHeight);
-
-      // Handle infinite scroll wrapping
-      if (type === 'hours') {
-        if (index >= 12) index = 0;
-        if (index < 0) index = 11;
-      } else if (type === 'minutes') {
-        if (index >= 60) index = 0;
-        if (index < 0) index = 59;
-      } else if (type === 'period') {
-        index = Math.min(1, Math.max(0, index));
+    // Update time
+    const newDate = new Date(date);
+    if (type === 'hours') {
+      const isPM = newDate.getHours() >= 12;
+      newDate.setHours(isPM ? (index === 12 ? 12 : index + 12) : (index === 12 ? 0 : index));
+    } else if (type === 'minutes') {
+      newDate.setMinutes(index);
+    } else if (type === 'period') {
+      const currentHours = newDate.getHours();
+      const currentPeriod = currentHours >= 12;
+      const newPeriod = index === 1;
+      
+      if (currentPeriod !== newPeriod) {
+        newDate.setHours((currentHours + 12) % 24);
       }
+    }
 
-      // Force scroll to nearest snap point
+    setDate(newDate);
+    onTimeUpdate?.(newDate.getHours(), newDate.getMinutes());
+
+    // Force scroll to nearest snap point
+    requestAnimationFrame(() => {
       element.scrollTo({
         top: index * itemHeight,
         behavior: 'smooth'
       });
-
-      // Update time
-      const newDate = new Date(date);
-      if (type === 'hours') {
-        const currentHour = index === 0 ? 12 : index;
-        const isPM = newDate.getHours() >= 12;
-        newDate.setHours(isPM ? (currentHour === 12 ? 12 : currentHour + 12) : (currentHour === 12 ? 0 : currentHour));
-      } else if (type === 'minutes') {
-        newDate.setMinutes(index);
-      } else if (type === 'period') {
-        const currentHour = newDate.getHours();
-        const isPM = index === 1;
-        if (isPM && currentHour < 12) {
-          newDate.setHours(currentHour + 12);
-        } else if (!isPM && currentHour >= 12) {
-          newDate.setHours(currentHour - 12);
-        }
-      }
-
-      setDate(newDate);
-      onTimeUpdate?.(newDate.getHours(), newDate.getMinutes());
-      setIsScrolling(prev => ({ ...prev, [type]: false }));
-    }, 150);
-  }, [date, setDate, onTimeUpdate, playTickSound, isScrolling]);
+    });
+  }, [date, setDate, onTimeUpdate, playTickSound]);
 
   // Initialize scroll positions
   React.useEffect(() => {
-    const initializeScroll = (type: 'hours' | 'minutes' | 'period') => {
-      const ref = scrollRefs[type];
-      if (!ref.current) return;
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? 1 : 0;
+    const display12Hour = hours % 12 || 12;
 
-      let scrollIndex = 0;
-      if (type === 'hours') {
-        scrollIndex = date.getHours() % 12;
-        if (scrollIndex === 0) scrollIndex = 12;
-      } else if (type === 'minutes') {
-        scrollIndex = date.getMinutes();
-      } else if (type === 'period') {
-        scrollIndex = date.getHours() >= 12 ? 1 : 0;
-      }
-
-      // Use immediate scroll for initialization
-      ref.current.scrollTop = scrollIndex * 72;
-    };
-
-    Object.keys(scrollRefs).forEach((type) => {
-      initializeScroll(type as 'hours' | 'minutes' | 'period');
-    });
+    if (scrollRefs.hours.current) {
+      scrollRefs.hours.current.scrollTop = (display12Hour - 1) * 72;
+    }
+    if (scrollRefs.minutes.current) {
+      scrollRefs.minutes.current.scrollTop = minutes * 72;
+    }
+    if (scrollRefs.period.current) {
+      scrollRefs.period.current.scrollTop = period * 72;
+    }
   }, [date]);
 
   return (
@@ -156,7 +131,7 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
                 key={`${hour}-${index}`}
                 className={cn(
                   "w-full h-[72px] flex items-center justify-center transition-colors snap-center select-none",
-                  index < hourOptions.length && date.getHours() % 12 === (parseInt(hour) % 12)
+                  index < hourOptions.length && (date.getHours() % 12 || 12) === parseInt(hour)
                     ? "text-primary text-4xl font-semibold scale-110"
                     : "text-muted-foreground/30 text-3xl"
                 )}
