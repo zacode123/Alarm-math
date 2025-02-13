@@ -8,7 +8,10 @@ const SOUNDS = {
 
 export function useSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [customRingtones, setCustomRingtones] = useState<string[]>([]);
+  const [customRingtones, setCustomRingtones] = useState<string[]>(() => {
+    const saved = localStorage.getItem('customRingtones');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const play = useCallback((sound: keyof typeof SOUNDS | string, volume: number = 1.0) => {
     if (audioRef.current) {
@@ -67,5 +70,10 @@ export function useSound() {
     }
   }, []);
 
-  return { play, stop, preview, customRingtones, setCustomRingtones };
+  const updateCustomRingtones = (ringtones: string[]) => {
+    setCustomRingtones(ringtones);
+    localStorage.setItem('customRingtones', JSON.stringify(ringtones));
+  };
+
+  return { play, stop, preview, customRingtones, setCustomRingtones: updateCustomRingtones };
 }
