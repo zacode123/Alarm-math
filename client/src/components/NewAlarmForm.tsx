@@ -257,7 +257,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                   <FormItem>
                     <FormControl>
                       <Input
-                        placeholder="Enter label"
+                        label="Enter label"
                         className="bg-muted/20 border border-input/50 focus:border-primary"
                         {...field}
                       />
