@@ -196,11 +196,11 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         <Form {...form}>
           <form className="space-y-0">
             <div className="flex items-center justify-between py-4 border-t">
-              <span className="text-sm">Ringtone</span>
+              <span className="text-[15px] font-medium tracking-wide">Ringtone</span>
               <Button 
                 type="button"
                 variant="ghost" 
-                className="text-primary text-sm flex items-center gap-2 hover:bg-transparent p-0"
+                className="text-primary text-[15px] flex items-center gap-2 hover:bg-transparent p-0 font-medium"
                 onClick={() => setShowRingtones(true)}
               >
                 {selectedRingtone.name}
@@ -209,11 +209,11 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             </div>
 
             <div className="flex items-center justify-between py-4 border-t">
-              <span className="text-sm">Repeat</span>
+              <span className="text-[15px] font-medium tracking-wide">Repeat</span>
               <Button 
                 type="button"
                 variant="ghost" 
-                className="text-primary text-sm flex items-center gap-2 hover:bg-transparent p-0"
+                className="text-primary text-[15px] flex items-center gap-2 hover:bg-transparent p-0 font-medium"
                 onClick={() => setShowRepeat(true)}
               >
                 {selectedRepeat.name}
@@ -222,7 +222,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             </div>
 
             <div className="flex items-center justify-between py-4 border-t">
-              <span className="text-sm">Vibrate when alarm sounds</span>
+              <span className="text-[15px] font-medium tracking-wide">Vibrate when alarm sounds</span>
               <Switch
                 checked={vibrationEnabled}
                 onCheckedChange={setVibrationEnabled}
@@ -231,7 +231,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             </div>
 
             <div className="flex items-center justify-between py-4 border-t">
-              <span className="text-sm">Delete after goes off</span>
+              <span className="text-[15px] font-medium tracking-wide">Delete after goes off</span>
               <FormField
                 control={form.control}
                 name="autoDelete"
