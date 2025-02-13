@@ -17,8 +17,14 @@ export function useAlarms() {
 
   const createAlarm = useMutation({
     mutationFn: async (alarm: InsertAlarm): Promise<Alarm> => {
-      const res = await apiRequest("POST", "/api/alarms", alarm);
-      return res.json();
+      const payload = {
+        ...alarm,
+        days: Array.isArray(alarm.days) ? alarm.days : [],
+        created: Math.floor(Date.now() / 1000)
+      };
+      const res = await apiRequest("POST", "/api/alarms", payload);
+      const data = await res.json();
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alarms"] });
@@ -39,7 +45,8 @@ export function useAlarms() {
   const updateAlarm = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<InsertAlarm> & { id: number }): Promise<Alarm> => {
       const res = await apiRequest("PATCH", `/api/alarms/${id}`, updates);
-      return res.json();
+      const data = await res.json();
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alarms"] });

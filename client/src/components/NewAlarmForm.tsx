@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { X, Check, ChevronRight, Calendar, RepeatIcon, Repeat1, CalendarDays, Settings2 } from "lucide-react";
 import { format } from "date-fns";
 import { TimePicker } from "@/components/ui/time-picker";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { RingtoneCard } from "@/components/ui/ringtone-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -281,6 +281,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Select Ringtone</DialogTitle>
+              <DialogDescription>
+                Choose a ringtone for your alarm. Click to preview the sound.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <AnimatePresence>
@@ -315,6 +318,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Repeat</DialogTitle>
+              <DialogDescription>
+                Choose when you want this alarm to repeat.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <AnimatePresence>
