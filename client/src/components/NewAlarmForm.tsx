@@ -431,9 +431,15 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                       )}
                       onClick={() => {
                         if (option.id === 'custom') {
-                          setExpandedOption(expandedOption === 'custom' ? null : 'custom');
+                          if (expandedOption === 'custom') {
+                            setExpandedOption(null);
+                          } else {
+                            setExpandedOption('custom');
+                            setSelectedRepeat(option);
+                          }
                         } else {
                           setSelectedRepeat(option);
+                          setExpandedOption(null);
                         }
                       }}
                     >
