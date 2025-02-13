@@ -143,6 +143,7 @@ export default function Settings() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
+                            className="bg-destructive hover:bg-destructive/90"
                             onClick={() => {
                               URL.revokeObjectURL(url);
                               setCustomRingtones(prev => prev.filter((_, i) => i !== index));
