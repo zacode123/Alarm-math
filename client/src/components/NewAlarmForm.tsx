@@ -265,9 +265,12 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       </div>
 
       <Dialog open={showRingtones} onOpenChange={setShowRingtones}>
-        <DialogContent>
+        <DialogContent aria-describedby="ringtone-dialog-description">
           <DialogHeader>
             <DialogTitle>Select Ringtone</DialogTitle>
+            <p id="ringtone-dialog-description" className="text-sm text-muted-foreground">
+              Choose a ringtone for your alarm
+            </p>
           </DialogHeader>
           <div className="space-y-2">
             {RINGTONES.map((ringtone) => (
@@ -289,9 +292,12 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       </Dialog>
 
       <Dialog open={showRepeat} onOpenChange={setShowRepeat}>
-        <DialogContent>
+        <DialogContent aria-describedby="repeat-dialog-description">
           <DialogHeader>
             <DialogTitle>Repeat</DialogTitle>
+            <p id="repeat-dialog-description" className="text-sm text-muted-foreground">
+              Choose when to repeat this alarm
+            </p>
           </DialogHeader>
           <div className="space-y-2">
             {REPEAT_OPTIONS.map((option) => (
