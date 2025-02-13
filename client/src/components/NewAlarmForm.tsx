@@ -73,6 +73,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     return defaultRingtone;
   });
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
+  const [originalRepeat, setOriginalRepeat] = useState(REPEAT_OPTIONS[0]);
   const [timeRemaining, setTimeRemaining] = useState("");
   const [expandedOption, setExpandedOption] = useState<string | null>(null);
   const [selectedDays, setSelectedDays] = useState<Record<string, boolean>>({
@@ -227,7 +228,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 type="button"
                 variant="ghost"
                 className="text-primary text-[15px] flex items-center gap-2 hover:bg-transparent p-0 font-medium"
-                onClick={() => setShowRepeat(true)}
+                onClick={() => {
+                  setOriginalRepeat(selectedRepeat);
+                  setShowRepeat(true);
+                }}
               >
                 {selectedRepeat.name}
                 <ChevronRight className="h-4 w-4" />
@@ -374,6 +378,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           open={showRepeat}
           onOpenChange={(open) => {
             if (!open) {
+              setSelectedRepeat(originalRepeat);
               setShowRepeat(false);
               setExpandedOption(null);
             }
@@ -385,7 +390,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  setSelectedRepeat(selectedRepeat);
+                  setSelectedRepeat(originalRepeat);
                   setShowRepeat(false);
                 }}
                 className="hover:bg-transparent absolute left-4"
