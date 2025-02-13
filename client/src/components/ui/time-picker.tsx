@@ -15,7 +15,6 @@ const generateTimeOptions = () => {
 };
 
 export function TimePicker({ date, setDate }: TimePickerProps) {
-  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const { hours: hourOptions, minutes: minuteOptions, periods } = generateTimeOptions();
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [lastScrollTime, setLastScrollTime] = React.useState(0);
@@ -34,7 +33,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
 
   const playTickSound = React.useCallback(() => {
     const now = Date.now();
-    if (now - lastScrollTime > 50) { // Debounce sound to prevent rapid firing
+    if (now - lastScrollTime > 50) {
       if (audioRef.current) {
         const newAudio = audioRef.current.cloneNode() as HTMLAudioElement;
         newAudio.play().catch(console.error);
@@ -54,7 +53,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
     scrollTimeout.current = setTimeout(() => {
       const containerHeight = element.clientHeight;
       const scrollPosition = element.scrollTop;
-      const itemHeight = 72; // Fixed height for each item
+      const itemHeight = 72;
 
       let index = Math.round(scrollPosition / itemHeight);
 
@@ -67,10 +66,10 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
         if (index < 0) index = 59;
       } else if (type === 'period') {
         if (index >= 2) index = 0;
-        if (index < 0) index = 1;
+        if (index < 1) index = 1;
       }
 
-      // Smooth scroll to the nearest snap point
+      // Smooth scroll to nearest snap point
       element.scrollTo({
         top: index * itemHeight,
         behavior: 'smooth'
@@ -94,86 +93,89 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
         }
       }
       setDate(newDate);
-    }, 150); // Delay to allow smooth scrolling
+    }, 150);
   }, [date, setDate, playTickSound]);
 
   return (
-    <div className="flex items-center gap-4">
-      <ScrollArea className="h-[216px] w-[100px] rounded-md">
-        <div 
-          className="flex flex-col items-center" 
-          onScroll={(e) => handleScroll(e.currentTarget, 'hours')}
-        >
-          {[...hourOptions, ...hourOptions.slice(0, 3)].map((hour, index) => (
-            <div
-              key={`${hour}-${index}`}
-              className={cn(
-                "w-full h-[72px] flex items-center justify-center transition-all snap-center",
-                index < hourOptions.length && date.getHours() % 12 === (parseInt(hour) % 12)
-                  ? "text-primary scale-110 font-medium"
-                  : "text-muted-foreground/50"
-              )}
-              style={{
-                scrollSnapAlign: 'center',
-              }}
-            >
-              <span className="text-3xl">{hour}</span>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+    <div className="flex items-center gap-8">
+      <div className="w-[80px]">
+        <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
+          <div 
+            className="flex flex-col items-center snap-y snap-mandatory"
+            onScroll={(e) => handleScroll(e.currentTarget, 'hours')}
+            style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
+          >
+            {[...hourOptions, ...hourOptions.slice(0, 3)].map((hour, index) => (
+              <div
+                key={`${hour}-${index}`}
+                className={cn(
+                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center",
+                  index < hourOptions.length && date.getHours() % 12 === (parseInt(hour) % 12)
+                    ? "text-primary text-4xl font-normal"
+                    : "text-muted-foreground/30 text-3xl"
+                )}
+                style={{ scrollSnapAlign: 'center' }}
+              >
+                {hour}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-      <div className="text-4xl font-light text-primary">:</div>
+      <div className="text-4xl text-primary">:</div>
 
-      <ScrollArea className="h-[216px] w-[100px] rounded-md">
-        <div 
-          className="flex flex-col items-center"
-          onScroll={(e) => handleScroll(e.currentTarget, 'minutes')}
-        >
-          {[...minuteOptions, ...minuteOptions.slice(0, 3)].map((minute, index) => (
-            <div
-              key={`${minute}-${index}`}
-              className={cn(
-                "w-full h-[72px] flex items-center justify-center transition-all snap-center",
-                index < minuteOptions.length && date.getMinutes() === parseInt(minute)
-                  ? "text-primary scale-110 font-medium"
-                  : "text-muted-foreground/50"
-              )}
-              style={{
-                scrollSnapAlign: 'center',
-              }}
-            >
-              <span className="text-3xl">{minute}</span>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="w-[80px]">
+        <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
+          <div 
+            className="flex flex-col items-center snap-y snap-mandatory"
+            onScroll={(e) => handleScroll(e.currentTarget, 'minutes')}
+            style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
+          >
+            {[...minuteOptions, ...minuteOptions.slice(0, 3)].map((minute, index) => (
+              <div
+                key={`${minute}-${index}`}
+                className={cn(
+                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center",
+                  index < minuteOptions.length && date.getMinutes() === parseInt(minute)
+                    ? "text-primary text-4xl font-normal"
+                    : "text-muted-foreground/30 text-3xl"
+                )}
+                style={{ scrollSnapAlign: 'center' }}
+              >
+                {minute}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-      <ScrollArea className="h-[216px] w-[80px] rounded-md">
-        <div 
-          className="flex flex-col items-center"
-          onScroll={(e) => handleScroll(e.currentTarget, 'period')}
-        >
-          {[...periods, ...periods.slice(0, 1)].map((period, index) => (
-            <div
-              key={`${period}-${index}`}
-              className={cn(
-                "w-full h-[72px] flex items-center justify-center transition-all snap-center",
-                index < periods.length && 
-                ((date.getHours() >= 12 && period === "PM") || 
-                (date.getHours() < 12 && period === "AM"))
-                  ? "text-primary scale-110 font-medium"
-                  : "text-muted-foreground/50"
-              )}
-              style={{
-                scrollSnapAlign: 'center',
-              }}
-            >
-              <span className="text-2xl">{period}</span>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="w-[80px]">
+        <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
+          <div 
+            className="flex flex-col items-center snap-y snap-mandatory"
+            onScroll={(e) => handleScroll(e.currentTarget, 'period')}
+            style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
+          >
+            {[...periods, ...periods.slice(0, 1)].map((period, index) => (
+              <div
+                key={`${period}-${index}`}
+                className={cn(
+                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center",
+                  index < periods.length && 
+                  ((date.getHours() >= 12 && period === "PM") || 
+                  (date.getHours() < 12 && period === "AM"))
+                    ? "text-primary text-3xl font-normal"
+                    : "text-muted-foreground/30 text-2xl"
+                )}
+                style={{ scrollSnapAlign: 'center' }}
+              >
+                {period}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

@@ -12,12 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { X, Check, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { TimePicker } from "@/components/ui/time-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const RINGTONES = [
   { id: 'default', name: 'Morning dew' },
@@ -72,7 +67,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     },
   });
 
-  const onSubmit = (data: InsertAlarm) => {
+  const onSubmit = async (data: InsertAlarm) => {
     const formattedTime = format(selectedDate, "HH:mm");
 
     const alarmData = {
@@ -82,25 +77,26 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       sound: selectedRingtone.id as "default" | "digital" | "beep"
     };
 
-    if (defaultValues?.id) {
-      updateAlarm.mutate({ id: defaultValues.id, ...alarmData }, {
-        onSuccess: () => {
-          toast({
-            title: "Alarm updated",
-            description: "Your alarm has been updated successfully.",
-          });
-          onSuccess();
-        },
-      });
-    } else {
-      createAlarm.mutate(alarmData, {
-        onSuccess: () => {
-          toast({
-            title: "Alarm created",
-            description: "Your alarm has been set successfully.",
-          });
-          onSuccess();
-        },
+    try {
+      if (defaultValues?.id) {
+        await updateAlarm.mutateAsync({ id: defaultValues.id, ...alarmData });
+        toast({
+          title: "Alarm updated",
+          description: "Your alarm has been updated successfully.",
+        });
+      } else {
+        await createAlarm.mutateAsync(alarmData);
+        toast({
+          title: "Alarm created",
+          description: "Your alarm has been set successfully.",
+        });
+      }
+      onSuccess();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save alarm. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -113,44 +109,48 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between p-4">
-        <Button variant="ghost" size="icon" onClick={onCancel} type="button">
+      <div className="flex items-center justify-between p-4 border-b">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onCancel}
+          type="button"
+          className="hover:bg-transparent"
+        >
           <X className="h-6 w-6" />
         </Button>
-        <h1 className="text-lg font-normal">Add alarm</h1>
-        <Button variant="ghost" size="icon" onClick={form.handleSubmit(onSubmit)} type="submit">
+        <h1 className="text-base font-normal">Add alarm</h1>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={form.handleSubmit(onSubmit)}
+          type="submit"
+          className="hover:bg-transparent"
+        >
           <Check className="h-6 w-6" />
         </Button>
       </div>
 
       <div className="p-4">
         <p className="text-sm text-muted-foreground text-center mb-8">
-          Set your alarm time
+          Alarm in {format(selectedDate, "H")} hours {format(selectedDate, "m")} minutes
         </p>
 
         <div className="flex justify-center items-center mb-12">
-          <TimePicker 
-            date={selectedDate} 
-            setDate={(newDate: Date) => setSelectedDate(newDate)} 
-          />
+          <TimePicker date={selectedDate} setDate={setSelectedDate} />
         </div>
 
         <Form {...form}>
-          <form 
-            className="space-y-4" 
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit(onSubmit)(e);
-            }}
-          >
+          <form className="space-y-0">
             <div className="flex items-center justify-between py-4 border-t">
-              <span>Ringtone</span>
+              <span className="text-sm">Ringtone</span>
               <Button 
                 type="button"
                 variant="ghost" 
-                className="text-primary flex items-center gap-2"
+                className="text-primary text-sm flex items-center gap-2 hover:bg-transparent p-0"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   setShowRingtones(true);
                 }}
               >
@@ -160,13 +160,14 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             </div>
 
             <div className="flex items-center justify-between py-4 border-t">
-              <span>Repeat</span>
+              <span className="text-sm">Repeat</span>
               <Button 
                 type="button"
                 variant="ghost" 
-                className="text-primary flex items-center gap-2"
+                className="text-primary text-sm flex items-center gap-2 hover:bg-transparent p-0"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   setShowRepeat(true);
                 }}
               >
@@ -176,15 +177,16 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             </div>
 
             <div className="flex items-center justify-between py-4 border-t">
-              <span>Vibrate when alarm sounds</span>
+              <span className="text-sm">Vibrate when alarm sounds</span>
               <Switch
                 checked={vibrationEnabled}
                 onCheckedChange={setVibrationEnabled}
+                className="data-[state=checked]:bg-primary"
               />
             </div>
 
             <div className="flex items-center justify-between py-4 border-t">
-              <span>Delete after alarm goes off</span>
+              <span className="text-sm">Delete after goes off</span>
               <FormField
                 control={form.control}
                 name="autoDelete"
@@ -194,6 +196,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-primary"
                       />
                     </FormControl>
                   </FormItem>
@@ -210,7 +213,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                     <FormControl>
                       <Input
                         placeholder="Enter label"
-                        className="bg-secondary/20"
+                        className="bg-muted/20 border-0"
                         {...field}
                       />
                     </FormControl>
@@ -228,7 +231,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           if (!open) setShowRingtones(false);
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Select Ringtone</DialogTitle>
           </DialogHeader>
@@ -238,9 +241,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 key={ringtone.id}
                 type="button"
                 variant="ghost"
-                className="w-full justify-start"
+                className="w-full justify-start text-sm"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   handleRingtoneSelect(ringtone);
                 }}
               >
@@ -257,7 +261,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           if (!open) setShowRepeat(false);
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Repeat</DialogTitle>
           </DialogHeader>
@@ -267,9 +271,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 key={option.id}
                 type="button"
                 variant="ghost"
-                className="w-full justify-start"
+                className="w-full justify-start text-sm"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   setSelectedRepeat(option);
                   setShowRepeat(false);
                 }}
