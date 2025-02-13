@@ -11,7 +11,7 @@ export const alarms = pgTable("alarms", {
   difficulty: text("difficulty").notNull().default("easy"),
   sound: text("sound").notNull().default("default"),
   volume: integer("volume").notNull().default(100),
-  autoDelete: boolean("autoDelete").notNull().default(false),
+  autoDelete: boolean("auto_delete").notNull().default(false),
   vibration: boolean("vibration").notNull().default(false),
   created: integer("created").notNull()
 });
