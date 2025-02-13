@@ -125,35 +125,49 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
         <div className="flex justify-center items-center gap-8 mb-12">
           <div className="flex items-center">
-            <ScrollArea className="h-[300px] w-[80px] rounded-md">
+            <ScrollArea className="h-[300px] w-[100px] rounded-md">
               <div className="flex flex-col items-center">
                 {hourOptions.map((h) => (
                   <button
                     key={h}
                     onClick={() => {
                       setHours(h);
-                      new Audio('/sounds/beep.mp3').play().catch(console.error);
+                      const audio = new Audio('/sounds/beep.mp3');
+                      audio.volume = 0.5;
+                      audio.play().catch(console.error);
+                      audio.onended = () => audio.remove();
                     }}
-                    className={`w-full py-4 text-2xl transition-all ${hours === h ? 'text-primary font-medium scale-110' : 'text-muted-foreground'}`}
+                    className={`w-full py-6 text-3xl font-medium transition-all ${
+                      hours === h 
+                        ? 'text-primary scale-110' 
+                        : 'text-muted-foreground/50'
+                    }`}
                   >
-                    {h}
+                    {h.padStart(2, '0')}
                   </button>
                 ))}
               </div>
             </ScrollArea>
-            <span className="text-5xl mx-4 font-light">:</span>
-            <ScrollArea className="h-[300px] w-[80px] rounded-md">
+            <span className="text-5xl mx-4 font-light text-primary">:</span>
+            <ScrollArea className="h-[300px] w-[100px] rounded-md">
               <div className="flex flex-col items-center">
                 {minuteOptions.map((m) => (
                   <button
                     key={m}
                     onClick={() => {
                       setMinutes(m);
-                      new Audio('/sounds/beep.mp3').play().catch(console.error);
+                      const audio = new Audio('/sounds/beep.mp3');
+                      audio.volume = 0.5;
+                      audio.play().catch(console.error);
+                      audio.onended = () => audio.remove();
                     }}
-                    className={`w-full py-4 text-2xl transition-all ${minutes === m ? 'text-primary font-medium scale-110' : 'text-muted-foreground'}`}
+                    className={`w-full py-6 text-3xl font-medium transition-all ${
+                      minutes === m 
+                        ? 'text-primary scale-110' 
+                        : 'text-muted-foreground/50'
+                    }`}
                   >
-                    {m}
+                    {m.padStart(2, '0')}
                   </button>
                 ))}
               </div>
