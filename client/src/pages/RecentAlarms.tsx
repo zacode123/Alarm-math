@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAlarms } from "@/lib/useAlarms";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Check } from "lucide-react";
 import { motion } from "framer-motion";
@@ -59,26 +59,31 @@ export default function RecentAlarms() {
       {/* New Alarm Dialog */}
       <Dialog open={showNewAlarmForm} onOpenChange={setShowNewAlarmForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0">
-          <div className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
+          <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowNewAlarmForm(false)}
               className="hover:bg-transparent absolute left-4"
+              aria-label="Close dialog"
             >
               <X className="h-10 w-10" />
             </Button>
             <DialogTitle className="text-2xl font-semibold flex-1 text-center">Set New Alarm</DialogTitle>
+            <DialogDescription className="sr-only">
+              Create a new alarm with custom settings including time, ringtone, and repeat options
+            </DialogDescription>
             <Button
               variant="ghost"
               size="icon"
               form="new-alarm-form"
               type="submit"
               className="hover:bg-transparent absolute right-4"
+              aria-label="Save alarm"
             >
               <Check className="h-10 w-10" />
             </Button>
-          </div>
+          </DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <NewAlarmForm
               onSuccess={() => setShowNewAlarmForm(false)}
