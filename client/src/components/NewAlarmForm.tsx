@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { X, Check, ChevronRight, Calendar, RepeatIcon, Repeat1, CalendarDays, Settings2 } from "lucide-react";
+import { X, Check, ChevronRight, Calendar, RepeatIcon, Repeat1, CalendarDays, Settings2, Volume2 } from "lucide-react";
 import { format } from "date-fns";
 import { TimePicker } from "@/components/ui/time-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -106,7 +106,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     defaultValues: defaultValues ? {
       time: defaultValues.time,
       days: defaultValues.days as WeekDay[],
-      difficulty: defaultValues.difficulty as Difficulty, 
+      difficulty: defaultValues.difficulty as Difficulty,
       sound: defaultValues.sound,
       volume: defaultValues.volume,
       enabled: defaultValues.enabled,
@@ -116,7 +116,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     } : {
       time: format(new Date(), "HH:mm"),
       days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as WeekDay[],
-      difficulty: "easy" as Difficulty, 
+      difficulty: "easy" as Difficulty,
       sound: "default",
       volume: 100,
       enabled: true,
@@ -289,12 +289,30 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           }}
         >
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Select Ringtone</DialogTitle>
-              <DialogDescription>
-                Choose a ringtone for your alarm. Click to preview the sound.
-              </DialogDescription>
+            <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowRingtones(false)}
+                className="hover:bg-transparent absolute left-4"
+                aria-label="Close ringtones dialog"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+              <DialogTitle className="text-xl font-semibold flex-1 text-center">Select Ringtone</DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowRingtones(false)}
+                className="hover:bg-transparent absolute right-4"
+                aria-label="Confirm ringtone selection"
+              >
+                <Check className="h-6 w-6" />
+              </Button>
             </DialogHeader>
+            <DialogDescription className="text-center pt-2">
+              Choose a ringtone for your alarm. Click to preview the sound.
+            </DialogDescription>
             <div className="grid gap-4 py-4">
               <AnimatePresence>
                 {allRingtones.map((ringtone) => (
@@ -308,7 +326,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                     <Card
                       className={cn(
                         "p-4 cursor-pointer border-2 transition-colors duration-200",
-                        (expandedOption === ringtone.id || selectedRingtone.id === ringtone.id)
+                        selectedRingtone.id === ringtone.id
                           ? "border-primary bg-primary/10"
                           : "hover:border-primary/50"
                       )}
@@ -318,21 +336,28 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                         <div className="flex items-center gap-3">
                           <motion.div
                             className={cn(
-                              "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
-                              (expandedOption === ringtone.id || selectedRingtone.id === ringtone.id)
+                              "w-10 h-10 rounded-full flex items-center justify-center",
+                              selectedRingtone.id === ringtone.id
                                 ? "bg-primary"
                                 : "bg-muted"
                             )}
                             animate={{
-                              rotate: (expandedOption === ringtone.id || selectedRingtone.id === ringtone.id) ? [0, 360] : 0,
-                              scale: (expandedOption === ringtone.id || selectedRingtone.id === ringtone.id) ? [1, 1.1, 1] : 1,
+                              rotate: selectedRingtone.id === ringtone.id ? [0, 360] : 0,
+                              scale: selectedRingtone.id === ringtone.id ? [1, 1.1, 1] : 1
                             }}
                             transition={{
                               duration: 0.5,
                               ease: "easeInOut"
                             }}
                           >
-                            {/* Rest of the ringtone card content remains the same */}
+                            <Volume2
+                              className={cn(
+                                "h-5 w-5 transition-colors duration-200",
+                                selectedRingtone.id === ringtone.id
+                                  ? "text-primary-foreground"
+                                  : "text-muted-foreground"
+                              )}
+                            />
                           </motion.div>
                           <span>{ringtone.name}</span>
                         </div>
@@ -355,12 +380,30 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           }}
         >
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Repeat</DialogTitle>
-              <DialogDescription>
-                Choose when you want this alarm to repeat.
-              </DialogDescription>
+            <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowRepeat(false)}
+                className="hover:bg-transparent absolute left-4"
+                aria-label="Close repeat dialog"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+              <DialogTitle className="text-xl font-semibold flex-1 text-center">Repeat</DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowRepeat(false)}
+                className="hover:bg-transparent absolute right-4"
+                aria-label="Confirm repeat selection"
+              >
+                <Check className="h-6 w-6" />
+              </Button>
             </DialogHeader>
+            <DialogDescription className="text-center pt-2">
+              Choose when you want this alarm to repeat.
+            </DialogDescription>
             <div className="grid gap-4 py-4">
               <AnimatePresence>
                 {REPEAT_OPTIONS.map((option) => (
