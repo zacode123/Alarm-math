@@ -114,11 +114,11 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between p-4">
-        <Button variant="ghost" size="icon" onClick={onCancel}>
+        <Button variant="ghost" size="icon" onClick={onCancel} type="button">
           <X className="h-6 w-6" />
         </Button>
         <h1 className="text-lg font-normal">Add alarm</h1>
-        <Button variant="ghost" size="icon" onClick={form.handleSubmit(onSubmit)}>
+        <Button variant="ghost" size="icon" onClick={form.handleSubmit(onSubmit)} type="submit">
           <Check className="h-6 w-6" />
         </Button>
       </div>
@@ -129,21 +129,30 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </p>
 
         <div className="flex justify-center items-center mb-12">
-          <TimePicker date={selectedDate} setDate={setSelectedDate} />
+          <TimePicker 
+            date={selectedDate} 
+            setDate={(newDate: Date) => setSelectedDate(newDate)} 
+          />
         </div>
 
         <Form {...form}>
-          <form className="space-y-4" onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit(onSubmit)(e);
-          }}>
+          <form 
+            className="space-y-4" 
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit(onSubmit)(e);
+            }}
+          >
             <div className="flex items-center justify-between py-4 border-t">
               <span>Ringtone</span>
               <Button 
                 type="button"
                 variant="ghost" 
                 className="text-primary flex items-center gap-2"
-                onClick={() => setShowRingtones(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowRingtones(true);
+                }}
               >
                 {selectedRingtone.name}
                 <ChevronRight className="h-4 w-4" />
@@ -156,7 +165,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 type="button"
                 variant="ghost" 
                 className="text-primary flex items-center gap-2"
-                onClick={() => setShowRepeat(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowRepeat(true);
+                }}
               >
                 {selectedRepeat.name}
                 <ChevronRight className="h-4 w-4" />
@@ -210,7 +222,12 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </Form>
       </div>
 
-      <Dialog open={showRingtones} onOpenChange={setShowRingtones}>
+      <Dialog 
+        open={showRingtones} 
+        onOpenChange={(open) => {
+          if (!open) setShowRingtones(false);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Select Ringtone</DialogTitle>
@@ -222,7 +239,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 type="button"
                 variant="ghost"
                 className="w-full justify-start"
-                onClick={() => handleRingtoneSelect(ringtone)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleRingtoneSelect(ringtone);
+                }}
               >
                 {ringtone.name}
               </Button>
@@ -231,7 +251,12 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showRepeat} onOpenChange={setShowRepeat}>
+      <Dialog 
+        open={showRepeat} 
+        onOpenChange={(open) => {
+          if (!open) setShowRepeat(false);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Repeat</DialogTitle>
@@ -243,7 +268,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 type="button"
                 variant="ghost"
                 className="w-full justify-start"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   setSelectedRepeat(option);
                   setShowRepeat(false);
                 }}
