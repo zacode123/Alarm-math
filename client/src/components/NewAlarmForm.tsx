@@ -18,11 +18,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
-const RINGTONES = [
+const DEFAULT_RINGTONES = [
   { id: 'default', name: 'Morning dew' },
   { id: 'digital', name: 'Digital Alarm' },
   { id: 'beep', name: 'Beep' },
 ];
+
+function useRingtones() {
+  const { customRingtones } = useSound();
+  return [
+    ...DEFAULT_RINGTONES,
+    ...customRingtones.map((url, index) => ({
+      id: url,
+      name: `Custom Ringtone ${index + 1}`
+    }))
+  ];
+}
+
+const RINGTONES = useRingtones();
 
 const REPEAT_OPTIONS = [
   { id: 'once', name: 'Once', icon: Calendar },

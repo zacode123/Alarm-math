@@ -27,7 +27,7 @@ export default function Settings() {
   );
   const { preview } = useSound();
   const { toast } = useToast();
-  const [customRingtones, setCustomRingtones] = useState<string[]>([]);
+  const { customRingtones, setCustomRingtones } = useSound();
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
