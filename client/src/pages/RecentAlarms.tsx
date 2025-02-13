@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAlarms } from "@/lib/useAlarms";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { NewAlarmForm } from "@/components/NewAlarmForm";
 import { AlarmList } from "@/components/AlarmList";
