@@ -25,9 +25,8 @@ export default function Settings() {
   const [theme, setTheme] = useState<'light' | 'dark'>(
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
-  const { preview } = useSound();
+  const { preview, customRingtones, setCustomRingtones } = useSound();
   const { toast } = useToast();
-  const { customRingtones, setCustomRingtones } = useSound();
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -39,9 +38,8 @@ export default function Settings() {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith('audio/')) {
-        // Create object URL for the uploaded audio file
         const audioUrl = URL.createObjectURL(file);
-        setCustomRingtones(prev => [...prev, audioUrl]);
+        setCustomRingtones([...customRingtones, audioUrl]);
         toast({
           title: "Ringtone added",
           description: `${file.name} has been added to your custom ringtones.`,
@@ -54,6 +52,16 @@ export default function Settings() {
         });
       }
     }
+  };
+
+  const handleDeleteRingtone = (index: number, url: string) => {
+    URL.revokeObjectURL(url);
+    const updatedRingtones = customRingtones.filter((_, i) => i !== index);
+    setCustomRingtones(updatedRingtones);
+    toast({
+      title: "Ringtone deleted",
+      description: "Custom ringtone has been removed successfully.",
+    });
   };
 
   return (
@@ -100,7 +108,7 @@ export default function Settings() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => preview(id as any)}
+                    onClick={() => preview(id)}
                   >
                     <Volume2 className="h-4 w-4" />
                   </Button>
@@ -133,9 +141,9 @@ export default function Settings() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="border-destructive">
+                      <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="text-destructive">Delete Ringtone</AlertDialogTitle>
+                          <AlertDialogTitle>Delete Ringtone</AlertDialogTitle>
                         </AlertDialogHeader>
                         <AlertDialogDescription>
                           Are you sure you want to delete this custom ringtone? This action cannot be undone.
@@ -143,15 +151,7 @@ export default function Settings() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            className="bg-destructive hover:bg-destructive/90"
-                            onClick={() => {
-                              URL.revokeObjectURL(url);
-                              setCustomRingtones(prev => prev.filter((_, i) => i !== index));
-                              toast({
-                                title: "Ringtone deleted",
-                                description: "Custom ringtone has been removed successfully.",
-                              });
-                            }}
+                            onClick={() => handleDeleteRingtone(index, url)}
                           >
                             Delete
                           </AlertDialogAction>

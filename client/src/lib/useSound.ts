@@ -4,16 +4,23 @@ const SOUNDS = {
   default: "/sounds/alarm_clock.mp3",
   digital: "/sounds/digital_alarm.mp3",
   beep: "/sounds/beep.mp3"
-};
+} as const;
+
+type SoundType = keyof typeof SOUNDS;
 
 export function useSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [customRingtones, setCustomRingtones] = useState<string[]>(() => {
-    const saved = localStorage.getItem('customRingtones');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('customRingtones');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error parsing custom ringtones:', error);
+      return [];
+    }
   });
 
-  const play = useCallback((sound: keyof typeof SOUNDS | string, volume: number = 1.0) => {
+  const play = useCallback((sound: SoundType | string, volume: number = 1.0) => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -21,9 +28,9 @@ export function useSound() {
 
     let audioSrc: string;
     if (sound in SOUNDS) {
-      audioSrc = SOUNDS[sound];
+      audioSrc = SOUNDS[sound as SoundType];
     } else if (customRingtones.includes(sound)) {
-      audioSrc = sound; // Assume sound is a valid URL if not in SOUNDS
+      audioSrc = sound;
     } else {
       console.error("Invalid sound:", sound);
       return;
@@ -41,10 +48,10 @@ export function useSound() {
     });
   }, [customRingtones]);
 
-  const preview = useCallback((sound: keyof typeof SOUNDS | string, volume: number = 1.0) => {
+  const preview = useCallback((sound: SoundType | string, volume: number = 1.0) => {
     let audioSrc: string;
     if (sound in SOUNDS) {
-      audioSrc = SOUNDS[sound];
+      audioSrc = SOUNDS[sound as SoundType];
     } else if (customRingtones.includes(sound)) {
       audioSrc = sound;
     } else {
@@ -71,8 +78,12 @@ export function useSound() {
   }, []);
 
   const updateCustomRingtones = (ringtones: string[]) => {
-    setCustomRingtones(ringtones);
-    localStorage.setItem('customRingtones', JSON.stringify(ringtones));
+    try {
+      setCustomRingtones(ringtones);
+      localStorage.setItem('customRingtones', JSON.stringify(ringtones));
+    } catch (error) {
+      console.error('Error saving custom ringtones:', error);
+    }
   };
 
   return { play, stop, preview, customRingtones, setCustomRingtones: updateCustomRingtones };
