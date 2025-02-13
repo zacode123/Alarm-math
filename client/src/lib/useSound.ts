@@ -19,18 +19,20 @@ export function useSound() {
       return parsedItems.map(item => {
         if (!item?.data) return item;
         try {
-          const binaryString = atob(item.data);
+          const binaryString = window.atob(item.data);
           const bytes = new Uint8Array(binaryString.length);
           for (let i = 0; i < binaryString.length; i++) {
             bytes[i] = binaryString.charCodeAt(i);
           }
           const blob = new Blob([bytes], {type: 'audio/mpeg'});
-          return {...item, url: URL.createObjectURL(blob)};
+          const url = URL.createObjectURL(blob);
+          if (!url) throw new Error('Failed to create object URL');
+          return {...item, url};
         } catch (err) {
           console.error('Error creating object URL:', err);
-          return item;
+          return { url: '', data: item.data };
         }
-      });
+      }).filter(item => item.url !== '');
     } catch (error) {
       console.error('Error parsing custom ringtones:', error);
       return [];
@@ -104,8 +106,17 @@ export function useSound() {
 
   const updateCustomRingtones = (ringtones: ({ url: string; data: string } | string)[]) => {
     try {
+      // Cleanup old object URLs
+      customRingtones.forEach(ringtone => {
+        if (typeof ringtone !== 'string' && ringtone.url) {
+          URL.revokeObjectURL(ringtone.url);
+        }
+      });
+      
       setCustomRingtones(ringtones);
-      localStorage.setItem('customRingtones', JSON.stringify(ringtones.map(r => typeof r === 'string' ? {data: r} : { data: r.data })));
+      localStorage.setItem('customRingtones', JSON.stringify(ringtones.map(r => 
+        typeof r === 'string' ? {data: r} : { data: r.data }
+      )));
     } catch (error) {
       console.error('Error saving custom ringtones:', error);
     }
