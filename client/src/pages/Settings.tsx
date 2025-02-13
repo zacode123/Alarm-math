@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Moon, Sun, Upload, Volume2, X } from "lucide-react";
+import { Moon, Sun, Upload, Volume2, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -130,12 +130,12 @@ export default function Settings() {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm">
-                          <X className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="border-destructive">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Ringtone</AlertDialogTitle>
+                          <AlertDialogTitle className="text-destructive">Delete Ringtone</AlertDialogTitle>
                         </AlertDialogHeader>
                         <AlertDialogDescription>
                           Are you sure you want to delete this custom ringtone? This action cannot be undone.
