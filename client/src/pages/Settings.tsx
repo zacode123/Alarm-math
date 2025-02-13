@@ -69,6 +69,7 @@ export default function Settings() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
         {/* Theme Settings */}
         <Card className="mb-4">
@@ -128,10 +129,7 @@ export default function Settings() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        const audio = new Audio(url);
-                        audio.play();
-                      }}
+                      onClick={() => preview(url)}
                     >
                       <Volume2 className="h-4 w-4" />
                     </Button>
@@ -144,10 +142,10 @@ export default function Settings() {
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Ringtone</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this custom ringtone? This action cannot be undone.
+                          </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this custom ringtone? This action cannot be undone.
-                        </AlertDialogDescription>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
@@ -174,8 +172,8 @@ export default function Settings() {
                   asChild
                   className="w-full"
                 >
-                  <label htmlFor="ringtone-upload">
-                    <Upload className="h-4 w-4 mr-2" />
+                  <label htmlFor="ringtone-upload" className="flex items-center justify-center gap-2 cursor-pointer">
+                    <Upload className="h-4 w-4" />
                     Upload Ringtone
                   </label>
                 </Button>
