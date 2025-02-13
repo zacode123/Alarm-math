@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAlarmSchema, type InsertAlarm, type Alarm, type WeekDay } from "@shared/schema";
+import { insertAlarmSchema, type InsertAlarm, type Alarm, type WeekDay, type Difficulty } from "@shared/schema";
 import { useAlarms } from "@/lib/useAlarms";
 import { useSound } from "@/lib/useSound";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
@@ -106,7 +106,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     defaultValues: defaultValues ? {
       time: defaultValues.time,
       days: defaultValues.days as WeekDay[],
-      difficulty: defaultValues.difficulty,
+      difficulty: defaultValues.difficulty as Difficulty, // Fix: Cast to Difficulty type
       sound: defaultValues.sound,
       volume: defaultValues.volume,
       enabled: defaultValues.enabled,
@@ -116,7 +116,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     } : {
       time: format(new Date(), "HH:mm"),
       days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as WeekDay[],
-      difficulty: "easy",
+      difficulty: "easy" as Difficulty, // Fix: Cast to Difficulty type
       sound: "default",
       volume: 100,
       enabled: true,

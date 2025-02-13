@@ -1,4 +1,4 @@
-import { alarms, type Alarm, type InsertAlarm } from "@shared/schema";
+import { alarms, audioFiles, type Alarm, type InsertAlarm, type Audio, type InsertAudio } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -7,6 +7,11 @@ export interface IStorage {
   createAlarm(alarm: InsertAlarm): Promise<Alarm>;
   updateAlarm(id: number, alarm: Partial<InsertAlarm>): Promise<Alarm>;
   deleteAlarm(id: number): Promise<void>;
+  // Audio related methods
+  getAudioFiles(): Promise<Audio[]>;
+  getAudioFile(id: number): Promise<Audio | undefined>;
+  createAudioFile(audio: InsertAudio): Promise<Audio>;
+  deleteAudioFile(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -47,6 +52,41 @@ export class DatabaseStorage implements IStorage {
 
     if (!deleted) {
       throw new Error("Alarm not found");
+    }
+  }
+
+  // Audio file methods
+  async getAudioFiles(): Promise<Audio[]> {
+    return await db.select().from(audioFiles);
+  }
+
+  async getAudioFile(id: number): Promise<Audio | undefined> {
+    const [audio] = await db
+      .select()
+      .from(audioFiles)
+      .where(eq(audioFiles.id, id));
+    return audio;
+  }
+
+  async createAudioFile(insertAudio: InsertAudio): Promise<Audio> {
+    const [audio] = await db
+      .insert(audioFiles)
+      .values({
+        ...insertAudio,
+        created: Math.floor(Date.now() / 1000)
+      })
+      .returning();
+    return audio;
+  }
+
+  async deleteAudioFile(id: number): Promise<void> {
+    const [deleted] = await db
+      .delete(audioFiles)
+      .where(eq(audioFiles.id, id))
+      .returning();
+
+    if (!deleted) {
+      throw new Error("Audio file not found");
     }
   }
 }

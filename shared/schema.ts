@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,6 +16,14 @@ export const alarms = pgTable("alarms", {
   created: integer("created").notNull()
 });
 
+export const audioFiles = pgTable("audio_files", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  data: text("data").notNull(), // Base64 encoded audio data
+  type: text("type").notNull(), // MIME type
+  created: integer("created").notNull()
+});
+
 // Define weekday type
 export const WeekDay = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
 export type WeekDay = z.infer<typeof WeekDay>;
@@ -23,6 +31,15 @@ export type WeekDay = z.infer<typeof WeekDay>;
 // Define difficulty type
 export const Difficulty = z.enum(['easy', 'medium', 'hard']);
 export type Difficulty = z.infer<typeof Difficulty>;
+
+export const insertAudioSchema = createInsertSchema(audioFiles)
+  .omit({ id: true })
+  .extend({
+    data: z.string(),
+    type: z.string(),
+    name: z.string(),
+    created: z.number()
+  });
 
 // Define update schema that includes id
 export const updateAlarmSchema = createInsertSchema(alarms)
@@ -46,3 +63,5 @@ export const insertAlarmSchema = createInsertSchema(alarms)
 export type InsertAlarm = z.infer<typeof insertAlarmSchema>;
 export type UpdateAlarm = z.infer<typeof updateAlarmSchema>;
 export type Alarm = typeof alarms.$inferSelect;
+export type InsertAudio = z.infer<typeof insertAudioSchema>;
+export type Audio = typeof audioFiles.$inferSelect;
