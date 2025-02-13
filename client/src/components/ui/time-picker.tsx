@@ -19,27 +19,25 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
   const { hours: hourOptions, minutes: minuteOptions, periods } = generateTimeOptions();
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [lastScrollTime, setLastScrollTime] = React.useState(0);
-  const scrollTimeouts = React.useRef<Record<string, NodeJS.Timeout>>({});
   const scrollRefs = {
     hours: React.useRef<HTMLDivElement>(null),
     minutes: React.useRef<HTMLDivElement>(null),
     period: React.useRef<HTMLDivElement>(null)
   };
+  const scrollTimeouts = React.useRef<Record<string, NodeJS.Timeout>>({});
 
   // Initialize audio with lower volume
   React.useEffect(() => {
     audioRef.current = new Audio('/sounds/beep.mp3');
     audioRef.current.volume = 0.1;
     return () => {
-      if (audioRef.current) {
-        audioRef.current = null;
-      }
+      audioRef.current = null;
     };
   }, []);
 
   const playTickSound = React.useCallback(() => {
     const now = Date.now();
-    if (now - lastScrollTime > 30) { // Increased frequency for smoother sound
+    if (now - lastScrollTime > 25) { // Increased frequency for smoother sound
       if (audioRef.current) {
         const newAudio = audioRef.current.cloneNode() as HTMLAudioElement;
         newAudio.play().catch(console.error);
@@ -72,7 +70,7 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
         index = Math.min(1, Math.max(0, index));
       }
 
-      // Smooth scroll to nearest snap point
+      // Force scroll to nearest snap point for perfect alignment
       element.scrollTo({
         top: index * itemHeight,
         behavior: 'smooth'
@@ -116,6 +114,7 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
         scrollIndex = date.getHours() >= 12 ? 1 : 0;
       }
 
+      // Use immediate scroll for initialization
       ref.current.scrollTop = scrollIndex * 72;
     };
 
@@ -125,22 +124,29 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
   }, [date]);
 
   return (
-    <div className="flex items-center gap-8">
+    <div className="flex items-center justify-center gap-8">
       <div className="w-[80px]">
         <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
           <div 
             ref={scrollRefs.hours}
             className="flex flex-col items-center snap-y snap-mandatory"
             onScroll={(e) => handleScroll(e.currentTarget, 'hours')}
-            style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
+            style={{ 
+              overflowY: 'auto', 
+              scrollSnapType: 'y mandatory',
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none'
+            }}
           >
             {[...hourOptions, ...hourOptions.slice(0, 3)].map((hour, index) => (
               <div
                 key={`${hour}-${index}`}
                 className={cn(
-                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center",
+                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center select-none",
                   index < hourOptions.length && date.getHours() % 12 === (parseInt(hour) % 12)
-                    ? "text-primary text-4xl font-normal"
+                    ? "text-primary text-4xl font-semibold scale-110"
                     : "text-muted-foreground/30 text-3xl"
                 )}
                 style={{ scrollSnapAlign: 'center' }}
@@ -152,7 +158,7 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
         </ScrollArea>
       </div>
 
-      <div className="text-4xl text-primary">:</div>
+      <div className="text-4xl font-medium text-primary">:</div>
 
       <div className="w-[80px]">
         <ScrollArea className="h-[216px] w-full rounded-md overflow-hidden">
@@ -160,15 +166,22 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
             ref={scrollRefs.minutes}
             className="flex flex-col items-center snap-y snap-mandatory"
             onScroll={(e) => handleScroll(e.currentTarget, 'minutes')}
-            style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
+            style={{ 
+              overflowY: 'auto', 
+              scrollSnapType: 'y mandatory',
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none'
+            }}
           >
             {[...minuteOptions, ...minuteOptions.slice(0, 3)].map((minute, index) => (
               <div
                 key={`${minute}-${index}`}
                 className={cn(
-                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center",
+                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center select-none",
                   index < minuteOptions.length && date.getMinutes() === parseInt(minute)
-                    ? "text-primary text-4xl font-normal"
+                    ? "text-primary text-4xl font-semibold scale-110"
                     : "text-muted-foreground/30 text-3xl"
                 )}
                 style={{ scrollSnapAlign: 'center' }}
@@ -186,17 +199,24 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
             ref={scrollRefs.period}
             className="flex flex-col items-center snap-y snap-mandatory"
             onScroll={(e) => handleScroll(e.currentTarget, 'period')}
-            style={{ overflowY: 'auto', scrollSnapType: 'y mandatory' }}
+            style={{ 
+              overflowY: 'auto', 
+              scrollSnapType: 'y mandatory',
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none'
+            }}
           >
             {[...periods, ...periods.slice(0, 1)].map((period, index) => (
               <div
                 key={`${period}-${index}`}
                 className={cn(
-                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center",
+                  "w-full h-[72px] flex items-center justify-center transition-colors snap-center select-none",
                   index < periods.length && 
                   ((date.getHours() >= 12 && period === "PM") || 
                   (date.getHours() < 12 && period === "AM"))
-                    ? "text-primary text-3xl font-normal"
+                    ? "text-primary text-3xl font-semibold scale-110"
                     : "text-muted-foreground/30 text-2xl"
                 )}
                 style={{ scrollSnapAlign: 'center' }}

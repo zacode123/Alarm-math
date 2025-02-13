@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { X, Check, ChevronRight } from "lucide-react";
+import { X, Check, ChevronRight, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { TimePicker } from "@/components/ui/time-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RingtoneCard } from "@/components/ui/ringtone-card";
+import { motion, AnimatePresence } from "framer-motion";
 
 const RINGTONES = [
   { id: 'default', name: 'Morning dew' },
@@ -52,6 +54,16 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const [selectedRingtone, setSelectedRingtone] = useState(RINGTONES[0]);
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
   const [timeRemaining, setTimeRemaining] = useState("");
+  const [showCustomDays, setShowCustomDays] = useState(false);
+  const [selectedDays, setSelectedDays] = useState<Record<string, boolean>>({
+    mon: true,
+    tue: true,
+    wed: true,
+    thu: true,
+    fri: true,
+    sat: true,
+    sun: true
+  });
 
   useEffect(() => {
     const now = new Date();
@@ -121,7 +133,13 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const handleRingtoneSelect = (ringtone: typeof RINGTONES[0]) => {
     setSelectedRingtone(ringtone);
     preview(ringtone.id as "default" | "digital" | "beep");
-    setShowRingtones(false);
+  };
+
+  const handleDayToggle = (day: string) => {
+    setSelectedDays(prev => ({
+      ...prev,
+      [day]: !prev[day]
+    }));
   };
 
   return (
@@ -183,11 +201,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 type="button"
                 variant="ghost" 
                 className="text-primary text-sm flex items-center gap-2 hover:bg-transparent p-0"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowRingtones(true);
-                }}
+                onClick={() => setShowRingtones(true)}
               >
                 {selectedRingtone.name}
                 <ChevronRight className="h-4 w-4" />
@@ -200,11 +214,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 type="button"
                 variant="ghost" 
                 className="text-primary text-sm flex items-center gap-2 hover:bg-transparent p-0"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowRepeat(true);
-                }}
+                onClick={() => setShowRepeat(true)}
               >
                 {selectedRepeat.name}
                 <ChevronRight className="h-4 w-4" />
@@ -258,68 +268,94 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             </div>
           </form>
         </Form>
+
+        <Dialog 
+          open={showRingtones} 
+          onOpenChange={(open) => {
+            if (!open) setShowRingtones(false);
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Select Ringtone</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <AnimatePresence>
+                {RINGTONES.map((ringtone) => (
+                  <motion.div
+                    key={ringtone.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <RingtoneCard
+                      name={ringtone.name}
+                      isSelected={selectedRingtone.id === ringtone.id}
+                      onClick={() => handleRingtoneSelect(ringtone)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog 
+          open={showRepeat} 
+          onOpenChange={(open) => {
+            if (!open) setShowRepeat(false);
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Repeat</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              {REPEAT_OPTIONS.map((option) => (
+                <div key={option.id} className="flex flex-col">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full justify-between text-sm py-6"
+                    onClick={() => {
+                      if (option.id === 'custom') {
+                        setShowCustomDays(true);
+                      } else {
+                        setSelectedRepeat(option);
+                        setShowRepeat(false);
+                      }
+                    }}
+                  >
+                    {option.name}
+                    {option.id === 'custom' ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : null}
+                  </Button>
+                  {option.id === 'custom' && showCustomDays && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="px-4 py-2 space-y-2"
+                    >
+                      {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
+                        <div key={day} className="flex items-center justify-between">
+                          <span className="capitalize">{day}</span>
+                          <Switch
+                            checked={selectedDays[day]}
+                            onCheckedChange={() => handleDayToggle(day)}
+                            className="data-[state=checked]:bg-primary"
+                          />
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <Dialog 
-        open={showRingtones} 
-        onOpenChange={(open) => {
-          if (!open) setShowRingtones(false);
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Ringtone</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {RINGTONES.map((ringtone) => (
-              <Button
-                key={ringtone.id}
-                type="button"
-                variant="ghost"
-                className="w-full justify-start text-sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleRingtoneSelect(ringtone);
-                }}
-              >
-                {ringtone.name}
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog 
-        open={showRepeat} 
-        onOpenChange={(open) => {
-          if (!open) setShowRepeat(false);
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Repeat</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {REPEAT_OPTIONS.map((option) => (
-              <Button
-                key={option.id}
-                type="button"
-                variant="ghost"
-                className="w-full justify-start text-sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedRepeat(option);
-                  setShowRepeat(false);
-                }}
-              >
-                {option.name}
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
