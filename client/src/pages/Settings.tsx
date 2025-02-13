@@ -5,7 +5,18 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Moon, Sun, Upload, Volume2 } from "lucide-react";
+import { Moon, Sun, Upload, Volume2, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { motion } from "framer-motion";
 import { useSound } from "@/lib/useSound";
 import { useToast } from "@/hooks/use-toast";
@@ -105,16 +116,48 @@ export default function Settings() {
               {customRingtones.map((url, index) => (
                 <div key={index} className="flex items-center justify-between py-2">
                   <span>Custom Ringtone {index + 1}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const audio = new Audio(url);
-                      audio.play();
-                    }}
-                  >
-                    <Volume2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const audio = new Audio(url);
+                        audio.play();
+                      }}
+                    >
+                      <Volume2 className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Ringtone</AlertDialogTitle>
+                        </AlertDialogHeader>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this custom ringtone? This action cannot be undone.
+                        </AlertDialogDescription>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              URL.revokeObjectURL(url);
+                              setCustomRingtones(prev => prev.filter((_, i) => i !== index));
+                              toast({
+                                title: "Ringtone deleted",
+                                description: "Custom ringtone has been removed successfully.",
+                              });
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               ))}
               <div className="flex items-center gap-4">
