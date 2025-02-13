@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAlarmSchema, type InsertAlarm, type Alarm } from "@shared/schema";
+import { insertAlarmSchema, type InsertAlarm, type Alarm, type WeekDay } from "@shared/schema";
 import { useAlarms } from "@/lib/useAlarms";
 import { useSound } from "@/lib/useSound";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
@@ -50,7 +50,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 }) {
   const { toast } = useToast();
   const { createAlarm, updateAlarm } = useAlarms();
-  const { preview, customRingtones } = useSound();
+  const { preview } = useSound();
   const [vibrationEnabled, setVibrationEnabled] = useState(defaultValues?.vibration ?? ("vibrate" in navigator));
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     if (defaultValues?.time) {
@@ -103,9 +103,19 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
-    defaultValues: defaultValues ?? {
+    defaultValues: defaultValues ? {
+      time: defaultValues.time,
+      days: defaultValues.days as WeekDay[],
+      difficulty: defaultValues.difficulty,
+      sound: defaultValues.sound,
+      volume: defaultValues.volume,
+      enabled: defaultValues.enabled,
+      autoDelete: defaultValues.autoDelete,
+      vibration: defaultValues.vibration,
+      label: defaultValues.label
+    } : {
       time: format(new Date(), "HH:mm"),
-      days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+      days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as WeekDay[],
       difficulty: "easy",
       sound: "default",
       volume: 100,
