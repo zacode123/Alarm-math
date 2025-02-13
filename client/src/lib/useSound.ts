@@ -13,14 +13,24 @@ export function useSound() {
   const [customRingtones, setCustomRingtones] = useState<({ url: string; data: string } | string)[]>(() => {
     try {
       const saved = localStorage.getItem('customRingtones');
-      return saved ? JSON.parse(saved).map(item => {
-        const binaryString = atob(item.data);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
+      if (!saved) return [];
+      
+      const parsedItems = JSON.parse(saved);
+      return parsedItems.map(item => {
+        if (!item?.data) return item;
+        try {
+          const binaryString = atob(item.data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], {type: 'audio/mpeg'});
+          return {...item, url: URL.createObjectURL(blob)};
+        } catch (err) {
+          console.error('Error creating object URL:', err);
+          return item;
         }
-        return {...item, url: URL.createObjectURL(new Blob([bytes], {type: 'audio/mpeg'}))};
-      }) : [];
+      });
     } catch (error) {
       console.error('Error parsing custom ringtones:', error);
       return [];
