@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { type Alarm, type WeekDay } from "@shared/schema";
+import { type Alarm } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NewAlarmForm } from "./NewAlarmForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, X, Check } from "lucide-react";
 import { useAlarms } from "@/lib/useAlarms";
 
 interface AlarmListProps {

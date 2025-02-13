@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAlarmSchema, type InsertAlarm } from "@shared/schema";
+import { insertAlarmSchema, type InsertAlarm, type Alarm } from "@shared/schema";
 import { useAlarms } from "@/lib/useAlarms";
 import { useSound } from "@/lib/useSound";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";

@@ -24,7 +24,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { AlarmList } from "@/components/AlarmList";
 
-const DAYS = [
+type WeekDay = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+
+const DAYS: Array<{ value: WeekDay; label: string }> = [
   { value: "sun", label: "Sunday" },
   { value: "mon", label: "Monday" },
   { value: "tue", label: "Tuesday" },
@@ -72,14 +74,14 @@ export default function Home() {
     resolver: zodResolver(insertAlarmSchema),
     defaultValues: {
       time: "",
-      days: DAYS.map(day => day.value as "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"),
+      days: DAYS.map(day => day.value),
       difficulty: "easy",
       sound: "default",
       volume: 100,
       enabled: true,
       autoDelete: false,
       vibration: vibrationEnabled,
-      label: "", // Add default empty label
+      label: "",
     },
   });
 
@@ -605,7 +607,6 @@ export default function Home() {
                       });
                     }}
                     onRename={handleRenameAlarm}
-
                   />
                 )}
               </CardContent>

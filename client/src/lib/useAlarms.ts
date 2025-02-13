@@ -12,13 +12,7 @@ export function useAlarms() {
     retry: 3,
     refetchOnWindowFocus: true,
     staleTime: 1000 * 60, // 1 minute
-    onError: (error: Error) => {
-      toast({
-        title: "Error fetching alarms",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    gcTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const createAlarm = useMutation({
@@ -84,7 +78,7 @@ export function useAlarms() {
   });
 
   return {
-    alarms,
+    alarms: alarms as Alarm[],
     isLoading,
     error,
     createAlarm,
