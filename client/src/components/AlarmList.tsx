@@ -137,7 +137,7 @@ export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmList
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="h-[80vh] flex items-center justify-center text-center text-muted-foreground"
+        className="h-[80vh] flex items-center justify-center text-center text-muted-foreground text-2xl"
       >
         No active alarms
       </motion.div>
