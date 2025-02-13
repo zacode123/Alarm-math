@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAlarmSchema, type InsertAlarm } from "@shared/schema";
@@ -11,18 +11,17 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { X, Check, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
+import { TimePicker } from "@/components/ui/time-picker";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const RINGTONES = [
   { id: 'default', name: 'Morning dew' },
-  { id: 'alarm_clock', name: 'Alarm Clock' },
-  { id: 'digital_alarm', name: 'Digital Alarm' },
+  { id: 'digital', name: 'Digital Alarm' },
   { id: 'beep', name: 'Beep' },
 ];
 
@@ -34,12 +33,6 @@ const REPEAT_OPTIONS = [
   { id: 'custom', name: 'Custom' },
 ];
 
-const generateTimeOptions = () => {
-  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
-  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
-  return { hours, minutes };
-};
-
 export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   onSuccess: () => void;
   onCancel: () => void;
@@ -49,20 +42,26 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const { createAlarm, updateAlarm } = useAlarms();
   const { preview } = useSound();
   const [vibrationEnabled, setVibrationEnabled] = useState(defaultValues?.vibration ?? ("vibrate" in navigator));
-  const [hours, setHours] = useState("08");
-  const [minutes, setMinutes] = useState("00");
-  const [ampm, setAmpm] = useState("AM");
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    if (defaultValues?.time) {
+      const [hours, minutes] = defaultValues.time.split(':').map(Number);
+      const date = new Date();
+      date.setHours(hours);
+      date.setMinutes(minutes);
+      return date;
+    }
+    return new Date();
+  });
   const [showRingtones, setShowRingtones] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
   const [selectedRingtone, setSelectedRingtone] = useState(RINGTONES[0]);
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
-  const { hours: hourOptions, minutes: minuteOptions } = generateTimeOptions();
 
   const form = useForm<InsertAlarm>({
     resolver: zodResolver(insertAlarmSchema),
     defaultValues: defaultValues ?? {
-      time: "",
-      days: ["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
+      time: format(new Date(), "HH:mm"),
+      days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
       difficulty: "easy",
       sound: "default",
       volume: 100,
@@ -74,15 +73,16 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   });
 
   const onSubmit = (data: InsertAlarm) => {
-    const formattedTime = format(new Date(`2000-01-01 ${hours}:${minutes} ${ampm}`), "HH:mm");
+    const formattedTime = format(selectedDate, "HH:mm");
 
     const alarmData = {
       ...data,
       time: formattedTime,
-      vibration: vibrationEnabled
+      vibration: vibrationEnabled,
+      sound: selectedRingtone.id as "default" | "digital" | "beep"
     };
 
-    if (defaultValues) {
+    if (defaultValues?.id) {
       updateAlarm.mutate({ id: defaultValues.id, ...alarmData }, {
         onSuccess: () => {
           toast({
@@ -105,6 +105,12 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     }
   };
 
+  const handleRingtoneSelect = (ringtone: typeof RINGTONES[0]) => {
+    setSelectedRingtone(ringtone);
+    preview(ringtone.id as "default" | "digital" | "beep");
+    setShowRingtones(false);
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between p-4">
@@ -119,82 +125,22 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
       <div className="p-4">
         <p className="text-sm text-muted-foreground text-center mb-8">
-          Alarm in 23 hours 59 minutes
+          Set your alarm time
         </p>
 
-        <div className="flex justify-center items-center gap-8 mb-12">
-          <div className="flex items-center">
-            <ScrollArea className="h-[300px] w-[100px] rounded-md">
-              <div className="flex flex-col items-center">
-                {hourOptions.map((h) => (
-                  <button
-                    key={h}
-                    onClick={() => {
-                      setHours(h);
-                      const audio = new Audio('/sounds/beep.mp3');
-                      audio.volume = 0.5;
-                      audio.play().catch(console.error);
-                      audio.onended = () => audio.remove();
-                    }}
-                    className={`w-full py-6 text-3xl font-medium transition-all ${
-                      hours === h 
-                        ? 'text-primary scale-110' 
-                        : 'text-muted-foreground/50'
-                    }`}
-                  >
-                    {h.padStart(2, '0')}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-            <span className="text-5xl mx-4 font-light text-primary">:</span>
-            <ScrollArea className="h-[300px] w-[100px] rounded-md">
-              <div className="flex flex-col items-center">
-                {minuteOptions.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => {
-                      setMinutes(m);
-                      const audio = new Audio('/sounds/beep.mp3');
-                      audio.volume = 0.5;
-                      audio.play().catch(console.error);
-                      audio.onended = () => audio.remove();
-                    }}
-                    className={`w-full py-6 text-3xl font-medium transition-all ${
-                      minutes === m 
-                        ? 'text-primary scale-110' 
-                        : 'text-muted-foreground/50'
-                    }`}
-                  >
-                    {m.padStart(2, '0')}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-            <ScrollArea className="h-[300px] w-[80px] rounded-md ml-6">
-              <div className="flex flex-col items-center">
-                {["AM", "PM"].map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => {
-                      setAmpm(period);
-                      new Audio('/sounds/beep.mp3').play().catch(console.error);
-                    }}
-                    className={`w-full py-4 text-2xl transition-all ${ampm === period ? 'text-primary font-medium scale-110' : 'text-muted-foreground'}`}
-                  >
-                    {period}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
+        <div className="flex justify-center items-center mb-12">
+          <TimePicker date={selectedDate} setDate={setSelectedDate} />
         </div>
 
         <Form {...form}>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit(onSubmit)(e);
+          }}>
             <div className="flex items-center justify-between py-4 border-t">
               <span>Ringtone</span>
               <Button 
+                type="button"
                 variant="ghost" 
                 className="text-primary flex items-center gap-2"
                 onClick={() => setShowRingtones(true)}
@@ -207,6 +153,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             <div className="flex items-center justify-between py-4 border-t">
               <span>Repeat</span>
               <Button 
+                type="button"
                 variant="ghost" 
                 className="text-primary flex items-center gap-2"
                 onClick={() => setShowRepeat(true)}
@@ -264,24 +211,18 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       </div>
 
       <Dialog open={showRingtones} onOpenChange={setShowRingtones}>
-        <DialogContent aria-describedby="ringtone-dialog-description">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Select Ringtone</DialogTitle>
-            <p id="ringtone-dialog-description" className="text-sm text-muted-foreground">
-              Choose a ringtone for your alarm
-            </p>
           </DialogHeader>
           <div className="space-y-2">
             {RINGTONES.map((ringtone) => (
               <Button
                 key={ringtone.id}
+                type="button"
                 variant="ghost"
                 className="w-full justify-start"
-                onClick={() => {
-                  setSelectedRingtone(ringtone);
-                  preview(ringtone.id);
-                  setShowRingtones(false);
-                }}
+                onClick={() => handleRingtoneSelect(ringtone)}
               >
                 {ringtone.name}
               </Button>
@@ -291,17 +232,15 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       </Dialog>
 
       <Dialog open={showRepeat} onOpenChange={setShowRepeat}>
-        <DialogContent aria-describedby="repeat-dialog-description">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Repeat</DialogTitle>
-            <p id="repeat-dialog-description" className="text-sm text-muted-foreground">
-              Choose when to repeat this alarm
-            </p>
           </DialogHeader>
           <div className="space-y-2">
             {REPEAT_OPTIONS.map((option) => (
               <Button
                 key={option.id}
+                type="button"
                 variant="ghost"
                 className="w-full justify-start"
                 onClick={() => {
