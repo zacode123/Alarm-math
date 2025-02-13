@@ -208,7 +208,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </div>
 
         <Form {...form}>
-          <form className="space-y-0">
+          <form className="space-y-0" id="new-alarm-form">
             <div className="flex items-center justify-between py-4 border-t">
               <span className="text-[15px] font-medium tracking-wide">Ringtone</span>
               <Button
@@ -307,9 +307,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowRingtones(false)}
+                type="submit"
+                form="new-alarm-form"
                 className="hover:bg-transparent absolute right-4"
-                aria-label="Confirm ringtone selection"
+                aria-label="Save alarm"
               >
                 <Check className="h-6 w-6" />
               </Button>

@@ -44,17 +44,19 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
     const newDate = new Date(date);
     if (type === 'hours') {
       setSelectedHour(value);
-      const hours = isAm ? value : value + 12;
-      newDate.setHours(hours === 24 ? 0 : hours);
+      const hours = isAm ? value : (value === 12 ? 12 : value + 12);
+      newDate.setHours(hours);
     } else if (type === 'minutes') {
       setSelectedMinute(value);
       newDate.setMinutes(value);
     } else if (type === 'period') {
       const newIsAm = value === 0;
       setIsAm(newIsAm);
-      const currentHours = selectedHour;
-      const newHours = newIsAm ? currentHours : currentHours + 12;
-      newDate.setHours(newHours === 24 ? 0 : newHours);
+      const hours = selectedHour + (newIsAm ? 0 : 12);
+      newDate.setHours(hours);
+      if (selectedHour === 12) {
+        newDate.setHours(newIsAm ? 0 : 12);
+      }
     }
     
     setDate(newDate);
