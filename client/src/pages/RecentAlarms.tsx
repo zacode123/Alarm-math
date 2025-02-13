@@ -66,7 +66,7 @@ export default function RecentAlarms() {
               onClick={() => setShowNewAlarmForm(false)}
               className="hover:bg-transparent absolute left-4"
             >
-              <X className="h-8 w-8" />
+              <X className="h-10 w-10" />
             </Button>
             <DialogTitle className="text-2xl font-semibold flex-1 text-center">Set New Alarm</DialogTitle>
             <Button
@@ -76,7 +76,7 @@ export default function RecentAlarms() {
               type="submit"
               className="hover:bg-transparent absolute right-4"
             >
-              <Check className="h-8 w-8" />
+              <Check className="h-10 w-10" />
             </Button>
           </div>
           <div className="flex-1 overflow-y-auto">
