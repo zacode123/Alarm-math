@@ -317,7 +317,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
             <DialogDescription className="text-center pt-2">
               Choose a ringtone for your alarm. Click to preview the sound.
             </DialogDescription>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
               <AnimatePresence>
                 {allRingtones.map((ringtone) => (
                   <motion.div
