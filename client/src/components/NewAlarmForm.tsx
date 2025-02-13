@@ -15,6 +15,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RingtoneCard } from "@/components/ui/ringtone-card";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const RINGTONES = [
   { id: 'default', name: 'Morning dew' },
@@ -64,6 +65,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     sat: true,
     sun: true
   });
+  const [expandedOption, setExpandedOption] = useState<string | null>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -145,9 +147,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between p-4 border-b">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onCancel}
           type="button"
           className="hover:bg-transparent"
@@ -155,8 +157,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           <X className="h-6 w-6" />
         </Button>
         <h1 className="text-base font-normal">Add alarm</h1>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="icon"
           onClick={form.handleSubmit(onSubmit)}
           type="submit"
@@ -172,8 +174,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </p>
 
         <div className="flex justify-center items-center mb-12">
-          <TimePicker 
-            date={selectedDate} 
+          <TimePicker
+            date={selectedDate}
             setDate={setSelectedDate}
             onTimeUpdate={() => {
               const now = new Date();
@@ -197,9 +199,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           <form className="space-y-0">
             <div className="flex items-center justify-between py-4 border-t">
               <span className="text-[15px] font-medium tracking-wide">Ringtone</span>
-              <Button 
+              <Button
                 type="button"
-                variant="ghost" 
+                variant="ghost"
                 className="text-primary text-[15px] flex items-center gap-2 hover:bg-transparent p-0 font-medium"
                 onClick={() => setShowRingtones(true)}
               >
@@ -210,9 +212,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
             <div className="flex items-center justify-between py-4 border-t">
               <span className="text-[15px] font-medium tracking-wide">Repeat</span>
-              <Button 
+              <Button
                 type="button"
-                variant="ghost" 
+                variant="ghost"
                 className="text-primary text-[15px] flex items-center gap-2 hover:bg-transparent p-0 font-medium"
                 onClick={() => setShowRepeat(true)}
               >
@@ -269,8 +271,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           </form>
         </Form>
 
-        <Dialog 
-          open={showRingtones} 
+        <Dialog
+          open={showRingtones}
           onOpenChange={(open) => {
             if (!open) setShowRingtones(false);
           }}
@@ -300,10 +302,13 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           </DialogContent>
         </Dialog>
 
-        <Dialog 
-          open={showRepeat} 
+        <Dialog
+          open={showRepeat}
           onOpenChange={(open) => {
-            if (!open) setShowRepeat(false);
+            if (!open) {
+              setShowRepeat(false);
+              setExpandedOption(null);
+            }
           }}
         >
           <DialogContent className="sm:max-w-md">
@@ -311,47 +316,107 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <DialogTitle>Repeat</DialogTitle>
             </DialogHeader>
             <div className="space-y-2">
-              {REPEAT_OPTIONS.map((option) => (
-                <div key={option.id} className="flex flex-col">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-between text-sm py-6"
-                    onClick={() => {
-                      if (option.id === 'custom') {
-                        setShowCustomDays(true);
-                      } else {
-                        setSelectedRepeat(option);
-                        setShowRepeat(false);
-                      }
-                    }}
+              <AnimatePresence>
+                {REPEAT_OPTIONS.map((option) => (
+                  <motion.div
+                    key={option.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="flex flex-col"
                   >
-                    {option.name}
-                    {option.id === 'custom' ? (
-                      <ChevronRight className="h-4 w-4" />
-                    ) : null}
-                  </Button>
-                  {option.id === 'custom' && showCustomDays && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-4 py-2 space-y-2"
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className={cn(
+                        "w-full justify-between text-sm py-6 relative overflow-hidden",
+                        expandedOption === option.id && "bg-primary/5"
+                      )}
+                      onClick={() => {
+                        if (option.id === 'custom') {
+                          setExpandedOption(expandedOption === 'custom' ? null : 'custom');
+                        } else {
+                          setSelectedRepeat(option);
+                          setShowRepeat(false);
+                        }
+                      }}
                     >
-                      {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
-                        <div key={day} className="flex items-center justify-between">
-                          <span className="capitalize">{day}</span>
-                          <Switch
-                            checked={selectedDays[day]}
-                            onCheckedChange={() => handleDayToggle(day)}
-                            className="data-[state=checked]:bg-primary"
-                          />
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </div>
-              ))}
+                      <span className={cn(
+                        "transition-colors duration-200",
+                        expandedOption === option.id ? "text-primary font-medium" : ""
+                      )}>
+                        {option.name}
+                      </span>
+                      {option.id === 'custom' && (
+                        <motion.div
+                          animate={{
+                            rotate: expandedOption === 'custom' ? 90 : 0
+                          }}
+                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </motion.div>
+                      )}
+                    </Button>
+                    {option.id === 'custom' && (
+                      <AnimatePresence>
+                        {expandedOption === 'custom' && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{
+                              height: 'auto',
+                              opacity: 1,
+                              transition: {
+                                height: {
+                                  duration: 0.3,
+                                  ease: "easeOut"
+                                },
+                                opacity: {
+                                  duration: 0.2,
+                                  delay: 0.1
+                                }
+                              }
+                            }}
+                            exit={{
+                              height: 0,
+                              opacity: 0,
+                              transition: {
+                                height: {
+                                  duration: 0.3,
+                                  ease: "easeIn"
+                                },
+                                opacity: {
+                                  duration: 0.2
+                                }
+                              }
+                            }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 py-2 space-y-3 bg-muted/50 rounded-lg m-2">
+                              {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
+                                <motion.div
+                                  key={day}
+                                  initial={{ x: -20, opacity: 0 }}
+                                  animate={{ x: 0, opacity: 1 }}
+                                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                  className="flex items-center justify-between bg-background p-3 rounded-md"
+                                >
+                                  <span className="capitalize font-medium">{day}</span>
+                                  <Switch
+                                    checked={selectedDays[day]}
+                                    onCheckedChange={() => handleDayToggle(day)}
+                                    className="data-[state=checked]:bg-primary"
+                                  />
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </DialogContent>
         </Dialog>
