@@ -384,7 +384,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowRepeat(false)}
+                onClick={() => {
+                  setSelectedRepeat(selectedRepeat);
+                  setShowRepeat(false);
+                }}
                 className="hover:bg-transparent absolute left-4"
                 aria-label="Close repeat dialog"
               >
