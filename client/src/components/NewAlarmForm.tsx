@@ -451,7 +451,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-background/95 backdrop-blur-sm p-6 rounded-xl shadow-xl"
+              className="relative bg-white/60 dark:bg-background/40 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border/20"
             >
               <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
                 <Button
@@ -539,181 +539,188 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </Dialog>
 
         <Dialog open={showRepeat} onOpenChange={setShowRepeat}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowRepeat(false)}
-                className="hover:bg-transparent absolute left-4"
-                aria-label="Close repeat dialog"
-              >
-                <X className="h-6 w-6" />
-              </Button>
-              <DialogTitle className="text-xl font-semibold flex-1 text-center">Repeat</DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={confirmRepeatSelection}
-                className="hover:bg-transparent absolute right-4"
-                aria-label="Confirm repeat selection"
-              >
-                <Check className="h-6 w-6" />
-              </Button>
-            </DialogHeader>
-            <DialogDescription className="text-center pt-2">
-              Choose when you want this alarm to repeat.
-            </DialogDescription>
-            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-              <AnimatePresence>
-                {REPEAT_OPTIONS.map((option) => (
-                  <motion.div
-                    key={option.id}
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  >
-                    <Card
-                      className={cn(
-                        "p-4 cursor-pointer border-2 transition-colors duration-200",
-                        (expandedOption === option.id || selectedRepeat.id === option.id)
-                          ? "border-primary bg-primary/10"
-                          : "hover:border-primary/50"
-                      )}
-                      onClick={() => {
-                        if (option.id === 'custom') {
-                          if (expandedOption === 'custom') {
-                            setExpandedOption(null);
-                          } else {
-                            setExpandedOption('custom');
-                            setSelectedRepeat(option);
-                          }
-                        } else {
-                          setSelectedRepeat(option);
-                          setExpandedOption(null);
-                        }
-                      }}
+          <DialogContent className="sm:max-w-md mx-4 rounded-xl">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-white/60 dark:bg-background/40 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border/20"
+            >
+              <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowRepeat(false)}
+                  className="hover:bg-transparent absolute left-4"
+                  aria-label="Close repeat dialog"
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+                <DialogTitle className="text-xl font-semibold flex-1 text-center">Repeat</DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={confirmRepeatSelection}
+                  className="hover:bg-transparent absolute right-4"
+                  aria-label="Confirm repeat selection"
+                >
+                  <Check className="h-6 w-6" />
+                </Button>
+              </DialogHeader>
+              <DialogDescription className="text-center pt-2">
+                Choose when you want this alarm to repeat.
+              </DialogDescription>
+              <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+                <AnimatePresence>
+                  {REPEAT_OPTIONS.map((option) => (
+                    <motion.div
+                      key={option.id}
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <motion.div
-                            className={cn(
-                              "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
+                      <Card
+                        className={cn(
+                          "p-4 cursor-pointer border-2 transition-colors duration-200",
+                          (expandedOption === option.id || selectedRepeat.id === option.id)
+                            ? "border-primary bg-primary/10"
+                            : "hover:border-primary/50"
+                        )}
+                        onClick={() => {
+                          if (option.id === 'custom') {
+                            if (expandedOption === 'custom') {
+                              setExpandedOption(null);
+                            } else {
+                              setExpandedOption('custom');
+                              setSelectedRepeat(option);
+                            }
+                          } else {
+                            setSelectedRepeat(option);
+                            setExpandedOption(null);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <motion.div
+                              className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
+                                (expandedOption === option.id || selectedRepeat.id === option.id)
+                                  ? "bg-primary"
+                                  : "bg-muted"
+                              )}
+                              animate={{
+                                rotate: (expandedOption === option.id || selectedRepeat.id === option.id) ? [0, 360] : 0,
+                                scale: (expandedOption === option.id || selectedRepeat.id === option.id) ? [1, 1.1, 1] : 1
+                              }}
+                              transition={{
+                                duration: 0.5,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              {option.icon && (
+                                <option.icon
+                                  className={cn(
+                                    "h-5 w-5 transition-colors duration-200",
+                                    (expandedOption === option.id || selectedRepeat.id === option.id)
+                                      ? "text-primary-foreground"
+                                      : "text-muted-foreground"
+                                  )}
+                                />
+                              )}
+                            </motion.div>
+                            <span className={cn(
+                              "text-base transition-colors duration-200",
                               (expandedOption === option.id || selectedRepeat.id === option.id)
-                                ? "bg-primary"
-                                : "bg-muted"
-                            )}
-                            animate={{
-                              rotate: (expandedOption === option.id || selectedRepeat.id === option.id) ? [0, 360] : 0,
-                              scale: (expandedOption === option.id || selectedRepeat.id === option.id) ? [1, 1.1, 1] : 1
-                            }}
-                            transition={{
-                              duration: 0.5,
-                              ease: "easeInOut"
-                            }}
-                          >
-                            {option.icon && (
-                              <option.icon
-                                className={cn(
-                                  "h-5 w-5 transition-colors duration-200",
-                                  (expandedOption === option.id || selectedRepeat.id === option.id)
-                                    ? "text-primary-foreground"
-                                    : "text-muted-foreground"
-                                )}
-                              />
-                            )}
-                          </motion.div>
-                          <span className={cn(
-                            "text-base transition-colors duration-200",
-                            (expandedOption === option.id || selectedRepeat.id === option.id)
-                              ? "text-primary font-medium"
-                              : "text-foreground"
-                          )}>
-                            {option.name}
-                          </span>
+                                ? "text-primary font-medium"
+                                : "text-foreground"
+                            )}>
+                              {option.name}
+                            </span>
+                          </div>
+                          {option.id === 'custom' && (
+                            <motion.div
+                              animate={{
+                                rotate: expandedOption === 'custom' ? 90 : 0
+                              }}
+                              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </motion.div>
+                          )}
                         </div>
                         {option.id === 'custom' && (
-                          <motion.div
-                            animate={{
-                              rotate: expandedOption === 'custom' ? 90 : 0
-                            }}
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </motion.div>
+                          <AnimatePresence>
+                            {expandedOption === 'custom' && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0, y: -20 }}
+                                animate={{
+                                  height: 'auto',
+                                  opacity: 1,
+                                  y: 0,
+                                  transition: {
+                                    height: {
+                                      duration: 0.3,
+                                      ease: "easeOut"
+                                    },
+                                    opacity: {
+                                      duration: 0.2,
+                                      delay: 0.1
+                                    },
+                                    y: {
+                                      duration: 0.3,
+                                      ease: "easeOut"
+                                    }
+                                  }
+                                }}
+                                exit={{
+                                  height: 0,
+                                  opacity: 0,
+                                  y: -20,
+                                  transition: {
+                                    height: {
+                                      duration: 0.3,
+                                      ease: "easeIn"
+                                    },
+                                    opacity: {
+                                      duration: 0.2
+                                    },
+                                    y: {
+                                      duration: 0.2
+                                    }
+                                  }
+                                }}
+                                className="overflow-hidden"
+                              >
+                                <div className="px-4 py-2 space-y-3 bg-muted/50 rounded-lg mt-2">
+                                  {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
+                                    <motion.div
+                                      key={day}
+                                      initial={{ x: -20, opacity: 0 }}
+                                      animate={{ x: 0, opacity: 1 }}
+                                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                      className="flex items-center justify-between bg-background p-3 rounded-md"
+                                    >
+                                      <span className="capitalize font-medium">{day}</span>
+                                      <Switch
+                                        checked={selectedDays[day]}
+                                        onCheckedChange={() => handleDayToggle(day)}
+                                        className="data-[state=checked]:bg-primary"
+                                      />
+                                    </motion.div>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         )}
-                      </div>
-                    </Card>
-                    {option.id === 'custom' && (
-                      <AnimatePresence>
-                        {expandedOption === 'custom' && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0, y: -20 }}
-                            animate={{
-                              height: 'auto',
-                              opacity: 1,
-                              y: 0,
-                              transition: {
-                                height: {
-                                  duration: 0.3,
-                                  ease: "easeOut"
-                                },
-                                opacity: {
-                                  duration: 0.2,
-                                  delay: 0.1
-                                },
-                                y: {
-                                  duration: 0.3,
-                                  ease: "easeOut"
-                                }
-                              }
-                            }}
-                            exit={{
-                              height: 0,
-                              opacity: 0,
-                              y: -20,
-                              transition: {
-                                height: {
-                                  duration: 0.3,
-                                  ease: "easeIn"
-                                },
-                                opacity: {
-                                  duration: 0.2
-                                },
-                                y: {
-                                  duration: 0.2
-                                }
-                              }
-                            }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-4 py-2 space-y-3 bg-muted/50 rounded-lg mt-2">
-                              {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
-                                <motion.div
-                                  key={day}
-                                  initial={{ x: -20, opacity: 0 }}
-                                  animate={{ x: 0, opacity: 1 }}
-                                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                  className="flex items-center justify-between bg-background p-3 rounded-md"
-                                >
-                                  <span className="capitalize font-medium">{day}</span>
-                                  <Switch
-                                    checked={selectedDays[day]}
-                                    onCheckedChange={() => handleDayToggle(day)}
-                                    className="data-[state=checked]:bg-primary"
-                                  />
-                                </motion.div>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </motion.div>
           </DialogContent>
         </Dialog>
       </div>
