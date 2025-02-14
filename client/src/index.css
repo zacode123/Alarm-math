@@ -22,56 +22,58 @@
     @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background/95 backdrop-blur-sm p-6 shadow-lg duration-200 sm:rounded-lg md:w-full my-8 mx-4;
   }
 
-  /* Enhanced Wavy Slider */
-  .wavy-slider-track {
+  /* Enhanced Animated Slider */
+  .animated-slider-track {
     position: relative;
     overflow: hidden;
+    transition: background-color 0.3s ease;
   }
 
-  .wavy-slider-track::before {
-    content: '';
-    position: absolute;
-    inset: 0;
+  .animated-slider-track:hover {
+    background-color: hsl(var(--secondary)/0.8);
+  }
+
+  .animated-slider-range {
     background: linear-gradient(
       90deg,
-      transparent 0%,
-      hsl(var(--primary)/0.2) 50%,
-      transparent 100%
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary)/0.8) 100%
     );
-    mask-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,8 C20,0 40,16 60,8 C80,0 100,16 120,8 C140,0 160,16 180,8' stroke='%23000' fill='none' /%3E%3C/svg%3E");
-    mask-size: 180px 100%;
-    animation: waveMove 3s linear infinite;
+    transition: all 0.3s ease;
   }
 
-  .wavy-slider-range::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: hsl(var(--primary));
-    mask-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,8 C20,0 40,16 60,8 C80,0 100,16 120,8 C140,0 160,16 180,8' stroke='%23000' fill='none' /%3E%3C/svg%3E");
-    mask-size: 180px 100%;
-    animation: waveMove 3s linear infinite;
+  .animated-slider-range:hover {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary)/0.8) 0%,
+      hsl(var(--primary)) 100%
+    );
   }
 
-  .wavy-slider-thumb {
-    animation: thumbWave 2s ease-in-out infinite;
-    transition: transform 0.2s cubic-bezier(0.65, 0, 0.35, 1);
+  .animated-slider-thumb {
+    transition: all 0.2s cubic-bezier(0.65, 0, 0.35, 1);
+    animation: pulse 2s ease-in-out infinite;
   }
 
-  @keyframes waveMove {
-    0% { mask-position: 0% center; }
-    100% { mask-position: 180px center; }
+  .animated-slider-thumb:hover {
+    transform: scale(1.2);
+    border-color: hsl(var(--primary)/0.8);
   }
 
-  @keyframes thumbWave {
+  .animated-slider-thumb:active {
+    transform: scale(0.95);
+  }
+
+  @keyframes pulse {
     0%, 100% {
-      transform: translateY(-4px) scale(1);
+      transform: scale(1);
     }
     50% {
-      transform: translateY(4px) scale(1.1);
+      transform: scale(1.1);
     }
   }
 
+  /* Rest of the existing styles... */
   .wave-bg {
     @apply relative overflow-hidden;
     background: linear-gradient(45deg, hsl(var(--primary)/0.1), transparent);
@@ -122,17 +124,6 @@
 
   .toast-info {
     @apply bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.3;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.1;
   }
 }
 
