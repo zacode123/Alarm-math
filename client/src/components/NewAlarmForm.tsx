@@ -32,9 +32,9 @@ const WavySlider = React.forwardRef<HTMLDivElement, { value: number; onChange: (
           onValueChange={([newValue]) => onChange(newValue)}
         />
       </div>
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-        </motion.div>
+    );
+  }
+);
       </motion.div>
     );
   }
