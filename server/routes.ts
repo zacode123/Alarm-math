@@ -15,6 +15,7 @@ const ensureSoundsDirectory = async () => {
   } catch {
     await fs.promises.mkdir(soundsDir, { recursive: true });
   }
+  return soundsDir;
 };
 
 export function registerRoutes(app: Express): Server {
@@ -70,13 +71,14 @@ export function registerRoutes(app: Express): Server {
     try {
       const result = insertAudioSchema.safeParse(req.body);
       if (!result.success) {
+        console.error('Audio file validation error:', result.error);
         res.status(400).json({ error: result.error });
         return;
       }
 
       const { name, data: base64Data, type, slot } = result.data;
 
-      // Generate object URL-friendly filename
+      // Generate filename
       const timestamp = Date.now();
       const fileName = `ringtone_${slot}_${timestamp}.mp3`;
       const localFilePath = `sounds/${fileName}`;
@@ -93,7 +95,7 @@ export function registerRoutes(app: Express): Server {
       // Save reference in database
       const audio = await storage.createAudioFile({
         name,
-        data: `/${localFilePath}`, // Store the relative URL path
+        data: `/${localFilePath}`,
         type,
         slot,
         created: Math.floor(Date.now() / 1000)
