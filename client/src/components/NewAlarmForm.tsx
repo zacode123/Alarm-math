@@ -20,6 +20,57 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useCallback, useMemo } from 'react';
 
+const WavySlider = React.forwardRef<HTMLDivElement, { value: number; onChange: (value: number) => void }>(
+  ({ value, onChange }, ref) => {
+    return (
+      <motion.div
+        ref={ref}
+        className="relative h-16 my-8"
+        whileHover="hover"
+      >
+        <svg
+          className="absolute w-full h-full"
+          preserveAspectRatio="none"
+          viewBox="0 0 200 50"
+        >
+          <motion.path
+            d="M 0,25 Q 50,40 100,25 T 200,25"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 1 }}
+          />
+        </svg>
+        <motion.div
+          className="absolute w-6 h-6 bg-primary rounded-full -ml-3 cursor-pointer flex items-center justify-center shadow-lg"
+          style={{
+            left: `${value}%`,
+            top: "calc(50% - 12px)"
+          }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 200 }}
+          dragElastic={0}
+          dragMomentum={false}
+          onDrag={(_, info) => {
+            const newValue = Math.max(0, Math.min(100, (info.point.x / 200) * 100));
+            onChange(newValue);
+          }}
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <motion.div
+            className="w-2 h-2 bg-white rounded-full"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+        </motion.div>
+      </motion.div>
+    );
+  }
+);
+
 function useRingtones() {
   const { customRingtones } = useSound();
   const defaultRingtones = Object.entries(DEFAULT_SOUNDS).map(([id, path]) => ({
@@ -295,29 +346,26 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               control={form.control}
               name="volume"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="space-y-8">
                   <FormLabel className="flex items-center justify-between">
-                    Volume
-                    <span className="text-sm text-muted-foreground">{field.value}%</span>
+                    <span className="text-lg font-semibold">Volume</span>
+                    <motion.span
+                      className="text-sm text-muted-foreground"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {field.value}%
+                    </motion.span>
                   </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Slider
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={[field.value]}
-                        onValueChange={([value]) => {
-                          field.onChange(value);
-                          setPreviewVolume(value);
-                          clearTimeout(previewTimeoutRef.current);
-                          previewTimeoutRef.current = setTimeout(() => {
-                            preview(selectedRingtone.path, value / 100);
-                          }, 1000);
-                        }}
-                        className="[&_.relative]:before:content-[''] [&_.relative]:before:absolute [&_.relative]:before:left-0 [&_.relative]:before:right-0 [&_.relative]:before:h-2 [&_.relative]:before:bg-gradient-to-r [&_.relative]:before:from-primary/20 [&_.relative]:before:to-primary [&_.relative]:before:rounded-full"
-                      />
-                    </div>
+                    <WavySlider
+                      value={field.value}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        setPreviewVolume(value);
+                        preview(selectedRingtone.path, value / 100);
+                      }}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -327,26 +375,40 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               control={form.control}
               name="difficulty"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Challenge Difficulty</FormLabel>
-                  <div className="grid grid-cols-3 gap-4">
+                <FormItem className="space-y-8">
+                  <FormLabel className="text-lg font-semibold">Challenge Difficulty</FormLabel>
+                  <div className="grid grid-cols-3 gap-6">
                     {['easy', 'medium', 'hard'].map((difficulty) => (
                       <motion.div
                         key={difficulty}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.05, y: -5 }}
                         whileTap={{ scale: 0.95 }}
+                        animate={field.value === difficulty ? {
+                          y: [0, -5, 0],
+                          transition: {
+                            duration: 0.5,
+                            repeat: Infinity,
+                            repeatType: "reverse"
+                          }
+                        } : {}}
                         onClick={() => field.onChange(difficulty)}
                         className={cn(
-                          "cursor-pointer rounded-lg p-4 text-center transition-colors duration-200",
+                          "cursor-pointer rounded-xl p-6 text-center transition-all duration-300",
+                          "shadow-lg hover:shadow-xl",
+                          "transform perspective-1000",
                           field.value === difficulty
-                            ? "bg-primary text-primary-foreground shadow-lg"
-                            : "bg-muted hover:bg-muted/80"
+                            ? "bg-primary text-primary-foreground rotate-3"
+                            : "bg-muted hover:bg-muted/80 rotate-0"
                         )}
                       >
                         <motion.div
                           initial={{ scale: 1 }}
-                          animate={field.value === difficulty ? { scale: [1, 1.2, 1] } : {}}
-                          transition={{ duration: 0.3 }}
+                          animate={field.value === difficulty ? {
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 360, 0]
+                          } : {}}
+                          transition={{ duration: 0.5 }}
+                          className="font-bold text-lg"
                         >
                           {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
                         </motion.div>
@@ -383,88 +445,95 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </Form>
 
         <Dialog open={showRingtones} onOpenChange={setShowRingtones}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setSelectedRingtone(originalRingtone);
-                  setShowRingtones(false);
-                }}
-                className="hover:bg-transparent absolute left-4"
-                aria-label="Close ringtones dialog"
-              >
-                <X className="h-6 w-6" />
-              </Button>
-              <DialogTitle className="text-xl font-semibold flex-1 text-center">Select Ringtone</DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={confirmRingtoneSelection}
-                className="hover:bg-transparent absolute right-4"
-                aria-label="Confirm ringtone selection"
-              >
-                <Check className="h-6 w-6" />
-              </Button>
-            </DialogHeader>
-            <DialogDescription className="text-center pt-2">
-              Choose a ringtone for your alarm. Click to preview the sound.
-            </DialogDescription>
-            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-              <AnimatePresence>
-                {allRingtones.map((ringtone) => (
-                  <motion.div
-                    key={ringtone.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  >
-                    <Card
-                      className={cn(
-                        "p-4 cursor-pointer border-2 transition-colors duration-200",
-                        selectedRingtone.id === ringtone.id
-                          ? "border-primary bg-primary/10"
-                          : "hover:border-primary/50"
-                      )}
-                      onClick={() => handleRingtoneSelect(ringtone)}
+          <DialogContent className="sm:max-w-md mx-4 rounded-xl">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-background/95 backdrop-blur-sm p-6 rounded-xl shadow-xl"
+            >
+              <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedRingtone(originalRingtone);
+                    setShowRingtones(false);
+                  }}
+                  className="hover:bg-transparent absolute left-4"
+                  aria-label="Close ringtones dialog"
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+                <DialogTitle className="text-xl font-semibold flex-1 text-center">Select Ringtone</DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={confirmRingtoneSelection}
+                  className="hover:bg-transparent absolute right-4"
+                  aria-label="Confirm ringtone selection"
+                >
+                  <Check className="h-6 w-6" />
+                </Button>
+              </DialogHeader>
+              <DialogDescription className="text-center pt-2">
+                Choose a ringtone for your alarm. Click to preview the sound.
+              </DialogDescription>
+              <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+                <AnimatePresence>
+                  {allRingtones.map((ringtone) => (
+                    <motion.div
+                      key={ringtone.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <motion.div
-                            className={cn(
-                              "w-10 h-10 rounded-full flex items-center justify-center",
-                              selectedRingtone.id === ringtone.id
-                                ? "bg-primary"
-                                : "bg-muted"
-                            )}
-                            animate={{
-                              rotate: selectedRingtone.id === ringtone.id ? [0, 360] : 0,
-                              scale: selectedRingtone.id === ringtone.id ? [1, 1.1, 1] : 1
-                            }}
-                            transition={{
-                              duration: 0.5,
-                              ease: "easeInOut"
-                            }}
-                          >
-                            <Music2
+                      <Card
+                        className={cn(
+                          "p-4 cursor-pointer border-2 transition-colors duration-200",
+                          selectedRingtone.id === ringtone.id
+                            ? "border-primary bg-primary/10"
+                            : "hover:border-primary/50"
+                        )}
+                        onClick={() => handleRingtoneSelect(ringtone)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <motion.div
                               className={cn(
-                                "h-5 w-5 transition-colors duration-200",
+                                "w-10 h-10 rounded-full flex items-center justify-center",
                                 selectedRingtone.id === ringtone.id
-                                  ? "text-primary-foreground"
-                                  : "text-muted-foreground"
+                                  ? "bg-primary"
+                                  : "bg-muted"
                               )}
-                            />
-                          </motion.div>
-                          <span>{ringtone.name}</span>
+                              animate={{
+                                rotate: selectedRingtone.id === ringtone.id ? [0, 360] : 0,
+                                scale: selectedRingtone.id === ringtone.id ? [1, 1.1, 1] : 1
+                              }}
+                              transition={{
+                                duration: 0.5,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              <Music2
+                                className={cn(
+                                  "h-5 w-5 transition-colors duration-200",
+                                  selectedRingtone.id === ringtone.id
+                                    ? "text-primary-foreground"
+                                    : "text-muted-foreground"
+                                )}
+                              />
+                            </motion.div>
+                            <span>{ringtone.name}</span>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </motion.div>
           </DialogContent>
         </Dialog>
 
