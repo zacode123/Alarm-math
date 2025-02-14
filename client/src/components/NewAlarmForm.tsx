@@ -458,8 +458,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    setSelectedRepeat(originalRepeat);
-                    setShowRepeat(false);
+                    setSelectedRingtone(originalRingtone);
+                    setShowRingtones(false);
                   }}
                   className="hover:bg-transparent absolute left-4"
                   aria-label="Close ringtones dialog"
@@ -550,7 +550,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setShowRepeat(false)}
+                  onClick={() => {
+                    setSelectedRepeat(originalRepeat);
+                    setShowRepeat(false);
+                  }}
                   className="hover:bg-transparent absolute left-4"
                   aria-label="Close repeat dialog"
                 >
