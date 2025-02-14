@@ -20,13 +20,19 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
 
   useEffect(() => {
     if (soundName) {
-      const newAudio = new Audio(DEFAULT_SOUNDS[soundName as SoundName] || soundName);
+      const newAudio = new Audio();
       newAudio.volume = defaultVolume / 100;
 
       // Test if the audio can be loaded
       newAudio.addEventListener('error', (e) => {
         console.error('Error loading audio:', e);
       });
+
+      try {
+        newAudio.src = DEFAULT_SOUNDS[soundName as SoundName] || soundName;
+      } catch (error) {
+        console.error('Error setting audio source:', error);
+      }
 
       setAudio(newAudio);
 
@@ -41,17 +47,21 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
 
   const play = useCallback((sound?: string, volume?: number) => {
     if (audio) {
-      if (sound) {
-        audio.src = DEFAULT_SOUNDS[sound as SoundName] || sound;
-      }
-      if (typeof volume === 'number') {
-        audio.volume = volume;
-      }
-      audio.currentTime = 0;
-      audio.play().catch(error => {
+      try {
+        if (sound) {
+          audio.src = DEFAULT_SOUNDS[sound as SoundName] || sound;
+        }
+        if (typeof volume === 'number') {
+          audio.volume = volume;
+        }
+        audio.currentTime = 0;
+        return audio.play();
+      } catch (error) {
         console.error('Error playing sound:', error);
-      });
+        return Promise.reject(error);
+      }
     }
+    return Promise.reject(new Error('Audio not initialized'));
   }, [audio]);
 
   const stop = useCallback(() => {
@@ -63,11 +73,11 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
 
   const preview = useCallback((sound: SoundName | string, volume: number = 1) => {
     const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
-    const previewAudio = new Audio(soundUrl);
+    const previewAudio = new Audio();
     previewAudio.volume = volume;
 
     return new Promise((resolve, reject) => {
-      previewAudio.addEventListener('canplaythrough', () => {
+      previewAudio.addEventListener('loadeddata', () => {
         previewAudio.play()
           .then(resolve)
           .catch(reject);
@@ -77,6 +87,13 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
         console.error('Error loading preview sound:', e);
         reject(e);
       });
+
+      try {
+        previewAudio.src = soundUrl;
+      } catch (error) {
+        console.error('Error setting preview audio source:', error);
+        reject(error);
+      }
     });
   }, []);
 
