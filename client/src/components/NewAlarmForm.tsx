@@ -28,10 +28,7 @@ function useRingtones() {
   const { customRingtones } = useSound();
   return [
     ...DEFAULT_RINGTONES,
-    ...customRingtones.map((url, index) => ({
-      id: url,
-      name: `Custom Ringtone ${index + 1}`
-    }))
+    ...customRingtones
   ];
 }
 
@@ -69,8 +66,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const [showRingtones, setShowRingtones] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
   const [selectedRingtone, setSelectedRingtone] = useState(() => {
-    const defaultRingtone = allRingtones.find(r => r.id === defaultValues?.sound) || allRingtones[0];
-    return defaultRingtone;
+    return allRingtones.find(r => r.id === defaultValues?.sound) || allRingtones[0];
   });
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
   const [originalRepeat, setOriginalRepeat] = useState(REPEAT_OPTIONS[0]);
@@ -118,7 +114,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       time: format(new Date(), "HH:mm"),
       days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as WeekDay[],
       difficulty: "easy" as Difficulty,
-      sound: "default",
+      sound: selectedRingtone.id,
       volume: 100,
       enabled: true,
       autoDelete: false,
@@ -167,6 +163,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
   const handleRingtoneSelect = (ringtone: typeof allRingtones[0]) => {
     setSelectedRingtone(ringtone);
+    form.setValue('sound', ringtone.id);
     preview(ringtone.id);
   };
 
@@ -179,7 +176,6 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
   return (
     <div className="flex flex-col h-full bg-background">
-
       <div className="p-4">
         <p className="text-sm text-muted-foreground text-center mb-8">
           {timeRemaining}
@@ -208,7 +204,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
         </div>
 
         <Form {...form}>
-          <form className="space-y-0" id="new-alarm-form">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
             <div className="flex items-center justify-between py-4 border-t">
               <span className="text-[15px] font-medium tracking-wide">Ringtone</span>
               <Button
@@ -274,7 +270,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                   <FormItem>
                     <FormControl>
                       <Input
-                        label="Enter label"
+                        placeholder="Enter label"
                         className="bg-muted/20 border border-input/50 focus:border-primary"
                         {...field}
                       />
@@ -307,8 +303,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <Button
                 variant="ghost"
                 size="icon"
-                type="submit"
-                form="new-alarm-form"
+                onClick={() => {
+                  form.handleSubmit(onSubmit)();
+                  setShowRingtones(false);
+                }}
                 className="hover:bg-transparent absolute right-4"
                 aria-label="Save alarm"
               >
@@ -403,7 +401,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowRepeat(false)}
+                onClick={() => {
+                  form.handleSubmit(onSubmit)();
+                  setShowRepeat(false);
+                }}
                 className="hover:bg-transparent absolute right-4"
                 aria-label="Confirm repeat selection"
               >
