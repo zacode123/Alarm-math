@@ -284,10 +284,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                       <div className="relative">
                         <Input
                           placeholder=" "
-                          className="bg-muted/20 border border-input/50 focus:border-primary pt-4 pb-2 px-3"
+                          className="bg-muted/20 border border-input/50 focus:border-primary px-3 py-2"
                           {...field}
                         />
-                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none transition-all duration-200 group-focus-within:text-xs group-focus-within:text-primary group-focus-within:-top-3 group-focus-within:left-3 group-focus-within:translate-x-0 peer-placeholder-shown:text-base">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none transition-all duration-200 group-focus-within:text-xs group-focus-within:-top-2 group-focus-within:translate-y-0 group-focus-within:text-primary peer-placeholder-shown:text-base">
                           <span className="px-1 bg-background">Enter label</span>
                         </span>
                       </div>
