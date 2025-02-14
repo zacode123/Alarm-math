@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { DEFAULT_SOUNDS } from '@/lib/useSound';
 import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from "@/components/ui/separator";
-import { Moon, Sun, Upload, Volume2, Trash2, Check } from "lucide-react";
+import { Moon, Sun, Upload, Volume2, Trash2, Check, History, Bell } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSound } from "@/lib/useSound";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,6 +33,7 @@ export default function Settings() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedRingtones, setSelectedRingtones] = useState<Set<string>>(new Set());
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [renamingRingtone, setRenamingRingtone] = useState<string | null>(null);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -70,6 +71,16 @@ export default function Settings() {
         setIsSelectionMode(false);
       }
     }
+  };
+
+  const handleSelectAllRingtones = () => {
+    const allIds = customRingtones.map(ringtone => ringtone.id);
+    setSelectedRingtones(new Set(allIds));
+  };
+
+  const handleDeselectAllRingtones = () => {
+    setSelectedRingtones(new Set());
+    setIsSelectionMode(false);
   };
 
   const handleRingtoneUpload = async (event: React.ChangeEvent<HTMLInputElement>, slot: number) => {
@@ -153,6 +164,34 @@ export default function Settings() {
     }
   };
 
+  const handleRename = async (id: string, newName: string) => {
+    const dbId = id.replace('db-', '');
+    try {
+      const response = await fetch(`/api/audio-files/${dbId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newName }),
+      });
+
+      if (!response.ok) throw new Error('Failed to rename ringtone');
+
+      await queryClient.invalidateQueries({ queryKey: ['/api/audio-files'] });
+      setRenamingRingtone(null);
+      toast({
+        title: "Success",
+        description: "Ringtone renamed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to rename ringtone",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       <motion.div
@@ -163,7 +202,10 @@ export default function Settings() {
         {/* Theme Settings */}
         <Card className="mb-4">
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Moon className="h-5 w-5" />
+              Appearance
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -182,19 +224,36 @@ export default function Settings() {
         {/* Ringtones */}
         <Card className="mb-4">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Ringtones</span>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Ringtones
               {isSelectionMode && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setIsSelectionMode(false);
-                    setSelectedRingtones(new Set());
-                  }}
-                >
-                  Cancel
-                </Button>
+                <div className="flex items-center gap-2 ml-auto text-sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSelectAllRingtones}
+                    className="text-primary"
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDeselectAllRingtones}
+                    className="text-primary"
+                  >
+                    Deselect All
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsSelectionMode(false)}
+                    className="text-primary"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               )}
             </CardTitle>
           </CardHeader>
@@ -232,7 +291,30 @@ export default function Settings() {
                   onClick={() => handleRingtoneClick(ringtone.id)}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="flex-1">{ringtone.name}</span>
+                  {renamingRingtone === ringtone.id ? (
+                    <Input
+                      defaultValue={ringtone.name}
+                      className="flex-1 mr-2"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newName = (e.target as HTMLInputElement).value;
+                          handleRename(ringtone.id, newName);
+                        } else if (e.key === 'Escape') {
+                          setRenamingRingtone(null);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const newName = e.target.value;
+                        if (newName !== ringtone.name) {
+                          handleRename(ringtone.id, newName);
+                        }
+                        setRenamingRingtone(null);
+                      }}
+                    />
+                  ) : (
+                    <span className="flex-1">{ringtone.name}</span>
+                  )}
                   <div className="flex gap-2">
                     {isSelectionMode ? (
                       <div className={`w-6 h-6 rounded-full border-2 ${
@@ -245,16 +327,28 @@ export default function Settings() {
                         )}
                       </div>
                     ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          preview(ringtone.url);
-                        }}
-                      >
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            preview(ringtone.url);
+                          }}
+                        >
+                          <Volume2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenamingRingtone(ringtone.id);
+                          }}
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </motion.div>
@@ -313,7 +407,10 @@ export default function Settings() {
         {/* About Us */}
         <Card>
           <CardHeader>
-            <CardTitle>About Us</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              About Us
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
