@@ -23,47 +23,15 @@ import { useCallback, useMemo } from 'react';
 const WavySlider = React.forwardRef<HTMLDivElement, { value: number; onChange: (value: number) => void }>(
   ({ value, onChange }, ref) => {
     return (
-      <motion.div
-        ref={ref}
-        className="relative h-24 my-8"
-        whileHover="hover"
-      >
-        <svg
-          className="absolute w-full h-full"
-          preserveAspectRatio="none"
-          viewBox="0 0 200 50"
-        >
-          <motion.path
-            d="M 0,25 Q 25,5 50,25 T 100,25 T 150,25 T 200,25"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="2"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 1 }}
-          />
-        </svg>
-        <motion.div
-          className="absolute w-8 h-8 bg-primary rounded-full -ml-4 cursor-pointer flex items-center justify-center shadow-lg"
-          style={{
-            left: `${value}%`,
-            top: "50%",
-            transform: "translateY(-50%)"
-          }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 200 }}
-          dragElastic={0}
-          dragMomentum={false}
-          onDrag={(_, info) => {
-            const newValue = Math.max(0, Math.min(100, (info.point.x / 200) * 100));
-            onChange(newValue);
-          }}
-          whileHover={{ scale: 1.2 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <motion.div
-            className="w-3 h-3 bg-white rounded-full"
-            animate={{ scale: [1, 1.2, 1] }}
+      <div ref={ref} className="my-8">
+        <Slider
+          value={[value]}
+          max={100}
+          step={1}
+          className="w-full"
+          onValueChange={([newValue]) => onChange(newValue)}
+        />
+      </div>
             transition={{ duration: 1, repeat: Infinity }}
           />
         </motion.div>
