@@ -62,7 +62,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       // Save file to public/sounds directory
-      const fileName = `audio_${Date.now()}.mp3`;
+      const fileName = `custom_ringtone_${req.body.slot}.mp3`;
       const filePath = path.join(process.cwd(), 'client/public/sounds', fileName);
 
       // Convert base64 to buffer and save

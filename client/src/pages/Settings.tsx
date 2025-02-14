@@ -41,10 +41,14 @@ export default function Settings() {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const base64Data = (e.target?.result as string).split(',')[1];
-          const slotName = `Custom ${slot}`;
-          
           try {
             const response = await fetch('/api/audio-files', {
+              body: JSON.stringify({
+                name: `Custom Ringtone ${slot}`,
+                data: base64Data,
+                type: file.type,
+                slot: slot
+              }),
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
