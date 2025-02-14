@@ -257,14 +257,14 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-background/10 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-background/10 backdrop-blur-sm flex items-center justify-center z-50 px-6"
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         transition={{ type: "spring", duration: 0.5 }}
-        className="bg-white/60 dark:bg-background/40 backdrop-blur-md rounded-xl shadow-xl border border-border/20 w-full max-w-lg max-h-[90vh] overflow-auto"
+        className="bg-white/60 dark:bg-background/40 backdrop-blur-md rounded-2xl shadow-xl border border-border/20 w-full max-w-2xl"
       >
         <div className="sticky top-0 z-10 bg-white/80 dark:bg-background/80 backdrop-blur-sm p-4 border-b border-border/10 flex items-center justify-between">
           <Button
