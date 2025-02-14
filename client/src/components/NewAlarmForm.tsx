@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAlarmSchema, type InsertAlarm, type Alarm, type WeekDay, type Difficulty } from "@shared/schema";
 import { useAlarms } from "@/lib/useAlarms";
 import { useSound } from "@/lib/useSound";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { DEFAULT_SOUNDS } from '@/lib/useSound';
+import { Slider } from "@/components/ui/slider";
 
 const DEFAULT_RINGTONES = Object.entries(DEFAULT_SOUNDS).map(([id, path]) => ({
   id,
@@ -287,6 +288,65 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="volume"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center justify-between">
+                    Volume
+                    <span className="text-sm text-muted-foreground">{field.value}%</span>
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Slider
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={[field.value]}
+                        onValueChange={([value]) => field.onChange(value)}
+                        className="[&_.relative]:before:content-[''] [&_.relative]:before:absolute [&_.relative]:before:left-0 [&_.relative]:before:right-0 [&_.relative]:before:h-2 [&_.relative]:before:bg-gradient-to-r [&_.relative]:before:from-primary/20 [&_.relative]:before:to-primary [&_.relative]:before:rounded-full"
+                      />
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="difficulty"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Challenge Difficulty</FormLabel>
+                  <div className="grid grid-cols-3 gap-4">
+                    {['easy', 'medium', 'hard'].map((difficulty) => (
+                      <motion.div
+                        key={difficulty}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => field.onChange(difficulty)}
+                        className={cn(
+                          "cursor-pointer rounded-lg p-4 text-center transition-colors duration-200",
+                          field.value === difficulty
+                            ? "bg-primary text-primary-foreground shadow-lg"
+                            : "bg-muted hover:bg-muted/80"
+                        )}
+                      >
+                        <motion.div
+                          initial={{ scale: 1 }}
+                          animate={field.value === difficulty ? { scale: [1, 1.2, 1] } : {}}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                        </motion.div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </FormItem>
+              )}
+            />
 
             <div className="py-4 border-t relative group">
               <FormField
