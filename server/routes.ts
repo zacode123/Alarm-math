@@ -7,20 +7,20 @@ import { writeFile, mkdir } from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
 
-// Ensure sounds directory exists
-const ensureSoundsDirectory = async () => {
-  const soundsDir = path.join(process.cwd(), 'client/public/sounds');
+// Ensure custom ringtones directory exists
+const ensureCustomRingtonesDirectory = async () => {
+  const customRingtonesDir = path.join(process.cwd(), 'client/public/sounds/custom_ringtones');
   try {
-    await fs.promises.access(soundsDir);
+    await fs.promises.access(customRingtonesDir);
   } catch {
-    await fs.promises.mkdir(soundsDir, { recursive: true });
+    await fs.promises.mkdir(customRingtonesDir, { recursive: true });
   }
-  return soundsDir;
+  return customRingtonesDir;
 };
 
 export function registerRoutes(app: Express): Server {
-  // Ensure sounds directory exists when server starts
-  ensureSoundsDirectory();
+  // Ensure custom ringtones directory exists when server starts
+  ensureCustomRingtonesDirectory();
 
   app.get("/api/alarms", async (_req, res) => {
     const alarms = await storage.getAlarms();
@@ -76,21 +76,20 @@ export function registerRoutes(app: Express): Server {
         return;
       }
 
-      const { name, data: base64Data, type, slot } = result.data;
+      const { name, data, type, slot } = result.data;
 
       // Generate filename
       const timestamp = Date.now();
-      const fileName = `ringtone_${slot}_${timestamp}.mp3`;
-      const localFilePath = `sounds/${fileName}`;
+      const fileName = `ringtone_${slot}_${timestamp}${path.extname(name)}`;
+      const localFilePath = `sounds/custom_ringtones/${fileName}`;
       const fullFilePath = path.join(process.cwd(), 'client/public', localFilePath);
 
       // Ensure directory exists
-      await ensureSoundsDirectory();
+      await ensureCustomRingtonesDirectory();
 
-      // Convert base64 to buffer and save
-      const base64Content = base64Data.split(',')[1];
-      const buffer = Buffer.from(base64Content, 'base64');
-      await writeFile(fullFilePath, buffer);
+      // Write the file directly (it's already in the correct format)
+      const audioData = Buffer.from(data);
+      await writeFile(fullFilePath, audioData);
 
       // Save reference in database
       const audio = await storage.createAudioFile({

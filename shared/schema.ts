@@ -36,8 +36,8 @@ export type Difficulty = z.infer<typeof Difficulty>;
 export const insertAudioSchema = createInsertSchema(audioFiles)
   .omit({ id: true })
   .extend({
-    data: z.string(), // Base64 encoded audio data
-    type: z.string(), // MIME type (e.g., 'audio/mp3')
+    data: z.string(), // Raw audio data
+    type: z.string(), // MIME type (e.g., 'audio/mp3', 'audio/wav')
     name: z.string().min(1, "Name is required"),
     slot: z.number().int().min(1).max(3),
     created: z.number().optional()
