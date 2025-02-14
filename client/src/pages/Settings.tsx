@@ -38,50 +38,38 @@ export default function Settings() {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith('audio/')) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const base64Data = (e.target?.result as string).split(',')[1];
-          try {
-            const response = await fetch('/api/audio-files', {
-              body: JSON.stringify({
-                name: `Custom Ringtone ${slot}`,
-                data: base64Data,
-                type: file.type,
-                slot: slot
-              }),
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                name: file.name,
-                data: base64Data,
-                type: file.type
-              }),
-              signal: AbortSignal.timeout(30000) // 30 second timeout
-            });
-            
-            if (!response.ok) throw new Error('Upload failed');
-            
-            const result = await response.json();
-            addCustomRingtone({ 
-              id: `db-${result.id}`, 
-              url: result.url,
-              name: result.name 
-            });
-            toast({
-              title: "Ringtone added",
-              description: `${file.name} has been added to your custom ringtones.`,
-            });
-          } catch (error) {
-            toast({
-              title: "Error",
-              description: "Failed to upload ringtone",
-              variant: "destructive",
-            });
-          }
-        };
-        reader.readAsDataURL(file);
+        try {
+          const formData = new FormData();
+          formData.append('name', file.name);
+          formData.append('data', file);
+          formData.append('type', file.type);
+          formData.append('slot', slot.toString());
+
+          const response = await fetch('/api/audio-files', {
+            method: 'POST',
+            body: formData,
+            signal: AbortSignal.timeout(30000) // 30 second timeout
+          });
+
+          if (!response.ok) throw new Error('Upload failed');
+
+          const result = await response.json();
+          addCustomRingtone({ 
+            id: `db-${result.id}`, 
+            url: result.url,
+            name: result.name 
+          });
+          toast({
+            title: "Ringtone added",
+            description: `${file.name} has been added to your custom ringtones.`,
+          });
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to upload ringtone",
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Invalid file",
@@ -94,10 +82,7 @@ export default function Settings() {
 
   const handleDeleteRingtone = (index: number, url: string) => {
     URL.revokeObjectURL(url);
-    // Since we can't modify the customRingtones array directly,
-    // we'll create a new array without the deleted ringtone
     const updatedRingtones = customRingtones.filter((_, i) => i !== index);
-    // Re-add all ringtones except the deleted one
     updatedRingtones.forEach(ringtone => {
       addCustomRingtone(ringtone);
     });

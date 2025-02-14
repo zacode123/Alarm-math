@@ -6,6 +6,7 @@ import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
+import multer from 'multer';
 
 // Ensure custom ringtones directory exists
 const ensureCustomRingtonesDirectory = async () => {
@@ -17,6 +18,35 @@ const ensureCustomRingtonesDirectory = async () => {
   }
   return customRingtonesDir;
 };
+
+// Configure multer for file uploads
+const multerStorage = multer.diskStorage({
+  destination: async function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'client/public/sounds/custom_ringtones');
+    await ensureCustomRingtonesDirectory();
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const timestamp = Date.now();
+    const slot = req.body.slot || '1';
+    const fileName = `ringtone_${slot}_${timestamp}${path.extname(file.originalname)}`;
+    cb(null, fileName);
+  }
+});
+
+const upload = multer({ 
+  storage: multerStorage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only audio files are allowed.'));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
 
 export function registerRoutes(app: Express): Server {
   // Ensure custom ringtones directory exists when server starts
@@ -67,29 +97,15 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/audio-files", async (req, res) => {
+  app.post("/api/audio-files", upload.single('data'), async (req, res) => {
     try {
-      const result = insertAudioSchema.safeParse(req.body);
-      if (!result.success) {
-        console.error('Audio file validation error:', result.error);
-        res.status(400).json({ error: result.error });
-        return;
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const { name, data, type, slot } = result.data;
-
-      // Generate filename
-      const timestamp = Date.now();
-      const fileName = `ringtone_${slot}_${timestamp}${path.extname(name)}`;
-      const localFilePath = `sounds/custom_ringtones/${fileName}`;
-      const fullFilePath = path.join(process.cwd(), 'client/public', localFilePath);
-
-      // Ensure directory exists
-      await ensureCustomRingtonesDirectory();
-
-      // Write the file directly (it's already in the correct format)
-      const audioData = Buffer.from(data);
-      await writeFile(fullFilePath, audioData);
+      const { originalname: name, mimetype: type } = req.file;
+      const slot = parseInt(req.body.slot) || 1;
+      const localFilePath = `sounds/custom_ringtones/${req.file.filename}`;
 
       // Save reference in database
       const audio = await storage.createAudioFile({
