@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { DEFAULT_SOUNDS } from '@/lib/useSound';
 import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from "@/components/ui/separator";
-import { Moon, Sun, Upload, Volume2, Trash2 } from "lucide-react";
+import { Moon, Sun, Upload, Volume2, Trash2, Check, X, Edit } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +30,9 @@ export default function Settings() {
   const { preview, customRingtones, addCustomRingtone } = useSound();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedRingtones, setSelectedRingtones] = useState<Set<string>>(new Set());
+  const [renamingRingtone, setRenamingRingtone] = useState<{ id: string, name: string } | null>(null);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -51,7 +54,7 @@ export default function Settings() {
           const response = await fetch('/api/audio-files', {
             method: 'POST',
             body: formData,
-            signal: AbortSignal.timeout(30000) // 30 second timeout
+            signal: AbortSignal.timeout(30000)
           });
 
           if (!response.ok) throw new Error('Upload failed');
@@ -83,33 +86,76 @@ export default function Settings() {
     }
   };
 
+  const handleDeleteRingtones = async () => {
+    const promises = Array.from(selectedRingtones).map(async (id) => {
+      const dbId = id.replace('db-', '');
+      try {
+        const response = await fetch(`/api/audio-files/${dbId}`, {
+          method: 'DELETE'
+        });
 
-  const handleDeleteRingtone = async (index: number, url: string) => {
-    URL.revokeObjectURL(url);
-    const ringtoneId = customRingtones[index].id;
-    const dbId = ringtoneId.replace('db-', '');
+        if (!response.ok) {
+          throw new Error('Failed to delete ringtone');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+    });
 
     try {
-      const response = await fetch(`/api/audio-files/${dbId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete ringtone');
-      }
-
-      // Invalidate and refetch audio files query
+      await Promise.all(promises);
       await queryClient.invalidateQueries({ queryKey: ['/api/audio-files'] });
-
+      setSelectedRingtones(new Set());
+      setIsSelectionMode(false);
       toast({
-        title: "Ringtone deleted",
-        description: "Custom ringtone has been removed successfully.",
+        title: "Success",
+        description: `${selectedRingtones.size} ringtone(s) deleted successfully.`,
       });
     } catch (error) {
-      console.error('Delete error:', error);
       toast({
         title: "Error",
-        description: "Failed to delete ringtone",
+        description: "Failed to delete some ringtones",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleRingtoneSelection = (id: string) => {
+    const newSelection = new Set(selectedRingtones);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedRingtones(newSelection);
+  };
+
+  const handleRename = async (newName: string) => {
+    if (!renamingRingtone) return;
+
+    const dbId = renamingRingtone.id.replace('db-', '');
+    try {
+      const response = await fetch(`/api/audio-files/${dbId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newName }),
+      });
+
+      if (!response.ok) throw new Error('Failed to rename ringtone');
+
+      await queryClient.invalidateQueries({ queryKey: ['/api/audio-files'] });
+      setRenamingRingtone(null);
+      toast({
+        title: "Success",
+        description: "Ringtone renamed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to rename ringtone",
         variant: "destructive",
       });
     }
@@ -143,8 +189,25 @@ export default function Settings() {
 
         {/* Ringtones */}
         <Card className="mb-4">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle>Ringtones</CardTitle>
+            {customRingtones.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsSelectionMode(!isSelectionMode);
+                  setSelectedRingtones(new Set());
+                }}
+              >
+                {isSelectionMode ? (
+                  <X className="h-4 w-4 mr-2" />
+                ) : (
+                  <Edit className="h-4 w-4 mr-2" />
+                )}
+                {isSelectionMode ? "Cancel" : "Edit"}
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Default Ringtones */}
@@ -169,62 +232,101 @@ export default function Settings() {
             {/* Custom Ringtones */}
             <div className="space-y-4">
               <h3 className="font-medium">Custom Ringtones</h3>
-              {customRingtones.map((ringtone, index) => (
+              {customRingtones.map((ringtone) => (
                 <div key={ringtone.id} className="flex items-center justify-between py-2">
-                  <span>{ringtone.name}</span>
+                  {renamingRingtone?.id === ringtone.id ? (
+                    <Input
+                      defaultValue={renamingRingtone.name}
+                      className="max-w-[200px]"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleRename((e.target as HTMLInputElement).value);
+                        } else if (e.key === 'Escape') {
+                          setRenamingRingtone(null);
+                        }
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    <span className="flex-1">{ringtone.name}</span>
+                  )}
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => preview(ringtone.url)}
-                    >
-                      <Volume2 className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4" />
+                    {isSelectionMode ? (
+                      <Button
+                        variant={selectedRingtones.has(ringtone.id) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleRingtoneSelection(ringtone.id)}
+                      >
+                        <Check className={`h-4 w-4 ${selectedRingtones.has(ringtone.id) ? "text-white" : ""}`} />
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => preview(ringtone.url)}
+                        >
+                          <Volume2 className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Ringtone</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this custom ringtone? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteRingtone(index, ringtone.url)}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRenamingRingtone({ id: ringtone.id, name: ringtone.name })}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
-              <div className="flex items-center gap-4">
-                <Input
-                  type="file"
-                  accept="audio/*"
-                  className="hidden"
-                  id="ringtone-upload"
-                  onChange={(e) => handleRingtoneUpload(e, customRingtones.length + 1)}
-                />
-                <Button
-                  variant="outline"
-                  asChild
-                  className="w-full"
-                >
-                  <label htmlFor="ringtone-upload" className="flex items-center justify-center gap-2 cursor-pointer">
-                    <Upload className="h-4 w-4" />
-                    Upload Custom Ringtone
-                  </label>
-                </Button>
-              </div>
+
+              {/* Selection Mode Actions */}
+              {isSelectionMode && selectedRingtones.size > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Selected ({selectedRingtones.size})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Ringtones</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete {selectedRingtones.size} ringtone(s)? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteRingtones}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
+              {/* Upload Button */}
+              {!isSelectionMode && (
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    accept="audio/*"
+                    className="hidden"
+                    id="ringtone-upload"
+                    onChange={(e) => handleRingtoneUpload(e, customRingtones.length + 1)}
+                  />
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="w-full"
+                  >
+                    <label htmlFor="ringtone-upload" className="flex items-center justify-center gap-2 cursor-pointer">
+                      <Upload className="h-4 w-4" />
+                      Upload Custom Ringtone
+                    </label>
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
