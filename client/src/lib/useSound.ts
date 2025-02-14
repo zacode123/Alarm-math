@@ -121,17 +121,14 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
 
   const preview = useCallback((function() {
     let currentPreview: HTMLAudioElement | null = null;
-    let isPlaying = false;
+    let preloadedAudio: Record<string, HTMLAudioElement> = {};
     
     return async (sound: SoundName | string, volume: number = 1) => {
       try {
-        if (isPlaying) {
-          if (currentPreview) {
-            currentPreview.pause();
-            currentPreview.src = '';
-          }
-          isPlaying = false;
-          await new Promise(resolve => setTimeout(resolve, 100));
+        // Stop current preview if exists
+        if (currentPreview) {
+          currentPreview.pause();
+          currentPreview.currentTime = 0;
         }
 
         const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
@@ -140,27 +137,23 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
           return;
         }
 
-        const previewAudio = new Audio(soundUrl);
-        currentPreview = previewAudio;
-        previewAudio.volume = volume;
-        isPlaying = true;
-
-        try {
-          await previewAudio.play();
-        } catch (error) {
-          console.warn('Preview playback failed:', error);
-          isPlaying = false;
+        // Use preloaded audio or create new one
+        if (!preloadedAudio[soundUrl]) {
+          preloadedAudio[soundUrl] = new Audio(soundUrl);
+          await preloadedAudio[soundUrl].load();
         }
 
-        previewAudio.onended = () => {
-          isPlaying = false;
-          if (currentPreview === previewAudio) {
-            currentPreview = null;
-          }
-        };
+        currentPreview = preloadedAudio[soundUrl];
+        currentPreview.volume = volume;
+        currentPreview.currentTime = 0;
+        
+        try {
+          await currentPreview.play();
+        } catch (error) {
+          console.warn('Preview playback failed:', error);
+        }
       } catch (error) {
         console.warn('Preview error:', error);
-        isPlaying = false;
       }
     };
   })(), []);
