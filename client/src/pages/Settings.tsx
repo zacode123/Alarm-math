@@ -80,6 +80,7 @@ export default function Settings() {
     }
   };
 
+  import { useQueryClient } from '@tanstack/react-query';
   const queryClient = useQueryClient();
   
   const handleDeleteRingtone = async (index: number, url: string) => {
