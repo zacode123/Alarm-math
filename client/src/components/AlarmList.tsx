@@ -13,9 +13,10 @@ interface AlarmListProps {
   alarms: Alarm[];
   onDelete: (ids: number[]) => void;
   onSelectionModeChange?: (isSelectionMode: boolean) => void;
+  onRename?: (id: number) => void;
 }
 
-export function AlarmList({ alarms, onDelete, onSelectionModeChange }: AlarmListProps) {
+export function AlarmList({ alarms, onDelete, onSelectionModeChange, onRename }: AlarmListProps) {
   const { updateAlarm } = useAlarms();
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);

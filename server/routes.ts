@@ -1,13 +1,26 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAlarmSchema } from "@shared/schema";
+import { insertAlarmSchema, insertAudioSchema } from "@shared/schema";
 import { join } from 'path';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
 
+// Ensure sounds directory exists
+const ensureSoundsDirectory = async () => {
+  const soundsDir = path.join(process.cwd(), 'client/public/sounds');
+  try {
+    await fs.promises.access(soundsDir);
+  } catch {
+    await fs.promises.mkdir(soundsDir, { recursive: true });
+  }
+};
+
 export function registerRoutes(app: Express): Server {
+  // Ensure sounds directory exists when server starts
+  ensureSoundsDirectory();
+
   app.get("/api/alarms", async (_req, res) => {
     const alarms = await storage.getAlarms();
     res.json(alarms);
@@ -54,31 +67,35 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/audio-files", async (req, res) => {
-    const { name, data, type } = req.body;
-
-    if (!data || !name) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const result = insertAudioSchema.safeParse(req.body);
+    if (!result.success) {
+      res.status(400).json({ error: result.error });
+      return;
     }
 
+    const { name, data, type, slot } = result.data;
+
     try {
-      // Save file to public/sounds directory
-      const fileName = `custom_ringtone_${req.body.slot}.mp3`;
+      // Generate a unique filename using timestamp and slot
+      const timestamp = Date.now();
+      const fileName = `custom_ringtone_${slot}_${timestamp}.mp3`;
       const filePath = path.join(process.cwd(), 'client/public/sounds', fileName);
 
       // Convert base64 to buffer and save
       const buffer = Buffer.from(data, 'base64');
-      fs.writeFileSync(filePath, buffer);
+      await writeFile(filePath, buffer);
 
       // Save reference in database with file path
       const audio = await storage.createAudioFile({
         name: fileName,
         data: `/sounds/${fileName}`,
         type,
+        slot,
         created: Math.floor(Date.now() / 1000)
       });
 
       res.json({
-        id: audio.id, // Assuming createAudioFile returns an object with an 'id' property. Adjust as necessary.
+        id: audio.id,
         name: fileName,
         url: `/sounds/${fileName}`
       });
@@ -88,6 +105,15 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/audio-files", async (_req, res) => {
+    try {
+      const files = await storage.getAudioFiles();
+      res.json(files);
+    } catch (error) {
+      console.error('Error fetching audio files:', error);
+      res.status(500).json({ error: 'Failed to fetch audio files' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
