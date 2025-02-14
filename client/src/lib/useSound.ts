@@ -123,36 +123,45 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
     let currentPreview: HTMLAudioElement | null = null;
     
     return (sound: SoundName | string, volume: number = 1) => {
-      // Stop any existing preview
-      if (currentPreview) {
-        currentPreview.pause();
-        currentPreview.src = '';
-      }
-
-      const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
-      const previewAudio = new Audio();
-      currentPreview = previewAudio;
-      previewAudio.volume = volume;
-
-      return new Promise((resolve, reject) => {
-        previewAudio.addEventListener('loadeddata', () => {
-          previewAudio.play()
-            .then(resolve)
-            .catch(reject);
-        });
-
-        previewAudio.addEventListener('error', (e) => {
-          console.error('Error loading preview sound:', e);
-          reject(e);
-        });
-
-        try {
-          previewAudio.src = soundUrl;
-        } catch (error) {
-          console.error('Error setting preview audio source:', error);
-          reject(error);
+      try {
+        // Stop any existing preview
+        if (currentPreview) {
+          currentPreview.pause();
+          currentPreview.src = '';
+          currentPreview = null;
         }
-      });
+
+        const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
+        if (!soundUrl) {
+          console.warn('Invalid sound URL');
+          return Promise.resolve();
+        }
+
+        const previewAudio = new Audio();
+        currentPreview = previewAudio;
+        previewAudio.volume = volume;
+
+        return new Promise((resolve) => {
+          const onError = (e: Event) => {
+            console.warn('Preview sound loading error:', e);
+            previewAudio.src = '';
+            resolve();
+          };
+
+          previewAudio.addEventListener('error', onError);
+          previewAudio.addEventListener('loadeddata', () => {
+            previewAudio.play().catch(() => {
+              console.warn('Preview playback failed');
+              resolve();
+            });
+          });
+
+          previewAudio.src = soundUrl;
+        });
+      } catch (error) {
+        console.warn('Preview error:', error);
+        return Promise.resolve();
+      }
     };
   })(), []);
 
