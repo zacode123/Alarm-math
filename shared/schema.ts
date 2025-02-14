@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -19,9 +19,9 @@ export const alarms = pgTable("alarms", {
 export const audioFiles = pgTable("audio_files", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  data: text("data").notNull(), // Base64 encoded audio data
+  data: text("data").notNull(), // URL path to the audio file
   type: text("type").notNull(), // MIME type
-  slot: integer("slot"), // Slot number (1-3)
+  slot: integer("slot").notNull(), // Slot number (1-3)
   created: integer("created").notNull()
 });
 
@@ -39,6 +39,7 @@ export const insertAudioSchema = createInsertSchema(audioFiles)
     data: z.string(),
     type: z.string(),
     name: z.string(),
+    slot: z.number().min(1).max(3),
     created: z.number()
   });
 
