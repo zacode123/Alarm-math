@@ -119,30 +119,40 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
     }
   }, [audio]);
 
-  const preview = useCallback((sound: SoundName | string, volume: number = 1) => {
-    const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
-    const previewAudio = new Audio();
-    previewAudio.volume = volume;
-
-    return new Promise((resolve, reject) => {
-      previewAudio.addEventListener('loadeddata', () => {
-        previewAudio.play()
-          .then(resolve)
-          .catch(reject);
-      });
-
-      previewAudio.addEventListener('error', (e) => {
-        console.error('Error loading preview sound:', e);
-        reject(e);
-      });
-
-      try {
-        previewAudio.src = soundUrl;
-      } catch (error) {
-        console.error('Error setting preview audio source:', error);
-        reject(error);
+  const preview = useCallback((function() {
+    let currentPreview: HTMLAudioElement | null = null;
+    
+    return (sound: SoundName | string, volume: number = 1) => {
+      // Stop any existing preview
+      if (currentPreview) {
+        currentPreview.pause();
+        currentPreview.src = '';
       }
-    });
+
+      const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
+      const previewAudio = new Audio();
+      currentPreview = previewAudio;
+      previewAudio.volume = volume;
+
+      return new Promise((resolve, reject) => {
+        previewAudio.addEventListener('loadeddata', () => {
+          previewAudio.play()
+            .then(resolve)
+            .catch(reject);
+        });
+
+        previewAudio.addEventListener('error', (e) => {
+          console.error('Error loading preview sound:', e);
+          reject(e);
+        });
+
+        try {
+          previewAudio.src = soundUrl;
+        } catch (error) {
+          console.error('Error setting preview audio source:', error);
+          reject(error);
+        }
+      });
   }, []);
 
   const addCustomRingtone = useCallback(async (ringtone: CustomRingtone) => {
