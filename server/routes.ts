@@ -59,16 +59,6 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      const audioFile = await storage.getAudioFile(id);
-      if (audioFile) {
-        // Remove the physical file if it exists
-        const filePath = path.join(process.cwd(), 'client/public', audioFile.data);
-        try {
-          await fs.promises.unlink(filePath);
-        } catch (error) {
-          console.warn('Could not delete audio file:', error);
-        }
-      }
       await storage.deleteAlarm(id);
       res.status(204).send();
     } catch (err) {
@@ -86,19 +76,24 @@ export function registerRoutes(app: Express): Server {
 
       const { name, data: base64Data, type, slot } = result.data;
 
-      // Generate a unique filename
+      // Generate object URL-friendly filename
       const timestamp = Date.now();
-      const fileName = `custom_ringtone_${slot}_${timestamp}.mp3`;
-      const filePath = path.join(process.cwd(), 'client/public/sounds', fileName);
+      const fileName = `ringtone_${slot}_${timestamp}.mp3`;
+      const localFilePath = `sounds/${fileName}`;
+      const fullFilePath = path.join(process.cwd(), 'client/public', localFilePath);
+
+      // Ensure directory exists
+      await ensureSoundsDirectory();
 
       // Convert base64 to buffer and save
-      const buffer = Buffer.from(base64Data.split(',')[1], 'base64');
-      await writeFile(filePath, buffer);
+      const base64Content = base64Data.split(',')[1];
+      const buffer = Buffer.from(base64Content, 'base64');
+      await writeFile(fullFilePath, buffer);
 
       // Save reference in database
       const audio = await storage.createAudioFile({
         name,
-        data: `/sounds/${fileName}`,
+        data: `/${localFilePath}`, // Store the relative URL path
         type,
         slot,
         created: Math.floor(Date.now() / 1000)
@@ -106,8 +101,8 @@ export function registerRoutes(app: Express): Server {
 
       res.json({
         id: audio.id,
-        name: fileName,
-        url: `/sounds/${fileName}`
+        name: audio.name,
+        url: `/${localFilePath}`
       });
     } catch (error) {
       console.error('Error saving audio file:', error);
@@ -122,6 +117,31 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error fetching audio files:', error);
       res.status(500).json({ error: 'Failed to fetch audio files' });
+    }
+  });
+
+  app.delete("/api/audio-files/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+
+    try {
+      const audioFile = await storage.getAudioFile(id);
+      if (audioFile) {
+        // Remove the physical file
+        const filePath = path.join(process.cwd(), 'client/public', audioFile.data);
+        try {
+          await fs.promises.unlink(filePath);
+        } catch (error) {
+          console.warn('Could not delete audio file:', error);
+        }
+      }
+      await storage.deleteAudioFile(id);
+      res.status(204).send();
+    } catch (err) {
+      res.status(404).json({ error: "Audio file not found" });
     }
   });
 
