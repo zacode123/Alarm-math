@@ -82,26 +82,24 @@ export default function Settings() {
     }
   };
 
-  import { useQueryClient } from '@tanstack/react-query';
-  const queryClient = useQueryClient();
-  
+
   const handleDeleteRingtone = async (index: number, url: string) => {
     URL.revokeObjectURL(url);
     const ringtoneId = customRingtones[index].id;
     const dbId = ringtoneId.replace('db-', '');
-    
+
     try {
       const response = await fetch(`/api/audio-files/${dbId}`, {
         method: 'DELETE'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete ringtone');
       }
 
       // Invalidate and refetch audio files query
       await queryClient.invalidateQueries({ queryKey: ['/api/audio-files'] });
-      
+
       toast({
         title: "Ringtone deleted",
         description: "Custom ringtone has been removed successfully.",
