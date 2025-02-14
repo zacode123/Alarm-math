@@ -384,7 +384,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowRingtones(false)}
+                onClick={() => {
+                  setSelectedRingtone(selectedRingtone); // Keep the previous selection
+                  setShowRingtones(false);
+                }}
                 className="hover:bg-transparent absolute left-4"
                 aria-label="Close ringtones dialog"
               >
