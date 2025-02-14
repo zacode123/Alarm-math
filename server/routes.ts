@@ -67,27 +67,27 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/audio-files", async (req, res) => {
-    const result = insertAudioSchema.safeParse(req.body);
-    if (!result.success) {
-      res.status(400).json({ error: result.error });
-      return;
-    }
-
-    const { name, data, type, slot } = result.data;
-
     try {
-      // Generate a unique filename using timestamp and slot
+      const result = insertAudioSchema.safeParse(req.body);
+      if (!result.success) {
+        res.status(400).json({ error: result.error });
+        return;
+      }
+
+      const { name, data: base64Data, type, slot } = result.data;
+
+      // Generate a unique filename
       const timestamp = Date.now();
       const fileName = `custom_ringtone_${slot}_${timestamp}.mp3`;
       const filePath = path.join(process.cwd(), 'client/public/sounds', fileName);
 
       // Convert base64 to buffer and save
-      const buffer = Buffer.from(data, 'base64');
+      const buffer = Buffer.from(base64Data.split(',')[1], 'base64');
       await writeFile(filePath, buffer);
 
-      // Save reference in database with file path
+      // Save reference in database
       const audio = await storage.createAudioFile({
-        name: fileName,
+        name,
         data: `/sounds/${fileName}`,
         type,
         slot,
