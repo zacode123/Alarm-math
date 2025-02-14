@@ -120,23 +120,7 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
   }, []);
 
   const addCustomRingtone = useCallback(async (ringtone: CustomRingtone) => {
-    // Save to database
-    const response = await fetch(ringtone.url);
-    const blob = await response.blob();
-    const reader = new FileReader();
-
-    reader.onloadend = async () => {
-      const base64data = (reader.result as string).split(',')[1];
-
-      await apiRequest('POST', '/api/audio-files', {
-        name: ringtone.name,
-        data: base64data,
-        type: blob.type,
-        created: Math.floor(Date.now() / 1000)
-      });
-    };
-
-    reader.readAsDataURL(blob);
+    setCustomRingtones(prev => [...prev, ringtone]);
   }, []);
 
   return { 

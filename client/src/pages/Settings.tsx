@@ -39,10 +39,30 @@ export default function Settings() {
     if (file) {
       if (file.type.startsWith('audio/')) {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
           const base64Data = (e.target?.result as string).split(',')[1];
-          const audioUrl = URL.createObjectURL(file);
-          addCustomRingtone({ id: `custom-${Date.now()}`, url: audioUrl, name: file.name });
+          
+          try {
+            const response = await fetch('/api/audio-files', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: file.name,
+                data: base64Data,
+                type: file.type
+              })
+            });
+            
+            if (!response.ok) throw new Error('Upload failed');
+            
+            const result = await response.json();
+            addCustomRingtone({ 
+              id: `db-${result.id}`, 
+              url: result.data,
+              name: file.name 
+            });
           toast({
             title: "Ringtone added",
             description: `${file.name} has been added to your custom ringtones.`,
