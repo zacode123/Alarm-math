@@ -74,9 +74,6 @@ export default function Settings() {
               variant: "destructive",
             });
           }
-            title: "Ringtone added",
-            description: `${file.name} has been added to your custom ringtones.`,
-          });
         };
         reader.readAsDataURL(file);
       } else {
