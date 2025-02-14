@@ -28,7 +28,7 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
       const files = await res.json();
       return files.map((file: any) => ({
         id: `db-${file.id}`,
-        url: `data:${file.type};base64,${file.data}`,
+        url: file.data, // Now contains the file path
         name: file.name
       }));
     }
