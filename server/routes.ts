@@ -2,8 +2,6 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertAlarmSchema } from "@shared/schema";
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 
 export function registerRoutes(app: Express): Server {
   app.get("/api/alarms", async (_req, res) => {
@@ -27,7 +25,7 @@ export function registerRoutes(app: Express): Server {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-
+    
     try {
       const alarm = await storage.updateAlarm(id, req.body);
       res.json(alarm);
@@ -42,7 +40,7 @@ export function registerRoutes(app: Express): Server {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-
+    
     try {
       await storage.deleteAlarm(id);
       res.status(204).send();
@@ -50,29 +48,6 @@ export function registerRoutes(app: Express): Server {
       res.status(404).json({ error: "Alarm not found" });
     }
   });
-
-  app.post("/api/audio-files", async (req, res) => {
-    try {
-      const audioData = req.body;
-      const fileName = `audio_${Date.now()}.mp3`;
-      const filePath = join(process.cwd(), 'client', 'public', 'sounds', fileName);
-
-      await writeFile(filePath, Buffer.from(audioData));
-
-      // Store only metadata in database
-      const audio = await storage.createAudioFile({
-        name: fileName,
-        path: `/sounds/${fileName}`,
-        created: Math.floor(Date.now() / 1000)
-      });
-
-      res.json(audio);
-    } catch (error) {
-      console.error("Error uploading audio file:", error);
-      res.status(500).json({ error: "Failed to upload audio file" });
-    }
-  });
-
 
   const httpServer = createServer(app);
   return httpServer;
