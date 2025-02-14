@@ -376,9 +376,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               control={form.control}
               name="difficulty"
               render={({ field }) => (
-                <FormItem className="space-y-8">
+                <FormItem className="space-y-4">
                   <FormLabel className="text-lg font-semibold">Challenge Difficulty</FormLabel>
-                  <div className="grid grid-cols-3 gap-6">
+                  <div className="grid grid-cols-3 gap-3">
                     {['easy', 'medium', 'hard'].map((difficulty) => (
                       <motion.div
                         key={difficulty}
