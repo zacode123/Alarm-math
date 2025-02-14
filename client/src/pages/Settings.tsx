@@ -84,6 +84,14 @@ export default function Settings() {
   };
 
 
+  const { data: audioFiles, refetch } = useQuery({
+    queryKey: ['/api/audio-files'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/audio-files');
+      return res.json();
+    }
+  });
+
   const handleDeleteRingtone = async (index: number, url: string) => {
     URL.revokeObjectURL(url);
     const ringtoneId = customRingtones[index].id;
@@ -100,6 +108,7 @@ export default function Settings() {
 
       // Invalidate and refetch audio files query
       await queryClient.invalidateQueries({ queryKey: ['/api/audio-files'] });
+      await refetch(); // Explicitly refetch the data
 
       toast({
         title: "Ringtone deleted",
