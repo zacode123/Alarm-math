@@ -121,46 +121,46 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
 
   const preview = useCallback((function() {
     let currentPreview: HTMLAudioElement | null = null;
+    let isPlaying = false;
     
-    return (sound: SoundName | string, volume: number = 1) => {
+    return async (sound: SoundName | string, volume: number = 1) => {
       try {
-        // Stop any existing preview
-        if (currentPreview) {
-          currentPreview.pause();
-          currentPreview.src = '';
-          currentPreview = null;
+        if (isPlaying) {
+          if (currentPreview) {
+            currentPreview.pause();
+            currentPreview.src = '';
+          }
+          isPlaying = false;
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
         if (!soundUrl) {
           console.warn('Invalid sound URL');
-          return Promise.resolve();
+          return;
         }
 
-        const previewAudio = new Audio();
+        const previewAudio = new Audio(soundUrl);
         currentPreview = previewAudio;
         previewAudio.volume = volume;
+        isPlaying = true;
 
-        return new Promise((resolve) => {
-          const onError = (e: Event) => {
-            console.warn('Preview sound loading error:', e);
-            previewAudio.src = '';
-            resolve();
-          };
+        try {
+          await previewAudio.play();
+        } catch (error) {
+          console.warn('Preview playback failed:', error);
+          isPlaying = false;
+        }
 
-          previewAudio.addEventListener('error', onError);
-          previewAudio.addEventListener('loadeddata', () => {
-            previewAudio.play().catch(() => {
-              console.warn('Preview playback failed');
-              resolve();
-            });
-          });
-
-          previewAudio.src = soundUrl;
-        });
+        previewAudio.onended = () => {
+          isPlaying = false;
+          if (currentPreview === previewAudio) {
+            currentPreview = null;
+          }
+        };
       } catch (error) {
         console.warn('Preview error:', error);
-        return Promise.resolve();
+        isPlaying = false;
       }
     };
   })(), []);
