@@ -253,36 +253,67 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground text-center mb-8">
-          {timeRemaining}
-        </p>
-
-        <div className="flex justify-center items-center mb-12">
-          <TimePicker
-            date={selectedDate}
-            setDate={setSelectedDate}
-            onTimeUpdate={() => {
-              const now = new Date();
-              const targetTime = new Date(now);
-              targetTime.setHours(selectedDate.getHours());
-              targetTime.setMinutes(selectedDate.getMinutes());
-
-              if (targetTime < now) {
-                targetTime.setDate(targetTime.getDate() + 1);
-              }
-
-              const diffHours = Math.floor((targetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
-              const diffMinutes = Math.floor(((targetTime.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
-
-              setTimeRemaining(`Alarm in ${diffHours} hours ${diffMinutes} minutes`);
-            }}
-          />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-background/10 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{ type: "spring", duration: 0.5 }}
+        className="bg-white/60 dark:bg-background/40 backdrop-blur-md rounded-xl shadow-xl border border-border/20 w-full max-w-lg max-h-[90vh] overflow-auto"
+      >
+        <div className="sticky top-0 z-10 bg-white/80 dark:bg-background/80 backdrop-blur-sm p-4 border-b border-border/10 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancel}
+            className="hover:bg-transparent"
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          <h2 className="text-xl font-semibold">Set New Alarm</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={form.handleSubmit(onSubmit)}
+            className="hover:bg-transparent"
+          >
+            <Check className="h-6 w-6" />
+          </Button>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
+        <div className="p-6 space-y-6">
+          <p className="text-sm text-muted-foreground text-center mb-8">
+            {timeRemaining}
+          </p>
+
+          <div className="flex justify-center items-center mb-12">
+            <TimePicker
+              date={selectedDate}
+              setDate={setSelectedDate}
+              onTimeUpdate={() => {
+                const now = new Date();
+                const targetTime = new Date(now);
+                targetTime.setHours(selectedDate.getHours());
+                targetTime.setMinutes(selectedDate.getMinutes());
+
+                if (targetTime < now) {
+                  targetTime.setDate(targetTime.getDate() + 1);
+                }
+
+                const diffHours = Math.floor((targetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+                const diffMinutes = Math.floor(((targetTime.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
+
+                setTimeRemaining(`Alarm in ${diffHours} hours ${diffMinutes} minutes`);
+              }}
+            />
+          </div>
+
+          <Form {...form}>
             <div className="flex items-center justify-between py-4 border-t">
               <span className="text-[15px] font-medium tracking-wide">Ringtone</span>
               <Button
@@ -442,288 +473,288 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 )}
               />
             </div>
-          </form>
-        </Form>
+          </Form>
+        </div>
+      </motion.div>
 
-        <Dialog open={showRingtones} onOpenChange={setShowRingtones}>
-          <DialogContent className="sm:max-w-md mx-4 rounded-xl">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-white/60 dark:bg-background/40 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border/20"
-            >
-              <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setSelectedRingtone(originalRingtone);
-                    setShowRingtones(false);
-                  }}
-                  className="hover:bg-transparent absolute left-4"
-                  aria-label="Close ringtones dialog"
-                >
-                  <X className="h-6 w-6" />
-                </Button>
-                <DialogTitle className="text-xl font-semibold flex-1 text-center">Select Ringtone</DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={confirmRingtoneSelection}
-                  className="hover:bg-transparent absolute right-4"
-                  aria-label="Confirm ringtone selection"
-                >
-                  <Check className="h-6 w-6" />
-                </Button>
-              </DialogHeader>
-              <DialogDescription className="text-center pt-2">
-                Choose a ringtone for your alarm. Click to preview the sound.
-              </DialogDescription>
-              <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-                <AnimatePresence>
-                  {allRingtones.map((ringtone) => (
-                    <motion.div
-                      key={ringtone.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      <Dialog open={showRingtones} onOpenChange={setShowRingtones}>
+        <DialogContent className="sm:max-w-md mx-4 rounded-xl">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="relative bg-white/60 dark:bg-background/40 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border/20"
+          >
+            <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedRingtone(originalRingtone);
+                  setShowRingtones(false);
+                }}
+                className="hover:bg-transparent absolute left-4"
+                aria-label="Close ringtones dialog"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+              <DialogTitle className="text-xl font-semibold flex-1 text-center">Select Ringtone</DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={confirmRingtoneSelection}
+                className="hover:bg-transparent absolute right-4"
+                aria-label="Confirm ringtone selection"
+              >
+                <Check className="h-6 w-6" />
+              </Button>
+            </DialogHeader>
+            <DialogDescription className="text-center pt-2">
+              Choose a ringtone for your alarm. Click to preview the sound.
+            </DialogDescription>
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+              <AnimatePresence>
+                {allRingtones.map((ringtone) => (
+                  <motion.div
+                    key={ringtone.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    <Card
+                      className={cn(
+                        "p-4 cursor-pointer border-2 transition-colors duration-200",
+                        selectedRingtone.id === ringtone.id
+                          ? "border-primary bg-primary/10"
+                          : "hover:border-primary/50"
+                      )}
+                      onClick={() => handleRingtoneSelect(ringtone)}
                     >
-                      <Card
-                        className={cn(
-                          "p-4 cursor-pointer border-2 transition-colors duration-200",
-                          selectedRingtone.id === ringtone.id
-                            ? "border-primary bg-primary/10"
-                            : "hover:border-primary/50"
-                        )}
-                        onClick={() => handleRingtoneSelect(ringtone)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <motion.div
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <motion.div
+                            className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center",
+                              selectedRingtone.id === ringtone.id
+                                ? "bg-primary"
+                                : "bg-muted"
+                            )}
+                            animate={{
+                              rotate: selectedRingtone.id === ringtone.id ? [0, 360] : 0,
+                              scale: selectedRingtone.id === ringtone.id ? [1, 1.1, 1] : 1
+                            }}
+                            transition={{
+                              duration: 0.5,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            <Music2
                               className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center",
+                                "h-5 w-5 transition-colors duration-200",
                                 selectedRingtone.id === ringtone.id
-                                  ? "bg-primary"
-                                  : "bg-muted"
+                                  ? "text-primary-foreground"
+                                  : "text-muted-foreground"
                               )}
-                              animate={{
-                                rotate: selectedRingtone.id === ringtone.id ? [0, 360] : 0,
-                                scale: selectedRingtone.id === ringtone.id ? [1, 1.1, 1] : 1
-                              }}
-                              transition={{
-                                duration: 0.5,
-                                ease: "easeInOut"
-                              }}
-                            >
-                              <Music2
+                            />
+                          </motion.div>
+                          <span>{ringtone.name}</span>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showRepeat} onOpenChange={setShowRepeat}>
+        <DialogContent className="sm:max-w-md mx-4 rounded-xl">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="relative bg-white/60 dark:bg-background/40 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border/20"
+          >
+            <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowRepeat(false)}
+                className="hover:bg-transparent absolute left-4"
+                aria-label="Close repeat dialog"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+              <DialogTitle className="text-xl font-semibold flex-1 text-center">Repeat</DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={confirmRepeatSelection}
+                className="hover:bg-transparent absolute right-4"
+                aria-label="Confirm repeat selection"
+              >
+                <Check className="h-6 w-6" />
+              </Button>
+            </DialogHeader>
+            <DialogDescription className="text-center pt-2">
+              Choose when you want this alarm to repeat.
+            </DialogDescription>
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+              <AnimatePresence>
+                {REPEAT_OPTIONS.map((option) => (
+                  <motion.div
+                    key={option.id}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    <Card
+                      className={cn(
+                        "p-4 cursor-pointer border-2 transition-colors duration-200",
+                        (expandedOption === option.id || selectedRepeat.id === option.id)
+                          ? "border-primary bg-primary/10"
+                          : "hover:border-primary/50"
+                      )}
+                      onClick={() => {
+                        if (option.id === 'custom') {
+                          if (expandedOption === 'custom') {
+                            setExpandedOption(null);
+                          } else {
+                            setExpandedOption('custom');
+                            setSelectedRepeat(option);
+                          }
+                        } else {
+                          setSelectedRepeat(option);
+                          setExpandedOption(null);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <motion.div
+                            className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
+                              (expandedOption === option.id || selectedRepeat.id === option.id)
+                                ? "bg-primary"
+                                : "bg-muted"
+                            )}
+                            animate={{
+                              rotate: (expandedOption === option.id || selectedRepeat.id === option.id) ? [0, 360] : 0,
+                              scale: (expandedOption === option.id || selectedRepeat.id === option.id) ? [1, 1.1, 1] : 1
+                            }}
+                            transition={{
+                              duration: 0.5,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            {option.icon && (
+                              <option.icon
                                 className={cn(
                                   "h-5 w-5 transition-colors duration-200",
-                                  selectedRingtone.id === ringtone.id
+                                  (expandedOption === option.id || selectedRepeat.id === option.id)
                                     ? "text-primary-foreground"
                                     : "text-muted-foreground"
                                 )}
                               />
-                            </motion.div>
-                            <span>{ringtone.name}</span>
-                          </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showRepeat} onOpenChange={setShowRepeat}>
-          <DialogContent className="sm:max-w-md mx-4 rounded-xl">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-white/60 dark:bg-background/40 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border/20"
-            >
-              <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowRepeat(false)}
-                  className="hover:bg-transparent absolute left-4"
-                  aria-label="Close repeat dialog"
-                >
-                  <X className="h-6 w-6" />
-                </Button>
-                <DialogTitle className="text-xl font-semibold flex-1 text-center">Repeat</DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={confirmRepeatSelection}
-                  className="hover:bg-transparent absolute right-4"
-                  aria-label="Confirm repeat selection"
-                >
-                  <Check className="h-6 w-6" />
-                </Button>
-              </DialogHeader>
-              <DialogDescription className="text-center pt-2">
-                Choose when you want this alarm to repeat.
-              </DialogDescription>
-              <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-                <AnimatePresence>
-                  {REPEAT_OPTIONS.map((option) => (
-                    <motion.div
-                      key={option.id}
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    >
-                      <Card
-                        className={cn(
-                          "p-4 cursor-pointer border-2 transition-colors duration-200",
-                          (expandedOption === option.id || selectedRepeat.id === option.id)
-                            ? "border-primary bg-primary/10"
-                            : "hover:border-primary/50"
-                        )}
-                        onClick={() => {
-                          if (option.id === 'custom') {
-                            if (expandedOption === 'custom') {
-                              setExpandedOption(null);
-                            } else {
-                              setExpandedOption('custom');
-                              setSelectedRepeat(option);
-                            }
-                          } else {
-                            setSelectedRepeat(option);
-                            setExpandedOption(null);
-                          }
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <motion.div
-                              className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
-                                (expandedOption === option.id || selectedRepeat.id === option.id)
-                                  ? "bg-primary"
-                                  : "bg-muted"
-                              )}
-                              animate={{
-                                rotate: (expandedOption === option.id || selectedRepeat.id === option.id) ? [0, 360] : 0,
-                                scale: (expandedOption === option.id || selectedRepeat.id === option.id) ? [1, 1.1, 1] : 1
-                              }}
-                              transition={{
-                                duration: 0.5,
-                                ease: "easeInOut"
-                              }}
-                            >
-                              {option.icon && (
-                                <option.icon
-                                  className={cn(
-                                    "h-5 w-5 transition-colors duration-200",
-                                    (expandedOption === option.id || selectedRepeat.id === option.id)
-                                      ? "text-primary-foreground"
-                                      : "text-muted-foreground"
-                                  )}
-                                />
-                              )}
-                            </motion.div>
-                            <span className={cn(
-                              "text-base transition-colors duration-200",
-                              (expandedOption === option.id || selectedRepeat.id === option.id)
-                                ? "text-primary font-medium"
-                                : "text-foreground"
-                            )}>
-                              {option.name}
-                            </span>
-                          </div>
-                          {option.id === 'custom' && (
-                            <motion.div
-                              animate={{
-                                rotate: expandedOption === 'custom' ? 90 : 0
-                              }}
-                              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </motion.div>
-                          )}
+                            )}
+                          </motion.div>
+                          <span className={cn(
+                            "text-base transition-colors duration-200",
+                            (expandedOption === option.id || selectedRepeat.id === option.id)
+                              ? "text-primary font-medium"
+                              : "text-foreground"
+                          )}>
+                            {option.name}
+                          </span>
                         </div>
                         {option.id === 'custom' && (
-                          <AnimatePresence>
-                            {expandedOption === 'custom' && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0, y: -20 }}
-                                animate={{
-                                  height: 'auto',
-                                  opacity: 1,
-                                  y: 0,
-                                  transition: {
-                                    height: {
-                                      duration: 0.3,
-                                      ease: "easeOut"
-                                    },
-                                    opacity: {
-                                      duration: 0.2,
-                                      delay: 0.1
-                                    },
-                                    y: {
-                                      duration: 0.3,
-                                      ease: "easeOut"
-                                    }
-                                  }
-                                }}
-                                exit={{
-                                  height: 0,
-                                  opacity: 0,
-                                  y: -20,
-                                  transition: {
-                                    height: {
-                                      duration: 0.3,
-                                      ease: "easeIn"
-                                    },
-                                    opacity: {
-                                      duration: 0.2
-                                    },
-                                    y: {
-                                      duration: 0.2
-                                    }
-                                  }
-                                }}
-                                className="overflow-hidden"
-                              >
-                                <div className="px-4 py-2 space-y-3 bg-muted/50 rounded-lg mt-2">
-                                  {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
-                                    <motion.div
-                                      key={day}
-                                      initial={{ x: -20, opacity: 0 }}
-                                      animate={{ x: 0, opacity: 1 }}
-                                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                      className="flex items-center justify-between bg-background p-3 rounded-md"
-                                    >
-                                      <span className="capitalize font-medium">{day}</span>
-                                      <Switch
-                                        checked={selectedDays[day]}
-                                        onCheckedChange={() => handleDayToggle(day)}
-                                        className="data-[state=checked]:bg-primary"
-                                      />
-                                    </motion.div>
-                                  ))}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          <motion.div
+                            animate={{
+                              rotate: expandedOption === 'custom' ? 90 : 0
+                            }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </motion.div>
                         )}
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
+                      </div>
+                      {option.id === 'custom' && (
+                        <AnimatePresence>
+                          {expandedOption === 'custom' && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0, y: -20 }}
+                              animate={{
+                                height: 'auto',
+                                opacity: 1,
+                                y: 0,
+                                transition: {
+                                  height: {
+                                    duration: 0.3,
+                                    ease: "easeOut"
+                                  },
+                                  opacity: {
+                                    duration: 0.2,
+                                    delay: 0.1
+                                  },
+                                  y: {
+                                    duration: 0.3,
+                                    ease: "easeOut"
+                                  }
+                                }
+                              }}
+                              exit={{
+                                height: 0,
+                                opacity: 0,
+                                y: -20,
+                                transition: {
+                                  height: {
+                                    duration: 0.3,
+                                    ease: "easeIn"
+                                  },
+                                  opacity: {
+                                    duration: 0.2
+                                  },
+                                  y: {
+                                    duration: 0.2
+                                  }
+                                }
+                              }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 py-2 space-y-3 bg-muted/50 rounded-lg mt-2">
+                                {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
+                                  <motion.div
+                                    key={day}
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    className="flex items-center justify-between bg-background p-3 rounded-md"
+                                  >
+                                    <span className="capitalize font-medium">{day}</span>
+                                    <Switch
+                                      checked={selectedDays[day]}
+                                      onCheckedChange={() => handleDayToggle(day)}
+                                      className="data-[state=checked]:bg-primary"
+                                    />
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      )}
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
+    </motion.div>
   );
 }
