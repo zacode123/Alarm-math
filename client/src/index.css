@@ -15,11 +15,11 @@
 @layer components {
   /* Dialog backdrop blur and spacing */
   .dialog-overlay {
-    @apply fixed inset-0 bg-background/80 backdrop-blur-sm;
+    @apply fixed inset-0 bg-background/10 backdrop-blur-sm;
   }
 
   .dialog-content {
-    @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg md:w-full;
+    @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background/95 p-6 shadow-lg duration-200 sm:rounded-lg md:w-full my-8 mx-4;
   }
 
   /* Animated Wave Background */
@@ -48,6 +48,35 @@
   /* Card hover effects */
   .hover-card {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Enhanced toast notifications */
+  .toast-root {
+    @apply bg-gradient-to-r from-background/95 to-background/90 backdrop-blur-md border border-border/50 shadow-xl;
+  }
+
+  .toast-title {
+    @apply text-foreground font-semibold;
+  }
+
+  .toast-description {
+    @apply text-muted-foreground;
+  }
+
+  .toast-success {
+    @apply bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30;
+  }
+
+  .toast-error {
+    @apply bg-gradient-to-r from-red-500/20 to-rose-500/20 border-red-500/30;
+  }
+
+  .toast-warning {
+    @apply bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-yellow-500/30;
+  }
+
+  .toast-info {
+    @apply bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30;
   }
 }
 
