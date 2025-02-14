@@ -83,6 +83,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     sat: true,
     sun: true
   });
+  const [previewVolume, setPreviewVolume] = useState(100); // Added state for preview volume
 
   useEffect(() => {
     const updateTimeRemaining = () => {
@@ -302,7 +303,14 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                         max={100}
                         step={1}
                         value={[field.value]}
-                        onValueChange={([value]) => field.onChange(value)}
+                        onValueChange={([value]) => {
+                          field.onChange(value);
+                          setPreviewVolume(value);
+                          // Preview the sound immediately when volume changes
+                          if (form.getValues("sound")) {
+                            preview(form.getValues("sound"), value / 100);
+                          }
+                        }}
                         className="[&_.relative]:before:content-[''] [&_.relative]:before:absolute [&_.relative]:before:left-0 [&_.relative]:before:right-0 [&_.relative]:before:h-2 [&_.relative]:before:bg-gradient-to-r [&_.relative]:before:from-primary/20 [&_.relative]:before:to-primary [&_.relative]:before:rounded-full"
                       />
                     </div>

@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,27 +19,8 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
   const [selectedHour, setSelectedHour] = React.useState(date.getHours() % 12 || 12);
   const [selectedMinute, setSelectedMinute] = React.useState(date.getMinutes());
   const [isAm, setIsAm] = React.useState(date.getHours() < 12);
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
-
-  React.useEffect(() => {
-    audioRef.current = new Audio('/sounds/beep.mp3');
-    audioRef.current.volume = 0.1;
-    return () => {
-      audioRef.current = null;
-    };
-  }, []);
-
-  const playTickSound = React.useCallback(() => {
-    if (audioRef.current) {
-      const newAudio = audioRef.current.cloneNode() as HTMLAudioElement;
-      newAudio.play().catch(console.error);
-      newAudio.onended = () => newAudio.remove();
-    }
-  }, []);
 
   const handleTimeChange = React.useCallback((value: number, type: 'hours' | 'minutes' | 'period') => {
-    playTickSound();
-    
     const newDate = new Date(date);
     if (type === 'hours') {
       setSelectedHour(value);
@@ -58,10 +38,10 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
         newDate.setHours(newIsAm ? 0 : 12);
       }
     }
-    
+
     setDate(newDate);
     onTimeUpdate?.(newDate.getHours(), newDate.getMinutes());
-  }, [date, setDate, onTimeUpdate, playTickSound, selectedHour, isAm]);
+  }, [date, setDate, onTimeUpdate, selectedHour, isAm]);
 
   return (
     <div className="flex items-center justify-center gap-2">
@@ -71,16 +51,16 @@ export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
         onSelect={(value) => handleTimeChange(value, 'hours')}
         format={(num) => String(num).padStart(2, '0')}
       />
-      
+
       <div className="text-4xl font-medium text-primary">:</div>
-      
+
       <ScrollColumn
         items={minutes}
         selectedValue={selectedMinute}
         onSelect={(value) => handleTimeChange(value, 'minutes')}
         format={(num) => String(num).padStart(2, '0')}
       />
-      
+
       <div className="flex flex-col gap-2 ml-4">
         <button
           className={cn(
@@ -120,11 +100,11 @@ function ScrollColumn({ items, selectedValue, onSelect, format }: ScrollColumnPr
     const itemHeight = 72;
     const scrollPosition = element.scrollTop + element.clientHeight / 2 - itemHeight / 2;
     const index = Math.round(scrollPosition / itemHeight);
-    
+
     if (index >= 0 && index < items.length) {
       onSelect(items[index]);
     }
-    
+
     requestAnimationFrame(() => {
       element.scrollTo({
         top: index * itemHeight,
