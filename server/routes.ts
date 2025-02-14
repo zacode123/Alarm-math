@@ -53,16 +53,17 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/audio-files", async (req, res) => {
     try {
-      const audioData = req.body;
+      const { name, data, type } = req.body;
       const fileName = `audio_${Date.now()}.mp3`;
       const filePath = join(process.cwd(), 'client', 'public', 'sounds', fileName);
 
-      await writeFile(filePath, Buffer.from(audioData));
+      await writeFile(filePath, Buffer.from(data, 'base64'));
 
-      // Store only metadata in database
+      // Store metadata in database
       const audio = await storage.createAudioFile({
         name: fileName,
-        path: `/sounds/${fileName}`,
+        data,
+        type,
         created: Math.floor(Date.now() / 1000)
       });
 
