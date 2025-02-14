@@ -413,7 +413,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 {REPEAT_OPTIONS.map((option) => (
                   <motion.div
                     key={option.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -493,10 +493,11 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                       <AnimatePresence>
                         {expandedOption === 'custom' && (
                           <motion.div
-                            initial={{ height: 0, opacity: 0 }}
+                            initial={{ height: 0, opacity: 0, y: -20 }}
                             animate={{
                               height: 'auto',
                               opacity: 1,
+                              y: 0,
                               transition: {
                                 height: {
                                   duration: 0.3,
@@ -505,18 +506,26 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                                 opacity: {
                                   duration: 0.2,
                                   delay: 0.1
+                                },
+                                y: {
+                                  duration: 0.3,
+                                  ease: "easeOut"
                                 }
                               }
                             }}
                             exit={{
                               height: 0,
                               opacity: 0,
+                              y: -20,
                               transition: {
                                 height: {
                                   duration: 0.3,
                                   ease: "easeIn"
                                 },
                                 opacity: {
+                                  duration: 0.2
+                                },
+                                y: {
                                   duration: 0.2
                                 }
                               }
