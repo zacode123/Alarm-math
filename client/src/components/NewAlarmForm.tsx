@@ -84,7 +84,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     sat: true,
     sun: true
   });
-  const [previewVolume, setPreviewVolume] = useState(100); // Added state for preview volume
+  const [previewVolume, setPreviewVolume] = useState(100);
 
   useEffect(() => {
     const updateTimeRemaining = () => {
@@ -104,7 +104,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     };
 
     updateTimeRemaining();
-    const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
+    const interval = setInterval(updateTimeRemaining, 60000);
     return () => clearInterval(interval);
   }, [selectedDate]);
 
@@ -309,11 +309,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                         onValueChange={([value]) => {
                           field.onChange(value);
                           setPreviewVolume(value);
-                          // Debounce the preview to prevent rapid audio playback
-                          const timeoutId = setTimeout(() => {
-                            preview(originalRingtone.path, value / 100);
-                          }, 200);
-                          return () => clearTimeout(timeoutId);
+                          preview(selectedRingtone.path, value / 100);
                         }}
                         className="[&_.relative]:before:content-[''] [&_.relative]:before:absolute [&_.relative]:before:left-0 [&_.relative]:before:right-0 [&_.relative]:before:h-2 [&_.relative]:before:bg-gradient-to-r [&_.relative]:before:from-primary/20 [&_.relative]:before:to-primary [&_.relative]:before:rounded-full"
                       />
