@@ -16,9 +16,12 @@ const DEFAULT_SOUNDS = {
   beep: "/sounds/beep.mp3"
 };
 
+import { useQueryClient } from '@tanstack/react-query';
+
 export function useSound(soundName?: string, defaultVolume: number = 100) {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [customRingtones, setCustomRingtones] = useState<CustomRingtone[]>([]);
+  const queryClient = useQueryClient();
 
   // Fetch custom ringtones from the database
   const { data: audioFiles } = useQuery({
