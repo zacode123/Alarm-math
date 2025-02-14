@@ -52,8 +52,7 @@ export default function Settings() {
                 name: file.name,
                 data: base64Data,
                 type: file.type
-              }),
-              signal: AbortSignal.timeout(30000) // 30 second timeout
+              })
             });
             
             if (!response.ok) throw new Error('Upload failed');

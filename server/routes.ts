@@ -4,8 +4,6 @@ import { storage } from "./storage";
 import { insertAlarmSchema } from "@shared/schema";
 import { join } from 'path';
 import { writeFile } from 'fs/promises';
-import fs from 'fs';
-import path from 'path';
 
 export function registerRoutes(app: Express): Server {
   app.get("/api/alarms", async (_req, res) => {
@@ -54,36 +52,25 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/audio-files", async (req, res) => {
-    const { name, data, type } = req.body;
-
-    if (!data || !name) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
     try {
-      // Save file to public/sounds directory
+      const { name, data, type } = req.body;
       const fileName = `audio_${Date.now()}.mp3`;
-      const filePath = path.join(process.cwd(), 'client/public/sounds', fileName);
+      const filePath = join(process.cwd(), 'client', 'public', 'sounds', fileName);
 
-      // Convert base64 to buffer and save
-      const buffer = Buffer.from(data, 'base64');
-      fs.writeFileSync(filePath, buffer);
+      // Save file to filesystem
+      await writeFile(filePath, Buffer.from(data, 'base64'));
 
-      // Save reference in database - Assuming 'storage' has a createAudioFile method.  Adjust as needed for your database interaction.
+      // Store only metadata in database
       const audio = await storage.createAudioFile({
         name: fileName,
+        data: `/sounds/${fileName}`, // Store path instead of data
         type,
         created: Math.floor(Date.now() / 1000)
       });
-
-      res.json({
-        id: audio.id, // Assuming createAudioFile returns an object with an 'id' property. Adjust as necessary.
-        name: fileName,
-        url: `/sounds/${fileName}`
-      });
+      res.json(audio);
     } catch (error) {
-      console.error('Error saving audio file:', error);
-      res.status(500).json({ error: 'Failed to save audio file' });
+      console.error("Error uploading audio file:", error);
+      res.status(500).json({ error: "Failed to upload audio file" });
     }
   });
 
