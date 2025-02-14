@@ -35,10 +35,8 @@ const WavySlider = React.forwardRef<HTMLDivElement, { value: number; onChange: (
     );
   }
 );
-      </motion.div>
-    );
-  }
-);
+
+WavySlider.displayName = "WavySlider";
 
 function useRingtones() {
   const { customRingtones } = useSound();
