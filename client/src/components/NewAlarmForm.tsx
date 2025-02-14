@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAlarmSchema, type InsertAlarm, type Alarm, type WeekDay, type Difficulty } from "@shared/schema";
 import { useAlarms } from "@/lib/useAlarms";
-import { useSound } from "@/lib/useSound";
+import { useSound, DEFAULT_SOUNDS } from "@/lib/useSound";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,17 +21,18 @@ import { Slider } from "@/components/ui/slider";
 
 function useRingtones() {
   const { customRingtones } = useSound();
-  return customRingtones.map(rt => ({
+  const defaultRingtones = Object.entries(DEFAULT_SOUNDS).map(([id, path]) => ({
+    id,
+    name: id.charAt(0).toUpperCase() + id.slice(1),
+    path
+  }));
+  
+  return [...defaultRingtones, ...customRingtones.map(rt => ({
     id: rt.id,
     name: rt.name,
     path: rt.url
-  }));
+  }))];
 }
-
-const allRingtones = useRingtones();
-
-
-function useRingtones() {
   const { customRingtones } = useSound();
   return [
     ...DEFAULT_RINGTONES,
