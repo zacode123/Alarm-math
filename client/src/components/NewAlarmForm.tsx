@@ -60,9 +60,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     return new Date();
   });
 
-  // Update RINGTONES to include custom ringtones
   const allRingtones = useRingtones();
-
   const [showRingtones, setShowRingtones] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
   const [selectedRingtone, setSelectedRingtone] = useState(() => {
@@ -83,19 +81,25 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   });
 
   useEffect(() => {
-    const now = new Date();
-    const targetTime = new Date(now);
-    targetTime.setHours(selectedDate.getHours());
-    targetTime.setMinutes(selectedDate.getMinutes());
+    const updateTimeRemaining = () => {
+      const now = new Date();
+      const targetTime = new Date(now);
+      targetTime.setHours(selectedDate.getHours());
+      targetTime.setMinutes(selectedDate.getMinutes());
 
-    if (targetTime < now) {
-      targetTime.setDate(targetTime.getDate() + 1);
-    }
+      if (targetTime < now) {
+        targetTime.setDate(targetTime.getDate() + 1);
+      }
 
-    const diffHours = Math.floor((targetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(((targetTime.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
+      const diffHours = Math.floor((targetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor(((targetTime.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60));
 
-    setTimeRemaining(`Alarm in ${diffHours} hours ${diffMinutes} minutes`);
+      setTimeRemaining(`Alarm in ${diffHours} hours ${diffMinutes} minutes`);
+    };
+
+    updateTimeRemaining();
+    const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
+    return () => clearInterval(interval);
   }, [selectedDate]);
 
   const form = useForm<InsertAlarm>({
@@ -172,6 +176,14 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
       ...prev,
       [day]: !prev[day]
     }));
+  };
+
+  const confirmRingtoneSelection = () => {
+    setShowRingtones(false);
+  };
+
+  const confirmRepeatSelection = () => {
+    setShowRepeat(false);
   };
 
   return (
@@ -279,15 +291,18 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 )}
               />
             </div>
+            <div className="mt-6 flex justify-end gap-4">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Save Alarm
+              </Button>
+            </div>
           </form>
         </Form>
 
-        <Dialog
-          open={showRingtones}
-          onOpenChange={(open) => {
-            if (!open) setShowRingtones(false);
-          }}
-        >
+        <Dialog open={showRingtones} onOpenChange={setShowRingtones}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
               <Button
@@ -303,12 +318,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  form.handleSubmit(onSubmit)();
-                  setShowRingtones(false);
-                }}
+                onClick={confirmRingtoneSelection}
                 className="hover:bg-transparent absolute right-4"
-                aria-label="Save alarm"
+                aria-label="Confirm ringtone selection"
               >
                 <Check className="h-6 w-6" />
               </Button>
@@ -373,25 +385,13 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
           </DialogContent>
         </Dialog>
 
-        <Dialog
-          open={showRepeat}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedRepeat(originalRepeat);
-              setShowRepeat(false);
-              setExpandedOption(null);
-            }
-          }}
-        >
+        <Dialog open={showRepeat} onOpenChange={setShowRepeat}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  setSelectedRepeat(originalRepeat);
-                  setShowRepeat(false);
-                }}
+                onClick={() => setShowRepeat(false)}
                 className="hover:bg-transparent absolute left-4"
                 aria-label="Close repeat dialog"
               >
@@ -401,10 +401,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  form.handleSubmit(onSubmit)();
-                  setShowRepeat(false);
-                }}
+                onClick={confirmRepeatSelection}
                 className="hover:bg-transparent absolute right-4"
                 aria-label="Confirm repeat selection"
               >
