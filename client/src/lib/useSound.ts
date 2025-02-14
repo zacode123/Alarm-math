@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { apiRequest } from "./queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 type SoundName = "default" | "digital" | "beep";
 
@@ -18,12 +20,32 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [customRingtones, setCustomRingtones] = useState<CustomRingtone[]>([]);
 
+  // Fetch custom ringtones from the database
+  const { data: audioFiles } = useQuery({
+    queryKey: ['/api/audio-files'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/audio-files');
+      const files = await res.json();
+      return files.map((file: any) => ({
+        id: `db-${file.id}`,
+        url: `data:${file.type};base64,${file.data}`,
+        name: file.name
+      }));
+    }
+  });
+
+  // Update custom ringtones when audio files change
+  useEffect(() => {
+    if (audioFiles) {
+      setCustomRingtones(audioFiles);
+    }
+  }, [audioFiles]);
+
   useEffect(() => {
     if (soundName) {
       const newAudio = new Audio();
       newAudio.volume = defaultVolume / 100;
 
-      // Test if the audio can be loaded
       newAudio.addEventListener('error', (e) => {
         console.error('Error loading audio:', e);
       });
@@ -97,8 +119,24 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
     });
   }, []);
 
-  const addCustomRingtone = useCallback((ringtone: CustomRingtone) => {
-    setCustomRingtones(prev => [...prev, ringtone]);
+  const addCustomRingtone = useCallback(async (ringtone: CustomRingtone) => {
+    // Save to database
+    const response = await fetch(ringtone.url);
+    const blob = await response.blob();
+    const reader = new FileReader();
+
+    reader.onloadend = async () => {
+      const base64data = (reader.result as string).split(',')[1];
+
+      await apiRequest('POST', '/api/audio-files', {
+        name: ringtone.name,
+        data: base64data,
+        type: blob.type,
+        created: Math.floor(Date.now() / 1000)
+      });
+    };
+
+    reader.readAsDataURL(blob);
   }, []);
 
   return { 
