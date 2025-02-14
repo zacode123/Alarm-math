@@ -90,6 +90,10 @@ export default function Settings() {
         method: 'DELETE'
       });
       
+      // Update local state
+      const newRingtones = customRingtones.filter((_, i) => i !== index);
+      setCustomRingtones(newRingtones);
+      
       toast({
         title: "Ringtone deleted",
         description: "Custom ringtone has been removed successfully.",
