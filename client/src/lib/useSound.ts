@@ -153,7 +153,8 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
           reject(error);
         }
       });
-  }, []);
+    };
+  })(), []);
 
   const addCustomRingtone = useCallback(async (ringtone: CustomRingtone) => {
     setCustomRingtones(prev => [...prev, ringtone]);
