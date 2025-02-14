@@ -152,7 +152,7 @@ export default function Settings() {
               <h3 className="font-medium">Default Ringtones</h3>
               {Object.entries(DEFAULT_SOUNDS).map(([id, path]) => (
                 <div key={id} className="flex items-center justify-between py-2">
-                  <span>{name}</span>
+                  <span>{id.charAt(0).toUpperCase() + id.slice(1)}</span>
                   <Button
                     variant="outline"
                     size="sm"
