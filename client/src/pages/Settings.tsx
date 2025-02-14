@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useQueryClient } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
+import { DEFAULT_SOUNDS } from '@/lib/useSound';
+import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from "@/components/ui/separator";
 import { Moon, Sun, Upload, Volume2, Trash2 } from "lucide-react";
 import {

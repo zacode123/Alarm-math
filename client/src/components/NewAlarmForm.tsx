@@ -17,12 +17,7 @@ import { RingtoneCard } from "@/components/ui/ringtone-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-
-// Assuming DEFAULT_SOUNDS is defined elsewhere and contains the ringtone data.  Example:
-// const DEFAULT_SOUNDS = {
-//   default: '/sounds/default.mp3',
-//   beep: '/sounds/beep.mp3'
-// };
+import { DEFAULT_SOUNDS } from '@/lib/useSound';
 
 const DEFAULT_RINGTONES = Object.entries(DEFAULT_SOUNDS).map(([id, path]) => ({
   id,
