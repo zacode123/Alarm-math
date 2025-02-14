@@ -216,7 +216,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500); // Show loading screen for 1.5 seconds
+    }, 800); // Reduced from 1500ms to 800ms for better UX
     return () => clearTimeout(timer);
   }, []);
 
@@ -302,7 +302,7 @@ export default function Home() {
 
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isLoading && <LoadingScreen />}
       </AnimatePresence>
       <div className="min-h-screen bg-background p-4 md:p-8">
