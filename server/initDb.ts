@@ -1,52 +1,49 @@
-import { db, pool } from "./db";
-import * as schema from "@shared/schema";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { migrate } from "drizzle-orm/neon-serverless/migrator";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
-async function initializeDatabase() {
+export async function initDb() {
   try {
-    // Attempt to verify tables exist
-    try {
-      await db.select().from(schema.alarms);
-      await db.select().from(schema.audioFiles);
-      console.log("Database tables verified");
-    } catch (error) {
-      console.log("Tables don't exist, creating schema...");
+    console.log('Starting database initialization...');
 
-      // Create tables if they don't exist
-      const sql = `
-        CREATE TABLE IF NOT EXISTS alarms (
-          id SERIAL PRIMARY KEY,
-          time TEXT NOT NULL,
-          enabled BOOLEAN NOT NULL DEFAULT true,
-          days TEXT[] NOT NULL,
-          label TEXT NOT NULL DEFAULT '',
-          difficulty TEXT NOT NULL DEFAULT 'easy',
-          sound TEXT NOT NULL DEFAULT 'default',
-          volume INTEGER NOT NULL DEFAULT 100,
-          auto_delete BOOLEAN NOT NULL DEFAULT false,
-          vibration BOOLEAN NOT NULL DEFAULT false,
-          created INTEGER NOT NULL
-        );
+    // Create alarms table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS alarms (
+        id SERIAL PRIMARY KEY,
+        time TEXT NOT NULL,
+        enabled BOOLEAN NOT NULL DEFAULT true,
+        days TEXT[] NOT NULL,
+        label TEXT NOT NULL DEFAULT '',
+        difficulty TEXT NOT NULL DEFAULT 'easy',
+        sound TEXT NOT NULL DEFAULT 'default',
+        volume INTEGER NOT NULL DEFAULT 100,
+        auto_delete BOOLEAN NOT NULL DEFAULT false,
+        vibration BOOLEAN NOT NULL DEFAULT false,
+        created INTEGER NOT NULL
+      );
+    `);
+    console.log('Alarms table initialized');
 
-        CREATE TABLE IF NOT EXISTS audio_files (
-          id SERIAL PRIMARY KEY,
-          name TEXT NOT NULL,
-          data TEXT NOT NULL,
-          type TEXT NOT NULL,
-          created INTEGER NOT NULL
-        );
-      `;
+    // Create audio_files table with slot column
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS audio_files (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        data TEXT NOT NULL,
+        type TEXT NOT NULL,
+        slot INTEGER NOT NULL,
+        created INTEGER NOT NULL,
+        CONSTRAINT valid_slot CHECK (slot >= 1 AND slot <= 3)
+      );
+    `);
+    console.log('Audio files table initialized');
 
-      await pool.query(sql);
-      console.log("Database tables created successfully");
-    }
+    // Verify tables exist by doing a simple select
+    await db.execute(sql`SELECT COUNT(*) FROM alarms`);
+    await db.execute(sql`SELECT COUNT(*) FROM audio_files`);
 
-    return true;
+    console.log('Database tables verified successfully');
   } catch (error) {
-    console.error("Database initialization error:", error);
+    console.error('Error during database initialization:', error);
     throw error;
   }
 }
-
-export { initializeDatabase };

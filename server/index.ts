@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { initializeDatabase } from "./initDb";
+import { initDb } from "./initDb";
 import { pool } from "./db";
 
 const app = express();
@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 (async () => {
   try {
     // Initialize database before starting the server
-    await initializeDatabase();
+    await initDb();
     log("Database initialized successfully");
 
     const server = registerRoutes(app);

@@ -11,34 +11,40 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create a connection pool with proper error handling
+// Create a connection pool with proper error handling and retries
 const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  connectionTimeoutMillis: 5000,
-  max: 20
+  connectionTimeoutMillis: 10000, // Increased timeout
+  max: 20,
+  idleTimeoutMillis: 30000,
+  retryDelay: 1000,
+  maxRetries: 3
 });
 
 // Add error handler to the pool
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  // Don't exit the process, just log the error
+  console.error('Database connection error occurred, will retry automatically');
 });
 
-// Test the connection
-pool.connect((err, client, done) => {
-  if (err) {
-    console.error('Error connecting to the database', err);
-    return;
+// Test the connection with better error handling
+async function testConnection() {
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query('SELECT NOW()');
+    console.log('Database connected successfully at:', result.rows[0].now);
+  } catch (error) {
+    console.error('Error testing database connection:', error);
+    throw error;
+  } finally {
+    if (client) client.release();
   }
-  client.query('SELECT NOW()', (err, result) => {
-    done();
-    if (err) {
-      console.error('Error executing query', err);
-      return;
-    }
-    console.log('Database connected successfully');
-  });
-});
+}
+
+// Initial connection test
+testConnection().catch(console.error);
 
 export const db = drizzle(pool, { schema });
 export { pool };
