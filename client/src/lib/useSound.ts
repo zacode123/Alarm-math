@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "./queryClient";
 import { useQuery } from "@tanstack/react-query";
-import path from 'path';
 
 type SoundName = "default" | "digital" | "beep";
 
@@ -11,17 +10,11 @@ export interface CustomRingtone {
   name: string;
 }
 
-const DEFAULT_SOUNDS: Record<string, string> = {
-  'Morning Dew': "/sounds/default.mp3",
-  'Beep': "/sounds/beep.mp3"
+const DEFAULT_SOUNDS = {
+  default: "/sounds/default.mp3",
+  digital: "/sounds/digital.mp3",
+  beep: "/sounds/beep.mp3"
 };
-
-// Helper function to clean ringtone name
-export function cleanRingtoneName(name: string): string {
-  return path.parse(name).name.split('_').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
-}
 
 export function useSound(soundName?: string, defaultVolume: number = 100) {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
@@ -35,8 +28,8 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
       const files = await res.json();
       return files.map((file: any) => ({
         id: `db-${file.id}`,
-        url: file.data,
-        name: cleanRingtoneName(file.name)
+        url: file.data, // Now contains the file path
+        name: file.name
       }));
     }
   });
@@ -58,9 +51,7 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
       });
 
       try {
-        // Check if it's a default sound or a custom one
-        const soundPath = DEFAULT_SOUNDS[soundName] || soundName;
-        newAudio.src = soundPath;
+        newAudio.src = DEFAULT_SOUNDS[soundName as SoundName] || soundName;
       } catch (error) {
         console.error('Error setting audio source:', error);
       }
@@ -80,10 +71,10 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
     if (audio) {
       try {
         if (sound) {
-          audio.src = DEFAULT_SOUNDS[sound] || sound;
+          audio.src = DEFAULT_SOUNDS[sound as SoundName] || sound;
         }
         if (typeof volume === 'number') {
-          audio.volume = volume / 100;
+          audio.volume = volume;
         }
         audio.currentTime = 0;
         return audio.play();
@@ -102,9 +93,10 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
     }
   }, [audio]);
 
-  const preview = useCallback((sound: string, volume: number = 100) => {
+  const preview = useCallback((sound: SoundName | string, volume: number = 1) => {
+    const soundUrl = DEFAULT_SOUNDS[sound as SoundName] || sound;
     const previewAudio = new Audio();
-    previewAudio.volume = volume / 100;
+    previewAudio.volume = volume;
 
     return new Promise((resolve, reject) => {
       previewAudio.addEventListener('loadeddata', () => {
@@ -119,9 +111,7 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
       });
 
       try {
-        // Check if it's a default sound or a custom one
-        const soundPath = DEFAULT_SOUNDS[sound] || sound;
-        previewAudio.src = soundPath;
+        previewAudio.src = soundUrl;
       } catch (error) {
         console.error('Error setting preview audio source:', error);
         reject(error);
@@ -129,11 +119,8 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
     });
   }, []);
 
-  const addCustomRingtone = useCallback((ringtone: CustomRingtone) => {
-    setCustomRingtones(prev => [...prev, {
-      ...ringtone,
-      name: cleanRingtoneName(ringtone.name)
-    }]);
+  const addCustomRingtone = useCallback(async (ringtone: CustomRingtone) => {
+    setCustomRingtones(prev => [...prev, ringtone]);
   }, []);
 
   return { 
@@ -141,7 +128,6 @@ export function useSound(soundName?: string, defaultVolume: number = 100) {
     stop, 
     preview, 
     customRingtones,
-    addCustomRingtone,
-    defaultSounds: DEFAULT_SOUNDS
+    addCustomRingtone
   };
 }

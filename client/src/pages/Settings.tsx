@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Moon, Sun, Upload, Volume2, Trash2, Music2, Check, X, Pencil } from "lucide-react";
+import { Moon, Sun, Upload, Volume2, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,21 +17,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { motion, AnimatePresence } from "framer-motion";
-import { useSound, cleanRingtoneName } from "@/lib/useSound";
+import { motion } from "framer-motion";
+import { useSound } from "@/lib/useSound";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 
 export default function Settings() {
   const [theme, setTheme] = useState<'light' | 'dark'>(
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
-  const { preview, customRingtones, defaultSounds } = useSound();
+  const { preview, customRingtones, addCustomRingtone } = useSound();
   const { toast } = useToast();
-  const [showRingtones, setShowRingtones] = useState(false);
-  const [selectedRingtone, setSelectedRingtone] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState<string>("");
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -53,18 +48,21 @@ export default function Settings() {
           const response = await fetch('/api/audio-files', {
             method: 'POST',
             body: formData,
-            signal: AbortSignal.timeout(30000)
+            signal: AbortSignal.timeout(30000) // 30 second timeout
           });
 
           if (!response.ok) throw new Error('Upload failed');
 
+          const result = await response.json();
+          addCustomRingtone({ 
+            id: `db-${result.id}`, 
+            url: result.url,
+            name: result.name 
+          });
           toast({
             title: "Ringtone added",
-            description: `${cleanRingtoneName(file.name)} has been added to your custom ringtones.`,
+            description: `${file.name} has been added to your custom ringtones.`,
           });
-
-          // Close the dialog after successful upload
-          setShowRingtones(false);
         } catch (error) {
           toast({
             title: "Error",
@@ -82,39 +80,16 @@ export default function Settings() {
     }
   };
 
-  const handlePreview = async (url: string) => {
-    try {
-      await preview(url);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not preview the ringtone",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteRingtone = async (id: string) => {
-    try {
-      const response = await fetch(`/api/audio-files/${id.replace('db-', '')}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) throw new Error('Delete failed');
-
-      toast({
-        title: "Ringtone deleted",
-        description: "Custom ringtone has been removed successfully.",
-      });
-
-      setShowRingtones(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete ringtone",
-        variant: "destructive",
-      });
-    }
+  const handleDeleteRingtone = (index: number, url: string) => {
+    URL.revokeObjectURL(url);
+    const updatedRingtones = customRingtones.filter((_, i) => i !== index);
+    updatedRingtones.forEach(ringtone => {
+      addCustomRingtone(ringtone);
+    });
+    toast({
+      title: "Ringtone deleted",
+      description: "Custom ringtone has been removed successfully.",
+    });
   };
 
   return (
@@ -152,27 +127,21 @@ export default function Settings() {
             {/* Default Ringtones */}
             <div className="space-y-4">
               <h3 className="font-medium">Default Ringtones</h3>
-              {Object.entries(defaultSounds).map(([name, path]) => (
-                <motion.div
-                  key={name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                      <Music2 className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <span>{name}</span>
-                  </div>
+              {Object.entries({
+                default: "Default Alarm",
+                digital: "Digital",
+                beep: "Beep",
+              }).map(([id, name]) => (
+                <div key={id} className="flex items-center justify-between py-2">
+                  <span>{name}</span>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePreview(path)}
+                    onClick={() => preview(id)}
                   >
                     <Volume2 className="h-4 w-4" />
                   </Button>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -181,65 +150,43 @@ export default function Settings() {
             {/* Custom Ringtones */}
             <div className="space-y-4">
               <h3 className="font-medium">Custom Ringtones</h3>
-              <AnimatePresence>
-                {customRingtones.map((ringtone) => (
-                  <motion.div
-                    key={ringtone.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className={cn(
-                      "flex items-center justify-between py-2 px-4 rounded-lg transition-colors",
-                      selectedRingtone === ringtone.id ? "bg-primary/10 border-2 border-primary" : "hover:bg-muted/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center",
-                        selectedRingtone === ringtone.id ? "bg-primary" : "bg-muted"
-                      )}>
-                        <Music2 className={cn(
-                          "h-5 w-5",
-                          selectedRingtone === ringtone.id ? "text-primary-foreground" : "text-muted-foreground"
-                        )} />
-                      </div>
-                      <span>{ringtone.name}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePreview(ringtone.url)}
-                      >
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Ringtone</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this custom ringtone? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteRingtone(ringtone.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+              {customRingtones.map((ringtone, index) => (
+                <div key={ringtone.id} className="flex items-center justify-between py-2">
+                  <span>{ringtone.name}</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => preview(ringtone.url)}
+                    >
+                      <Volume2 className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Ringtone</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this custom ringtone? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteRingtone(index, ringtone.url)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              ))}
               <div className="flex items-center gap-4">
                 <Input
                   type="file"
