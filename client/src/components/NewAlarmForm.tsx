@@ -85,6 +85,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     sun: true
   });
   const [previewVolume, setPreviewVolume] = useState(100);
+  const previewTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const updateTimeRemaining = () => {
@@ -309,7 +310,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                         onValueChange={([value]) => {
                           field.onChange(value);
                           setPreviewVolume(value);
-                          preview(selectedRingtone.path, value / 100);
+                          clearTimeout(previewTimeoutRef.current);
+                          previewTimeoutRef.current = setTimeout(() => {
+                            preview(selectedRingtone.path, value / 100);
+                          }, 1000);
                         }}
                         className="[&_.relative]:before:content-[''] [&_.relative]:before:absolute [&_.relative]:before:left-0 [&_.relative]:before:right-0 [&_.relative]:before:h-2 [&_.relative]:before:bg-gradient-to-r [&_.relative]:before:from-primary/20 [&_.relative]:before:to-primary [&_.relative]:before:rounded-full"
                       />
