@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { useCallback, useMemo } from 'react';
 
 function useRingtones() {
   const { customRingtones } = useSound();
@@ -26,22 +27,12 @@ function useRingtones() {
     name: id.charAt(0).toUpperCase() + id.slice(1),
     path
   }));
-  
+
   return [...defaultRingtones, ...customRingtones.map(rt => ({
-    id: rt.id,
+    id: rt.id || `custom-${rt.name}`,
     name: rt.name,
     path: rt.url
   }))];
-}
-  const { customRingtones } = useSound();
-  return [
-    ...DEFAULT_RINGTONES,
-    ...customRingtones.map(rt => ({
-      id: rt.id,
-      name: rt.name,
-      path: rt.url
-    }))
-  ];
 }
 
 const REPEAT_OPTIONS = [
@@ -76,7 +67,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const [showRingtones, setShowRingtones] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
   const [selectedRingtone, setSelectedRingtone] = useState(() => {
-    return allRingtones.find(r => r.id === defaultValues?.sound) || allRingtones[0];
+    const ringtones = allRingtones;
+    return ringtones.find(r => r.id === defaultValues?.sound) || ringtones[0] || { id: 'default', name: 'Default', path: '/sounds/default.mp3' };
   });
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
   const [originalRepeat, setOriginalRepeat] = useState(REPEAT_OPTIONS[0]);
