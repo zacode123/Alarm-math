@@ -25,7 +25,7 @@ export default function Settings() {
   const [theme, setTheme] = useState<'light' | 'dark'>(
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
-  const { preview, customRingtones, setCustomRingtones } = useSound();
+  const { preview, customRingtones, addCustomRingtone } = useSound();
   const { toast } = useToast();
 
   const toggleTheme = () => {
@@ -42,7 +42,7 @@ export default function Settings() {
         reader.onload = (e) => {
           const base64Data = (e.target?.result as string).split(',')[1];
           const audioUrl = URL.createObjectURL(file);
-          setCustomRingtones([...customRingtones, { url: audioUrl, data: base64Data }]);
+          addCustomRingtone({ id: `custom-${Date.now()}`, url: audioUrl, name: file.name });
           toast({
             title: "Ringtone added",
             description: `${file.name} has been added to your custom ringtones.`,
@@ -61,8 +61,13 @@ export default function Settings() {
 
   const handleDeleteRingtone = (index: number, url: string) => {
     URL.revokeObjectURL(url);
+    // Since we can't modify the customRingtones array directly,
+    // we'll create a new array without the deleted ringtone
     const updatedRingtones = customRingtones.filter((_, i) => i !== index);
-    setCustomRingtones(updatedRingtones);
+    // Re-add all ringtones except the deleted one
+    updatedRingtones.forEach(ringtone => {
+      addCustomRingtone(ringtone);
+    });
     toast({
       title: "Ringtone deleted",
       description: "Custom ringtone has been removed successfully.",
@@ -127,14 +132,14 @@ export default function Settings() {
             {/* Custom Ringtones */}
             <div className="space-y-4">
               <h3 className="font-medium">Custom Ringtones</h3>
-              {customRingtones.map((url, index) => (
-                <div key={index} className="flex items-center justify-between py-2">
-                  <span>Custom Ringtone {index + 1}</span>
+              {customRingtones.map((ringtone, index) => (
+                <div key={ringtone.id} className="flex items-center justify-between py-2">
+                  <span>{ringtone.name}</span>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => preview(url)}
+                      onClick={() => preview(ringtone.url)}
                     >
                       <Volume2 className="h-4 w-4" />
                     </Button>
@@ -154,7 +159,7 @@ export default function Settings() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDeleteRingtone(index, url)}
+                            onClick={() => handleDeleteRingtone(index, ringtone.url)}
                           >
                             Delete
                           </AlertDialogAction>
