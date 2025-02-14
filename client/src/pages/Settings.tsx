@@ -363,6 +363,7 @@ export default function Settings() {
             <div className="flex justify-center gap-4 max-w-lg mx-auto">
               <Button
                 variant="outline"
+                size="icon"
                 onClick={() => {
                   const [selectedId] = selectedRingtones;
                   if (selectedRingtones.size === 1) {
@@ -377,15 +378,13 @@ export default function Settings() {
                   }
                 }}
               >
-                <History className="h-4 w-4 mr-2" />
-                Rename
+                <History className="h-4 w-4" />
               </Button>
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
+                  <Button variant="destructive" size="icon">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
