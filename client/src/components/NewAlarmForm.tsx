@@ -70,6 +70,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     const ringtones = allRingtones;
     return ringtones.find(r => r.id === defaultValues?.sound) || ringtones[0] || { id: 'default', name: 'Default', path: '/sounds/default.mp3' };
   });
+  const [originalRingtone, setOriginalRingtone] = useState(selectedRingtone);
   const [selectedRepeat, setSelectedRepeat] = useState(REPEAT_OPTIONS[0]);
   const [originalRepeat, setOriginalRepeat] = useState(REPEAT_OPTIONS[0]);
   const [timeRemaining, setTimeRemaining] = useState("");
@@ -236,7 +237,10 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 type="button"
                 variant="ghost"
                 className="text-primary text-[15px] flex items-center gap-2 hover:bg-transparent p-0 font-medium"
-                onClick={() => setShowRingtones(true)}
+                onClick={() => {
+                  setOriginalRingtone(selectedRingtone);
+                  setShowRingtones(true);
+                }}
               >
                 {selectedRingtone.name}
                 <ChevronRight className="h-4 w-4" />
@@ -385,7 +389,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  setSelectedRingtone(selectedRingtone); // Keep the previous selection
+                  setSelectedRingtone(originalRingtone);
                   setShowRingtones(false);
                 }}
                 className="hover:bg-transparent absolute left-4"
