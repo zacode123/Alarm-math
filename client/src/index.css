@@ -22,20 +22,7 @@
     @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background/95 backdrop-blur-sm p-6 shadow-lg duration-200 sm:rounded-lg md:w-full my-8 mx-4;
   }
 
-  /* Enhanced Slider with Wave Animation */
-  [data-radix-slider-thumb] {
-    animation: wave 2s ease-in-out infinite;
-    transition: transform 0.2s cubic-bezier(0.65, 0, 0.35, 1);
-  }
-
-  [data-radix-slider-thumb]:hover {
-    transform: scale(1.1) translateY(calc(var(--slider-wave-offset, 0) * 1px));
-  }
-
-  [data-radix-slider-thumb]:active {
-    transform: scale(0.95) translateY(calc(var(--slider-wave-offset, 0) * 1px));
-  }
-
+  /* Enhanced Wavy Slider */
   .wavy-slider-track {
     position: relative;
     overflow: hidden;
@@ -44,11 +31,9 @@
   .wavy-slider-track::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(90deg, 
+    inset: 0;
+    background: linear-gradient(
+      90deg,
       transparent 0%,
       hsl(var(--primary)/0.2) 50%,
       transparent 100%
@@ -58,21 +43,35 @@
     animation: waveMove 3s linear infinite;
   }
 
-  @keyframes waveMove {
-    from { mask-position: 0% center; }
-    to { mask-position: 180px center; }
+  .wavy-slider-range::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: hsl(var(--primary));
+    mask-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,8 C20,0 40,16 60,8 C80,0 100,16 120,8 C140,0 160,16 180,8' stroke='%23000' fill='none' /%3E%3C/svg%3E");
+    mask-size: 180px 100%;
+    animation: waveMove 3s linear infinite;
   }
 
-  @keyframes wave {
+  .wavy-slider-thumb {
+    animation: thumbWave 2s ease-in-out infinite;
+    transition: transform 0.2s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  @keyframes waveMove {
+    0% { mask-position: 0% center; }
+    100% { mask-position: 180px center; }
+  }
+
+  @keyframes thumbWave {
     0%, 100% {
-      --slider-wave-offset: -1;
+      transform: translateY(-4px) scale(1);
     }
     50% {
-      --slider-wave-offset: 1;
+      transform: translateY(4px) scale(1.1);
     }
   }
 
-  /* Animated Wave Background */
   .wave-bg {
     @apply relative overflow-hidden;
     background: linear-gradient(45deg, hsl(var(--primary)/0.1), transparent);
@@ -85,22 +84,18 @@
     animation: pulse 8s ease-in-out infinite;
   }
 
-  /* Smooth transitions */
   .smooth-transition {
     @apply transition-all duration-300 ease-in-out;
   }
 
-  /* Loading animation */
   .loading-ring {
     @apply border-4 border-primary/20 border-t-primary rounded-full animate-spin;
   }
 
-  /* Card hover effects */
   .hover-card {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
 
-  /* Enhanced toast notifications */
   .toast-root {
     @apply bg-gradient-to-r from-background/95 to-background/90 backdrop-blur-md border border-border/50 shadow-xl;
   }
@@ -141,7 +136,6 @@
   }
 }
 
-/* Enhance dialog animations */
 [data-state="open"] {
   animation: dialogIn 0.3s ease-out;
 }

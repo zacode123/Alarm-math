@@ -16,16 +16,12 @@ const Slider = React.forwardRef<
     {...props}
   >
     <SliderPrimitive.Track 
-      className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary"
+      className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary wavy-slider-track"
     >
-      <SliderPrimitive.Range className="absolute h-full bg-primary" />
+      <SliderPrimitive.Range className="absolute h-full bg-primary wavy-slider-range" />
     </SliderPrimitive.Track>
     <SliderPrimitive.Thumb 
-      className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer hover:scale-110 transition-transform duration-200"
-      style={{
-        transform: 'translateY(var(--radix-slider-thumb-transform))',
-        transition: 'transform 0.2s cubic-bezier(0.65, 0, 0.35, 1)'
-      }}
+      className="wavy-slider-thumb block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
     />
   </SliderPrimitive.Root>
 ))
