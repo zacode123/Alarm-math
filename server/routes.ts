@@ -59,6 +59,16 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
+      const audioFile = await storage.getAudioFile(id);
+      if (audioFile) {
+        // Remove the physical file if it exists
+        const filePath = path.join(process.cwd(), 'client/public', audioFile.data);
+        try {
+          await fs.promises.unlink(filePath);
+        } catch (error) {
+          console.warn('Could not delete audio file:', error);
+        }
+      }
       await storage.deleteAlarm(id);
       res.status(204).send();
     } catch (err) {
