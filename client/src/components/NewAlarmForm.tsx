@@ -19,16 +19,16 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 
-const DEFAULT_RINGTONES = [];
-const { customRingtones } = useSound();
-const allRingtones = [
-  ...DEFAULT_RINGTONES,
-  ...customRingtones.map(rt => ({
+function useRingtones() {
+  const { customRingtones } = useSound();
+  return customRingtones.map(rt => ({
     id: rt.id,
     name: rt.name,
     path: rt.url
-  }))
-];
+  }));
+}
+
+const allRingtones = useRingtones();
 
 
 function useRingtones() {
