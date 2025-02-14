@@ -171,11 +171,13 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
     }
   };
 
-  const handleRingtoneSelect = (ringtone: typeof allRingtones[0]) => {
+  const handleRingtoneSelect = async (ringtone: typeof allRingtones[0]) => {
     setSelectedRingtone(ringtone);
     form.setValue('sound', ringtone.id);
-    // Use the correct path for preview
-    preview(ringtone.path).catch(error => {
+    // Wait a tiny bit to ensure previous audio is cleaned up
+    await new Promise(resolve => setTimeout(resolve, 50));
+    // Use the correct path for preview with current volume
+    preview(ringtone.path, previewVolume / 100).catch(error => {
       console.error('Error previewing ringtone:', error);
       toast({
         title: "Preview Error",
