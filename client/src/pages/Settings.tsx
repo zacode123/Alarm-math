@@ -202,28 +202,24 @@ export default function Settings() {
                   </div>
                 </div>
               ))}
-              <div className="space-y-4">
-                {[1, 2, 3].map((slot) => (
-                  <div key={slot} className="flex items-center gap-4">
-                    <Input
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      id={`ringtone-upload-${slot}`}
-                      onChange={(e) => handleRingtoneUpload(e, slot)}
-                    />
-                    <Button
-                      variant="outline"
-                      asChild
-                      className="w-full"
-                    >
-                      <label htmlFor={`ringtone-upload-${slot}`} className="flex items-center justify-center gap-2 cursor-pointer">
-                        <Upload className="h-4 w-4" />
-                        Custom Ringtone {slot}
-                      </label>
-                    </Button>
-                  </div>
-                ))}
+              <div className="flex items-center gap-4">
+                <Input
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  id="ringtone-upload"
+                  onChange={(e) => handleRingtoneUpload(e, customRingtones.length + 1)}
+                />
+                <Button
+                  variant="outline"
+                  asChild
+                  className="w-full"
+                >
+                  <label htmlFor="ringtone-upload" className="flex items-center justify-center gap-2 cursor-pointer">
+                    <Upload className="h-4 w-4" />
+                    Upload Custom Ringtone
+                  </label>
+                </Button>
               </div>
             </div>
           </CardContent>
