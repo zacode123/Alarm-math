@@ -274,30 +274,27 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               />
             </div>
 
-            <div className="py-4 border-t">
+            <div className="py-4 border-t relative group">
               <FormField
                 control={form.control}
                 name="label"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        placeholder="Enter label"
-                        className="bg-muted/20 border border-input/50 focus:border-primary"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          placeholder=" "
+                          className="bg-muted/20 border border-input/50 focus:border-primary pt-4 pb-2 px-3"
+                          {...field}
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none transition-all duration-200 group-focus-within:text-xs group-focus-within:top-3 group-focus-within:text-primary peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:text-muted-foreground">
+                          Enter label
+                        </span>
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="mt-6 flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                Save Alarm
-              </Button>
             </div>
           </form>
         </Form>
