@@ -19,16 +19,20 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
 const DEFAULT_RINGTONES = [
-  { id: 'default', name: 'Morning dew' },
-  { id: 'digital', name: 'Digital Alarm' },
-  { id: 'beep', name: 'Beep' },
+  { id: 'default', name: 'Morning dew', path: '/sounds/default.mp3' },
+  { id: 'digital', name: 'Digital Alarm', path: '/sounds/digital.mp3' },
+  { id: 'beep', name: 'Beep', path: '/sounds/beep.mp3' },
 ];
 
 function useRingtones() {
   const { customRingtones } = useSound();
   return [
     ...DEFAULT_RINGTONES,
-    ...customRingtones
+    ...customRingtones.map(rt => ({
+      id: rt.id,
+      name: rt.name,
+      path: rt.url
+    }))
   ];
 }
 
@@ -168,7 +172,15 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const handleRingtoneSelect = (ringtone: typeof allRingtones[0]) => {
     setSelectedRingtone(ringtone);
     form.setValue('sound', ringtone.id);
-    preview(ringtone.id);
+    // Use the correct path for preview
+    preview(ringtone.path).catch(error => {
+      console.error('Error previewing ringtone:', error);
+      toast({
+        title: "Preview Error",
+        description: "Could not preview the selected ringtone",
+        variant: "destructive",
+      });
+    });
   };
 
   const handleDayToggle = (day: string) => {
