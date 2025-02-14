@@ -458,8 +458,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    setSelectedRingtone(originalRingtone);
-                    setShowRingtones(false);
+                    setSelectedRepeat(originalRepeat);
+                    setShowRepeat(false);
                   }}
                   className="hover:bg-transparent absolute left-4"
                   aria-label="Close ringtones dialog"
