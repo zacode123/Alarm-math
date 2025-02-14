@@ -10,7 +10,7 @@ export interface CustomRingtone {
   name: string;
 }
 
-export const DEFAULT_SOUNDS: Record<string, string> = {
+export let DEFAULT_SOUNDS: Record<string, string> = {
   default: "/sounds/default.mp3",
   beep: "/sounds/beep.mp3"
 };
@@ -28,10 +28,10 @@ const checkSoundExists = async (path: string): Promise<boolean> => {
 const initDefaultSounds = async () => {
   const sounds = {
     default: "/sounds/default.mp3",
-    digital: "/sounds/digital.mp3",
     beep: "/sounds/beep.mp3"
   };
 
+  DEFAULT_SOUNDS = {}; // Reset default sounds
   for (const [key, path] of Object.entries(sounds)) {
     if (await checkSoundExists(path)) {
       DEFAULT_SOUNDS[key] = path;
