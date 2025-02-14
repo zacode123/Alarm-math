@@ -10,11 +10,34 @@ export interface CustomRingtone {
   name: string;
 }
 
-const DEFAULT_SOUNDS = {
-  default: "/sounds/default.mp3",
-  digital: "/sounds/digital.mp3",
-  beep: "/sounds/beep.mp3"
+const DEFAULT_SOUNDS: Record<string, string> = {};
+
+// Check which default sounds exist
+const checkSoundExists = async (path: string): Promise<boolean> => {
+  try {
+    const response = await fetch(path, { method: 'HEAD' });
+    return response.ok;
+  } catch {
+    return false;
+  }
 };
+
+const initDefaultSounds = async () => {
+  const sounds = {
+    default: "/sounds/default.mp3",
+    digital: "/sounds/digital.mp3",
+    beep: "/sounds/beep.mp3"
+  };
+
+  for (const [key, path] of Object.entries(sounds)) {
+    if (await checkSoundExists(path)) {
+      DEFAULT_SOUNDS[key] = path;
+    }
+  }
+};
+
+// Initialize default sounds
+initDefaultSounds();
 
 export function useSound(soundName?: string, defaultVolume: number = 100) {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
