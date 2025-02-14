@@ -21,6 +21,7 @@ export const audioFiles = pgTable("audio_files", {
   name: text("name").notNull(),
   data: text("data").notNull(), // Base64 encoded audio data
   type: text("type").notNull(), // MIME type
+  slot: integer("slot"), // Slot number (1-3)
   created: integer("created").notNull()
 });
 

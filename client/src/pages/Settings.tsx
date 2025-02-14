@@ -34,13 +34,14 @@ export default function Settings() {
     document.documentElement.classList.toggle('dark');
   };
 
-  const handleRingtoneUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRingtoneUpload = async (event: React.ChangeEvent<HTMLInputElement>, slot: number) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith('audio/')) {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const base64Data = (e.target?.result as string).split(',')[1];
+          const slotName = `Custom ${slot}`;
           
           try {
             const response = await fetch('/api/audio-files', {
@@ -197,24 +198,28 @@ export default function Settings() {
                   </div>
                 </div>
               ))}
-              <div className="flex items-center gap-4">
-                <Input
-                  type="file"
-                  accept="audio/*"
-                  className="hidden"
-                  id="ringtone-upload"
-                  onChange={handleRingtoneUpload}
-                />
-                <Button
-                  variant="outline"
-                  asChild
-                  className="w-full"
-                >
-                  <label htmlFor="ringtone-upload" className="flex items-center justify-center gap-2 cursor-pointer">
-                    <Upload className="h-4 w-4" />
-                    Upload Ringtone
-                  </label>
-                </Button>
+              <div className="space-y-4">
+                {[1, 2, 3].map((slot) => (
+                  <div key={slot} className="flex items-center gap-4">
+                    <Input
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      id={`ringtone-upload-${slot}`}
+                      onChange={(e) => handleRingtoneUpload(e, slot)}
+                    />
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="w-full"
+                    >
+                      <label htmlFor={`ringtone-upload-${slot}`} className="flex items-center justify-center gap-2 cursor-pointer">
+                        <Upload className="h-4 w-4" />
+                        Custom Ringtone {slot}
+                      </label>
+                    </Button>
+                  </div>
+                ))}
               </div>
             </div>
           </CardContent>
