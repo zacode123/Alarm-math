@@ -80,16 +80,27 @@ export default function Settings() {
     }
   };
 
-  const handleDeleteRingtone = (index: number, url: string) => {
+  const handleDeleteRingtone = async (index: number, url: string) => {
     URL.revokeObjectURL(url);
-    const updatedRingtones = customRingtones.filter((_, i) => i !== index);
-    updatedRingtones.forEach(ringtone => {
-      addCustomRingtone(ringtone);
-    });
-    toast({
-      title: "Ringtone deleted",
-      description: "Custom ringtone has been removed successfully.",
-    });
+    const ringtoneId = customRingtones[index].id;
+    const dbId = ringtoneId.replace('db-', '');
+    
+    try {
+      await fetch(`/api/audio-files/${dbId}`, {
+        method: 'DELETE'
+      });
+      
+      toast({
+        title: "Ringtone deleted",
+        description: "Custom ringtone has been removed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete ringtone",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
