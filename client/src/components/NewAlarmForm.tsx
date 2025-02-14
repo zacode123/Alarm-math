@@ -705,9 +705,11 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                                       <span className="capitalize font-medium">{day}</span>
                                       <Switch
                                         checked={selectedDays[day]}
-                                        onCheckedChange={(e) => {
-                                          e.stopPropagation();
+                                        onCheckedChange={(checked) => {
                                           handleDayToggle(day);
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                         }}
                                         className="data-[state=checked]:bg-primary"
                                       />
