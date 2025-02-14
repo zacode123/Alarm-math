@@ -63,7 +63,17 @@ export default function Settings() {
               url: result.data,
               name: file.name 
             });
-          toast({
+            toast({
+              title: "Ringtone added",
+              description: `${file.name} has been added to your custom ringtones.`,
+            });
+          } catch (error) {
+            toast({
+              title: "Error",
+              description: "Failed to upload ringtone",
+              variant: "destructive",
+            });
+          }
             title: "Ringtone added",
             description: `${file.name} has been added to your custom ringtones.`,
           });
