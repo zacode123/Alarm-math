@@ -254,7 +254,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="px-6 py-4 mx-4 rounded-xl">
+      <div className="py-4 mx-8 rounded-xl">
         <p className="text-sm text-muted-foreground text-center mb-8">
           {timeRemaining}
         </p>
