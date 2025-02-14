@@ -73,16 +73,6 @@ export default function Settings() {
     }
   };
 
-  const handleSelectAllRingtones = () => {
-    const allIds = customRingtones.map(ringtone => ringtone.id);
-    setSelectedRingtones(new Set(allIds));
-  };
-
-  const handleDeselectAllRingtones = () => {
-    setSelectedRingtones(new Set());
-    setIsSelectionMode(false);
-  };
-
   const handleRingtoneUpload = async (event: React.ChangeEvent<HTMLInputElement>, slot: number) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -227,34 +217,6 @@ export default function Settings() {
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
               Ringtones
-              {isSelectionMode && (
-                <div className="flex items-center gap-2 ml-auto text-sm">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSelectAllRingtones}
-                    className="text-primary"
-                  >
-                    Select All
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDeselectAllRingtones}
-                    className="text-primary"
-                  >
-                    Deselect All
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsSelectionMode(false)}
-                    className="text-primary"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -327,56 +289,20 @@ export default function Settings() {
                         )}
                       </div>
                     ) : (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            preview(ringtone.url);
-                          }}
-                        >
-                          <Volume2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRenamingRingtone(ringtone.id);
-                          }}
-                        >
-                          <History className="h-4 w-4" />
-                        </Button>
-                      </>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          preview(ringtone.url);
+                        }}
+                      >
+                        <Volume2 className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
                 </motion.div>
               ))}
-
-              {/* Selection Mode Actions */}
-              {isSelectionMode && selectedRingtones.size > 0 && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Selected ({selectedRingtones.size})
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Ringtones</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete {selectedRingtones.size} ringtone(s)? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteRingtones}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
 
               {/* Upload Button */}
               {!isSelectionMode && (
@@ -424,6 +350,61 @@ export default function Settings() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Selection Mode Actions */}
+      <AnimatePresence>
+        {isSelectionMode && selectedRingtones.size > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t"
+          >
+            <div className="flex justify-center gap-4 max-w-lg mx-auto">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const [selectedId] = selectedRingtones;
+                  if (selectedRingtones.size === 1) {
+                    setRenamingRingtone(selectedId);
+                    setIsSelectionMode(false);
+                  } else {
+                    toast({
+                      title: "Select one ringtone",
+                      description: "Please select only one ringtone to rename.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                <History className="h-4 w-4 mr-2" />
+                Rename
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Ringtones</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete {selectedRingtones.size} ringtone(s)? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteRingtones}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
