@@ -18,11 +18,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
-const DEFAULT_RINGTONES = [
-  { id: 'default', name: 'Morning dew', path: '/sounds/default.mp3' },
-  { id: 'digital', name: 'Digital Alarm', path: '/sounds/digital.mp3' },
-  { id: 'beep', name: 'Beep', path: '/sounds/beep.mp3' },
-];
+// Assuming DEFAULT_SOUNDS is defined elsewhere and contains the ringtone data.  Example:
+// const DEFAULT_SOUNDS = {
+//   default: '/sounds/default.mp3',
+//   beep: '/sounds/beep.mp3'
+// };
+
+const DEFAULT_RINGTONES = Object.entries(DEFAULT_SOUNDS).map(([id, path]) => ({
+  id,
+  name: id.charAt(0).toUpperCase() + id.slice(1),
+  path
+}));
+
 
 function useRingtones() {
   const { customRingtones } = useSound();

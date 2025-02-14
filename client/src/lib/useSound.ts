@@ -10,7 +10,10 @@ export interface CustomRingtone {
   name: string;
 }
 
-const DEFAULT_SOUNDS: Record<string, string> = {};
+export const DEFAULT_SOUNDS: Record<string, string> = {
+  default: "/sounds/default.mp3",
+  beep: "/sounds/beep.mp3"
+};
 
 // Check which default sounds exist
 const checkSoundExists = async (path: string): Promise<boolean> => {

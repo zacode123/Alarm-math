@@ -149,11 +149,7 @@ export default function Settings() {
             {/* Default Ringtones */}
             <div className="space-y-4">
               <h3 className="font-medium">Default Ringtones</h3>
-              {Object.entries({
-                default: "Default Alarm",
-                digital: "Digital",
-                beep: "Beep",
-              }).map(([id, name]) => (
+              {Object.entries(DEFAULT_SOUNDS).map(([id, path]) => (
                 <div key={id} className="flex items-center justify-between py-2">
                   <span>{name}</span>
                   <Button
