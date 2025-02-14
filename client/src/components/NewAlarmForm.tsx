@@ -395,6 +395,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                       onChange={(value) => {
                         field.onChange(value);
                         setPreviewVolume(value);
+                      }}
+                      onValueCommit={([value]) => {
+                        // Only preview when user stops dragging
                         preview(selectedRingtone.path, value / 100);
                       }}
                     />
