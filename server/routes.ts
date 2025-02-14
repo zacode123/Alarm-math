@@ -69,9 +69,10 @@ export function registerRoutes(app: Express): Server {
       const buffer = Buffer.from(data, 'base64');
       fs.writeFileSync(filePath, buffer);
 
-      // Save reference in database - Assuming 'storage' has a createAudioFile method.  Adjust as needed for your database interaction.
+      // Save reference in database with file path
       const audio = await storage.createAudioFile({
         name: fileName,
+        data: `/sounds/${fileName}`,
         type,
         created: Math.floor(Date.now() / 1000)
       });

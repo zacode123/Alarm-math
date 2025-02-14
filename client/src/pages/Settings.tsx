@@ -61,8 +61,8 @@ export default function Settings() {
             const result = await response.json();
             addCustomRingtone({ 
               id: `db-${result.id}`, 
-              url: result.data,
-              name: file.name 
+              url: result.url,
+              name: result.name 
             });
             toast({
               title: "Ringtone added",
