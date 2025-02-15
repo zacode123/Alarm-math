@@ -137,6 +137,22 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.patch("/api/audio-files/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+    const newName = req.body.name;
+    try {
+      const updatedAudio = await storage.updateAudioFile(id, { name: newName });
+      res.json(updatedAudio);
+    } catch (err) {
+      res.status(404).json({ error: "Audio file not found" });
+    }
+  });
+
+
   app.delete("/api/audio-files/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
