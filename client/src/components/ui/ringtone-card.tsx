@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Check, Music2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, stripFileExtension } from "@/lib/utils";
 
 interface RingtoneCardProps {
   name: string;
@@ -52,7 +52,7 @@ export function RingtoneCard({ name, isSelected, onClick }: RingtoneCardProps) {
               "text-base transition-colors duration-200",
               isSelected ? "text-primary font-medium" : "text-foreground"
             )}>
-              {name}
+              {stripFileExtension(name)}
             </span>
           </div>
           {isSelected && (

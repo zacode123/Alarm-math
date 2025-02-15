@@ -492,7 +492,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                                 )}
                               />
                             </motion.div>
-                            <span>{ringtone.name}</span>
+                            <span>{stripFileExtension(ringtone.name)}</span>
                           </div>
                         </div>
                       </Card>
