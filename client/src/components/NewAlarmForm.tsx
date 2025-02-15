@@ -15,7 +15,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { RingtoneCard } from "@/components/ui/ringtone-card";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, stripFileExtension } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useCallback, useMemo } from 'react';
