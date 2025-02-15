@@ -256,19 +256,19 @@ export default function Settings() {
                 >
                   {renamingRingtone === ringtone.id ? (
                     <Input
-                      defaultValue={ringtone.name}
+                      defaultValue={stripFileExtension(ringtone.name)}
                       className="flex-1 mr-2"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          const newName = (e.target as HTMLInputElement).value;
+                          const newName = (e.target as HTMLInputElement).value + '.wav';
                           handleRename(ringtone.id, newName);
                         } else if (e.key === 'Escape') {
                           setRenamingRingtone(null);
                         }
                       }}
                       onBlur={(e) => {
-                        const newName = e.target.value;
+                        const newName = e.target.value + '.wav';
                         if (newName !== ringtone.name) {
                           handleRename(ringtone.id, newName);
                         }
