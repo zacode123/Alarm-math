@@ -23,7 +23,7 @@ import { useCallback, useMemo } from 'react';
 const WavySlider = React.forwardRef<HTMLDivElement, { value: number; onChange: (value: number) => void }>(
   ({ value, onChange }, ref) => {
     return (
-      <div ref={ref} className="my-8">
+      <div ref={ref}>
         <Slider
           value={[value]}
           max={100}
@@ -313,7 +313,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               control={form.control}
               name="volume"
               render={({ field }) => (
-                <FormItem className="space-y-8">
+                <FormItem className="space-y-2">
                   <FormLabel className="flex items-center justify-between">
                     <span className="text-lg font-semibold">Volume</span>
                     <motion.span
