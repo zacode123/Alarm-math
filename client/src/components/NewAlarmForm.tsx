@@ -330,7 +330,12 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                       onChange={(value) => {
                         field.onChange(value);
                         setPreviewVolume(value);
-                        preview(selectedRingtone.path, value / 100);
+                        if (previewTimeoutRef.current) {
+                          clearTimeout(previewTimeoutRef.current);
+                        }
+                        previewTimeoutRef.current = setTimeout(() => {
+                          preview(selectedRingtone.path, value / 100);
+                        }, 300);
                       }}
                     />
                   </FormControl>
