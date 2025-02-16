@@ -261,16 +261,16 @@ export default function Settings() {
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          const newName = (e.target as HTMLInputElement).value + '.wav';
+                          const newName = (e.target as HTMLInputElement).value;
                           handleRename(ringtone.id, newName);
                         } else if (e.key === 'Escape') {
                           setRenamingRingtone(null);
                         }
                       }}
                       onBlur={(e) => {
-                        const newName = e.target.value + '.wav';
-                        if (newName !== ringtone.name) {
-                          handleRename(ringtone.id, newName);
+                        const newName = e.target.value;
+                        if (newName !== stripFileExtension(ringtone.name)) {
+                          handleRename(ringtone.id, newName + '.wav');
                         }
                         setRenamingRingtone(null);
                       }}

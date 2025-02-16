@@ -1,6 +1,7 @@
-
 export function stripFileExtension(filename: string): string {
-  return filename.replace(/\.[^/.]+$/, '');
+  // Only strip extension for display, don't modify actual filename
+  const lastDotIndex = filename.lastIndexOf('.');
+  return lastDotIndex === -1 ? filename : filename.substring(0, lastDotIndex);
 }
 
 
