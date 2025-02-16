@@ -260,7 +260,7 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                   setShowRingtones(true);
                 }}
               >
-                {stripFileExtension(selectedRingtone.name)}
+                {selectedRingtone.name}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

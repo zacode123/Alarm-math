@@ -276,7 +276,7 @@ export default function Settings() {
                       }}
                     />
                   ) : (
-                    <span className="flex-1">{stripFileExtension(ringtone.name)}</span>
+                    <span className="flex-1">{ringtone.name}</span>
                   )}
                   <div className="flex gap-2">
                     {isSelectionMode ? (

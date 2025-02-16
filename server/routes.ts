@@ -8,6 +8,10 @@ import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
 
+const stripFileExtension = (filename: string) => {
+  return filename.replace(/\.[^/.]+$/, '');
+};
+
 // Ensure custom ringtones directory exists
 const ensureCustomRingtonesDirectory = async () => {
   const customRingtonesDir = path.join(process.cwd(), 'client/public/sounds/custom_ringtones');
@@ -103,7 +107,8 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const { originalname: name, mimetype: type } = req.file;
+      const { originalname, mimetype: type } = req.file;
+      const name = stripFileExtension(originalname);
       const slot = parseInt(req.body.slot) || 1;
       const localFilePath = `sounds/custom_ringtones/${req.file.filename}`;
 
