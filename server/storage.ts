@@ -11,6 +11,7 @@ export interface IStorage {
   getAudioFiles(): Promise<Audio[]>;
   getAudioFile(id: number): Promise<Audio | undefined>;
   createAudioFile(audio: InsertAudio): Promise<Audio>;
+  updateAudioFile(id: number, updates: Partial<InsertAudio>): Promise<Audio>;
   deleteAudioFile(id: number): Promise<void>;
 }
 
@@ -77,6 +78,20 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return audio;
+  }
+
+  async updateAudioFile(id: number, updates: Partial<InsertAudio>): Promise<Audio> {
+    const [updated] = await db
+      .update(audioFiles)
+      .set(updates)
+      .where(eq(audioFiles.id, id))
+      .returning();
+
+    if (!updated) {
+      throw new Error("Audio file not found");
+    }
+
+    return updated;
   }
 
   async deleteAudioFile(id: number): Promise<void> {
