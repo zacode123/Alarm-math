@@ -376,14 +376,13 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                     {['easy', 'medium', 'hard'].map((difficulty) => (
                       <motion.div
                         key={difficulty}
-                        whileHover={!isTransitioning ? { scale: 1.05, y: -5 } : {}}
-                        whileTap={!isTransitioning ? { scale: 0.95 } : {}}
+                        whileHover={!isTransitioning ? { scale: 1.02 } : {}}
+                        whileTap={!isTransitioning ? { scale: 0.98 } : {}}
                         animate={field.value === difficulty && !isTransitioning ? {
-                          y: [0, -5, 0],
+                          scale: [1, 1.15, 1],
                           transition: {
-                            duration: 0.5,
-                            repeat: Infinity,
-                            repeatType: "reverse"
+                            duration: 0.3,
+                            ease: "easeInOut"
                           }
                         } : {}}
                         onClick={() => handleDifficultyChange(difficulty, field)}
@@ -393,8 +392,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                           "transform perspective-1000",
                           isTransitioning ? "pointer-events-none" : "",
                           field.value === difficulty
-                            ? "bg-primary text-primary-foreground rotate-3"
-                            : "bg-muted hover:bg-muted/80 rotate-0"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted hover:bg-muted/80"
                         )}
                         role="radio"
                         aria-checked={field.value === difficulty}
@@ -408,10 +407,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                         <motion.div
                           initial={{ scale: 1 }}
                           animate={field.value === difficulty && !isTransitioning ? {
-                            scale: [1, 1.2, 1],
-                            rotate: [0, 360, 0]
+                            scale: [1, 1.1, 1],
+                            transition: { duration: 0.3 }
                           } : {}}
-                          transition={{ duration: 0.5 }}
                           className="font-bold text-lg"
                         >
                           {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
