@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAlarmSchema, type InsertAlarm, type Alarm, type WeekDay, type Difficulty } from "@shared/schema";
@@ -18,7 +18,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn, stripFileExtension } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { useCallback, useMemo } from 'react';
 
 const WavySlider = React.forwardRef<HTMLDivElement, { value: number; onChange: (value: number) => void }>(
   ({ value, onChange }, ref) => {
@@ -60,6 +59,8 @@ const REPEAT_OPTIONS = [
   { id: 'weekends', name: 'Weekends', icon: CalendarDays },
   { id: 'custom', name: 'Custom', icon: Settings2 },
 ];
+
+const DIFFICULTY_DEBOUNCE_MS = 300;
 
 export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   onSuccess: () => void;
@@ -104,6 +105,8 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   });
   const [previewVolume, setPreviewVolume] = useState(100);
   const previewTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [lastDifficultyChange, setLastDifficultyChange] = useState(Date.now());
 
   useEffect(() => {
     const updateTimeRemaining = () => {
@@ -217,6 +220,22 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
   const confirmRepeatSelection = () => {
     setShowRepeat(false);
   };
+
+  const handleDifficultyChange = useCallback((difficulty: string, field: any) => {
+    const now = Date.now();
+    if (now - lastDifficultyChange < DIFFICULTY_DEBOUNCE_MS || isTransitioning) {
+      return; // Ignore rapid clicks or clicks during transition
+    }
+
+    setIsTransitioning(true);
+    setLastDifficultyChange(now);
+    field.onChange(difficulty);
+
+    // Reset transition state after animation completes
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, DIFFICULTY_DEBOUNCE_MS);
+  }, [lastDifficultyChange, isTransitioning]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -349,13 +368,17 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
               render={({ field }) => (
                 <FormItem className="space-y-4">
                   <FormLabel className="text-lg font-semibold">Challenge Difficulty</FormLabel>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div
+                    className="grid grid-cols-3 gap-3"
+                    role="radiogroup"
+                    aria-label="Challenge difficulty"
+                  >
                     {['easy', 'medium', 'hard'].map((difficulty) => (
                       <motion.div
                         key={difficulty}
-                        whileHover={{ scale: 1.05, y: -5 }}
-                        whileTap={{ scale: 0.95 }}
-                        animate={field.value === difficulty ? {
+                        whileHover={!isTransitioning ? { scale: 1.05, y: -5 } : {}}
+                        whileTap={!isTransitioning ? { scale: 0.95 } : {}}
+                        animate={field.value === difficulty && !isTransitioning ? {
                           y: [0, -5, 0],
                           transition: {
                             duration: 0.5,
@@ -363,19 +386,28 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                             repeatType: "reverse"
                           }
                         } : {}}
-                        onClick={() => field.onChange(difficulty)}
+                        onClick={() => handleDifficultyChange(difficulty, field)}
                         className={cn(
                           "cursor-pointer rounded-xl p-6 text-center transition-all duration-300",
                           "shadow-lg hover:shadow-xl",
                           "transform perspective-1000",
+                          isTransitioning ? "pointer-events-none" : "",
                           field.value === difficulty
                             ? "bg-primary text-primary-foreground rotate-3"
                             : "bg-muted hover:bg-muted/80 rotate-0"
                         )}
+                        role="radio"
+                        aria-checked={field.value === difficulty}
+                        tabIndex={0}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            handleDifficultyChange(difficulty, field);
+                          }
+                        }}
                       >
                         <motion.div
                           initial={{ scale: 1 }}
-                          animate={field.value === difficulty ? {
+                          animate={field.value === difficulty && !isTransitioning ? {
                             scale: [1, 1.2, 1],
                             rotate: [0, 360, 0]
                           } : {}}
