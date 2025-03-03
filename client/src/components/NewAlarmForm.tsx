@@ -379,10 +379,12 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                         whileHover={!isTransitioning ? { scale: 1.02 } : {}}
                         whileTap={!isTransitioning ? { scale: 0.98 } : {}}
                         animate={field.value === difficulty && !isTransitioning ? {
-                          scale: [1, 1.15, 1],
+                          scale: [1, 1.5, 1],
                           transition: {
-                            duration: 0.3,
-                            ease: "easeInOut"
+                            duration: 0.4,
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 30
                           }
                         } : {}}
                         onClick={() => handleDifficultyChange(difficulty, field)}
@@ -404,16 +406,9 @@ export function NewAlarmForm({ onSuccess, onCancel, defaultValues }: {
                           }
                         }}
                       >
-                        <motion.div
-                          initial={{ scale: 1 }}
-                          animate={field.value === difficulty && !isTransitioning ? {
-                            scale: [1, 1.1, 1],
-                            transition: { duration: 0.3 }
-                          } : {}}
-                          className="font-bold text-lg"
-                        >
+                        <div className="font-bold text-lg">
                           {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-                        </motion.div>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
