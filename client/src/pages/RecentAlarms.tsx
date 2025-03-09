@@ -25,17 +25,20 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
     onSelectionModeChange?.(mode);
   };
 
-  const [showInitialAnimation, setShowInitialAnimation] = useState(() => !localStorage.getItem('alarmAnimationShown'));
+  const [animationTimer, setAnimationTimer] = useState(true);
+  const hasShownBefore = localStorage.getItem('alarmAnimationShown');
   
   useEffect(() => {
-    if (showInitialAnimation) {
+    if (!hasShownBefore) {
       const timer = setTimeout(() => {
-        setShowInitialAnimation(false);
+        setAnimationTimer(false);
         localStorage.setItem('alarmAnimationShown', 'true');
       }, 3500);
       return () => clearTimeout(timer);
+    } else {
+      setAnimationTimer(false);
     }
-  }, [showInitialAnimation]);
+  }, [hasShownBefore]);
   
   const handleDelete = (ids: number[]) => {
     ids.forEach(id => deleteAlarm.mutate(id));
@@ -49,7 +52,7 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
                 <>  
                   <div className="p-4 pb-20">  
                     <div className="space-y-4">  
-                      {(showInitialAnimation || (!showInitialAnimation && isLoading)) ? (
+                      {(!hasShownBefore && animationTimer) || isLoading ? (
                         <AlarmLoadingAnimation />
                       ) : (
             <AlarmList
