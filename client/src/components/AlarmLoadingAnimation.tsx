@@ -3,7 +3,7 @@ import { Clock, Bell } from "lucide-react";
 
 export const AlarmLoadingAnimation = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-[60vh] space-y-6">
+    <div className="flex flex-col items-center justify-center min-h-[90vh] space-y-6">
       <motion.div
         className="relative"
         initial={{ opacity: 0, scale: 0.5 }}
@@ -41,20 +41,6 @@ export const AlarmLoadingAnimation = () => {
         >
           <Bell className="h-6 w-6" />
         </motion.div>
-
-        {/* Add pulse effect ring */}
-        <motion.div
-          className="absolute inset-0 rounded-full border-4 border-primary/30"
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.3, 0, 0.3]
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
       </motion.div>
 
       <motion.div
