@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useAlarms } from "@/lib/useAlarms";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { AlarmList } from "@/components/AlarmList";
 import { TabsLayout } from "@/components/layout/TabsLayout";
 import { useToast } from "@/hooks/use-toast";
 import { AlarmLoadingAnimation } from "@/components/AlarmLoadingAnimation";
+import useAnimationFlag from "@/hooks/useAnimationFlag";
 
 interface RecentAlarmsProps {
   onSelectionModeChange?: (mode: boolean) => void;
@@ -19,23 +21,13 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
   const { alarms, isLoading, deleteAlarm } = useAlarms();
   const [showNewAlarmForm, setShowNewAlarmForm] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [hasPlayed, setHasPlayed] = useAnimationFlag();
 
   const handleSelectionModeChange = (mode: boolean) => {
     setIsSelectionMode(mode);
     onSelectionModeChange?.(mode);
   };
 
-  const [hasPlayed, setHasPlayed] = useState(false);
-  
-  useEffect(() => {
-    if (!hasPlayed) {
-      const timer = setTimeout(() => {
-        setHasPlayed(true);
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-  }, [hasPlayed]);
-  
   const handleDelete = (ids: number[]) => {
     ids.forEach(id => deleteAlarm.mutate(id));
     toast({
@@ -44,20 +36,19 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
     });
   };
 
-            return (  
-                <>  
-                  <div className="p-4 pb-20">  
-                    <div className="space-y-4">  
-                      {(!hasPlayed || isLoading) ? (
-                        <AlarmLoadingAnimation />
-                      ) : (
+  return (
+    <>  
+      <div className="p-4 pb-20">  
+        <div className="space-y-4">  
+          {(!hasPlayed || isLoading) ? (
+            <AlarmLoadingAnimation />
+          ) : (
             <AlarmList
               alarms={alarms}
               onDelete={handleDelete}
               onSelectionModeChange={handleSelectionModeChange}
             />
-            )
-          }
+          )}
         </div>
       </div>   
       {!isSelectionMode && (
