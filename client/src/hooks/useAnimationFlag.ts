@@ -9,7 +9,12 @@ const useAnimationFlag = () => {
 
   useEffect(() => {
     if (!hasPlayed) {
-      sessionStorage.setItem('hasPlayed', 'true');
+      const timer = setTimeout(() => {
+        setHasPlayed(true);
+        sessionStorage.setItem('hasPlayed', 'true');
+      }, 3500); // 3.5 seconds
+
+      return () => clearTimeout(timer);
     }
   }, [hasPlayed]);
 
