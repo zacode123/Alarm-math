@@ -29,11 +29,22 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
   const [showLoading, setShowLoading] = useState(true);
 
 useEffect(() => {
-  const timer = setTimeout(() => {
+  // Check if animation has been shown already in this session
+  const hasShownAnimation = localStorage.getItem('alarmAnimationShown');
+  
+  if (!hasShownAnimation) {
+    // If not shown, set timeout to hide after 2 seconds
+    const timer = setTimeout(() => {
+      setShowLoading(false);
+      // Mark animation as shown for this session
+      localStorage.setItem('alarmAnimationShown', 'true');
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  } else {
+    // If already shown, don't show it again
     setShowLoading(false);
-  }, 2000);
-
-  return () => clearTimeout(timer);
+  }
 }, []);
   
   const handleDelete = (ids: number[]) => {
