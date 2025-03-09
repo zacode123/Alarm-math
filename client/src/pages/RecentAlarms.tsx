@@ -62,7 +62,7 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
               onSelectionModeChange={handleSelectionModeChange}
             />
             )
-          )}
+          }
         </div>
       </div>   
       {!isSelectionMode && (
