@@ -1,21 +1,23 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const useAnimationFlag = () => {
-  const [hasPlayed, setHasPlayed] = useState(() => {
-    const playedFlag = sessionStorage.getItem('hasPlayed');
-    return playedFlag === 'true';
-  });
+  const [hasPlayed, setHasPlayed] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!hasPlayed) {
-      const timer = setTimeout(() => {
+    if (!hasPlayed && !timerRef.current) {
+      timerRef.current = setTimeout(() => {
         setHasPlayed(true);
-        sessionStorage.setItem('hasPlayed', 'true');
-      }, 3500); // 3.5 seconds
-
-      return () => clearTimeout(timer);
+      }, 3500);
     }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [hasPlayed]);
 
   return [hasPlayed, setHasPlayed] as const;
