@@ -103,9 +103,12 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const { originalname: name, mimetype: type } = req.file;
+      const { originalname: originalName, mimetype: type } = req.file;
       const slot = parseInt(req.body.slot) || 1;
       const localFilePath = `sounds/custom_ringtones/${req.file.filename}`;
+
+      // Clean up the file name for display
+      const name = originalName.replace(/\.[^/.]+$/, ""); // Remove file extension
 
       // Save reference in database
       const audio = await storage.createAudioFile({
@@ -118,7 +121,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({
         id: audio.id,
-        name: audio.name,
+        name: name, // Send clean name without extension
         url: `/${localFilePath}`
       });
     } catch (error) {

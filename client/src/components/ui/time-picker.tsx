@@ -6,7 +6,6 @@ import { useDebouncedCallback } from "use-debounce";
 interface TimePickerProps {
   date: Date;
   setDate: (date: Date) => void;
-  onTimeUpdate?: () => void;
 }
 
 const generateTimeOptions = () => {
@@ -15,91 +14,112 @@ const generateTimeOptions = () => {
   return { hours, minutes };
 };
 
-export function TimePicker({ date, setDate, onTimeUpdate }: TimePickerProps) {
+export function TimePicker({ date, setDate }: TimePickerProps) {
   const { hours, minutes } = generateTimeOptions();
   const [selectedHour, setSelectedHour] = React.useState(date.getHours() % 12 || 12);
   const [selectedMinute, setSelectedMinute] = React.useState(date.getMinutes());
-  const [selectedPeriod, setSelectedPeriod] = React.useState(date.getHours() >= 12 ? 'PM' : 'AM');
+  const [isAm, setIsAm] = React.useState(date.getHours() < 12);
 
-  const updateTime = React.useCallback(() => {
+  const updateTime = React.useCallback((value: number, type: 'hours' | 'minutes' | 'period') => {
     const newDate = new Date(date);
-    let hours24 = selectedHour;
-    if (selectedPeriod === 'PM' && selectedHour !== 12) hours24 += 12;
-    if (selectedPeriod === 'AM' && selectedHour === 12) hours24 = 0;
-    newDate.setHours(hours24);
-    newDate.setMinutes(selectedMinute);
+    if (type === 'hours') {
+      setSelectedHour(value);
+      newDate.setHours(isAm ? value : (value === 12 ? 12 : value + 12));
+    } else if (type === 'minutes') {
+      setSelectedMinute(value);
+      newDate.setMinutes(value);
+    } else if (type === 'period') {
+      setIsAm(value === 0);
+      newDate.setHours((selectedHour % 12) + (value === 0 ? 0 : 12));
+    }
     setDate(newDate);
-    onTimeUpdate?.();
-  }, [date, setDate, selectedHour, selectedMinute, selectedPeriod, onTimeUpdate]);
-
-  React.useEffect(() => {
-    updateTime();
-  }, [selectedHour, selectedMinute, selectedPeriod, updateTime]);
+  }, [date, setDate, selectedHour, isAm]);
 
   return (
-    <div className="inline-flex items-center gap-2 bg-muted/20 p-4 rounded-xl">
+    <div className="flex items-center justify-center gap-2">
       <ScrollColumn
         items={hours}
         selectedValue={selectedHour}
-        onSelect={setSelectedHour}
+        onSelect={(value) => updateTime(value, 'hours')}
         format={(num) => String(num).padStart(2, '0')}
-        loop={true}
+        loop
       />
-      <div className="text-4xl font-semibold">:</div>
+
+      <div className="text-4xl font-medium text-primary">:</div>
+
       <ScrollColumn
         items={minutes}
         selectedValue={selectedMinute}
-        onSelect={setSelectedMinute}
+        onSelect={(value) => updateTime(value, 'minutes')}
         format={(num) => String(num).padStart(2, '0')}
-        loop={true}
+        loop
       />
-      <ScrollColumn
-        items={['AM', 'PM']}
-        selectedValue={selectedPeriod}
-        onSelect={setSelectedPeriod}
-        format={(str) => str}
-      />
+
+      <div className="flex flex-col gap-2 ml-4">
+        <button
+          className={cn(
+            "px-4 py-2 rounded-md transition-colors",
+            isAm ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+          )}
+          onClick={() => updateTime(0, 'period')}
+        >
+          AM
+        </button>
+        <button
+          className={cn(
+            "px-4 py-2 rounded-md transition-colors",
+            !isAm ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+          )}
+          onClick={() => updateTime(1, 'period')}
+        >
+          PM
+        </button>
+      </div>
     </div>
   );
 }
 
-interface ScrollColumnProps<T> {
-  items: T[];
-  selectedValue: T;
-  onSelect: (value: T) => void;
-  format: (value: T) => string;
+interface ScrollColumnProps {
+  items: number[];
+  selectedValue: number;
+  onSelect: (value: number) => void;
+  format: (num: number) => string;
   loop?: boolean;
 }
 
-function ScrollColumn<T>({ items, selectedValue, onSelect, format, loop = false }: ScrollColumnProps<T>) {
+function ScrollColumn({ items, selectedValue, onSelect, format, loop = false }: ScrollColumnProps) {
   const columnRef = React.useRef<HTMLDivElement>(null);
   const itemHeight = 72;
   const totalItems = items.length;
   const extendedItems = loop ? [...items, ...items, ...items] : items;
   const isAdjusting = React.useRef(false);
 
-  // Debounce selection updates for smoother scrolling
-  const debouncedOnSelect = useDebouncedCallback((value: T) => {
+  const debouncedOnSelect = useDebouncedCallback((value: number) => {
     if (value !== selectedValue) onSelect(value);
-  }, 50);
+  }, 100);
 
   const handleScroll = React.useCallback(() => {
-    if (isAdjusting.current || !columnRef.current) return;
+    if (!columnRef.current || isAdjusting.current) return;
     const element = columnRef.current;
     const centerOffset = (element.clientHeight - itemHeight) / 2;
     const scrollPosition = element.scrollTop + centerOffset;
-    const index = Math.round(scrollPosition / itemHeight) % totalItems;
+    let index = Math.round(scrollPosition / itemHeight) % totalItems;
 
-    // Infinite scroll adjustment
+    if (index < 0) index += totalItems;
+
+    clearTimeout((element as any).scrollTimeout);
+    (element as any).scrollTimeout = setTimeout(() => {
+      const snapTo = index * itemHeight - centerOffset;
+      element.scrollTo({ top: snapTo, behavior: "smooth" });
+    }, 150);
+
     if (loop) {
       const thirdHeight = totalItems * itemHeight;
-      const currentScroll = element.scrollTop;
-
-      if (currentScroll < thirdHeight - element.clientHeight) {
+      if (element.scrollTop < thirdHeight - element.clientHeight) {
         isAdjusting.current = true;
         element.scrollTop += thirdHeight;
         isAdjusting.current = false;
-      } else if (currentScroll > 2 * thirdHeight) {
+      } else if (element.scrollTop > 2 * thirdHeight) {
         isAdjusting.current = true;
         element.scrollTop -= thirdHeight;
         isAdjusting.current = false;
@@ -115,6 +135,7 @@ function ScrollColumn<T>({ items, selectedValue, onSelect, format, loop = false 
 
     const onScroll = () => requestAnimationFrame(handleScroll);
     column.addEventListener("scroll", onScroll);
+
     return () => column.removeEventListener("scroll", onScroll);
   }, [handleScroll]);
 
@@ -150,8 +171,7 @@ function ScrollColumn<T>({ items, selectedValue, onSelect, format, loop = false 
           <div
             key={index}
             className={cn(
-              "w-full h-[72px] flex items-center justify-center",
-              "transition-all duration-300 ease-in-out select-none",
+              "w-full h-[72px] flex items-center justify-center transition-all duration-300 ease-in-out select-none",
               item === selectedValue
                 ? "text-primary text-4xl font-semibold scale-110"
                 : "text-muted-foreground/30 text-3xl scale-100"
