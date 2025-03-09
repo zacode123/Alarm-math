@@ -26,7 +26,6 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
   };
 
   const [showAnimation, setShowAnimation] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
   useEffect(() => {
     const hasShownAnimation = localStorage.getItem('alarmAnimationShown');
@@ -40,8 +39,6 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
     } else {
       setShowAnimation(false);
     }
-    
-    setInitialLoadComplete(true);
   }, []);
   
   const handleDelete = (ids: number[]) => {
@@ -56,10 +53,9 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
                 <>  
                   <div className="p-4 pb-20">  
                     <div className="space-y-4">  
-                      {(!initialLoadComplete || showAnimation) ? (  
-                        <AlarmLoadingAnimation />  
-                      ) : (  
-                        isLoading ? <AlarmLoadingAnimation /> : (
+                      {(showAnimation || isLoading) ? (
+                        <AlarmLoadingAnimation />
+                      ) : (
             <AlarmList
               alarms={alarms}
               onDelete={handleDelete}
