@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAlarms } from "@/lib/useAlarms";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,16 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
     onSelectionModeChange?.(mode);
   };
 
+  const [showLoading, setShowLoading] = useState(true);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setShowLoading(false);
+  }, 2000);
+
+  return () => clearTimeout(timer);
+}, []);
+  
   const handleDelete = (ids: number[]) => {
     ids.forEach(id => deleteAlarm.mutate(id));
     toast({
@@ -34,18 +44,20 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
     });
   };
 
-  return (
-    <>
-      <div className="p-4 pb-20">
-        <div className="space-y-4">
-          {isLoading ? (
-            <AlarmLoadingAnimation />
-          ) : (
+            return (  
+                <>  
+                  <div className="p-4 pb-20">  
+                    <div className="space-y-4">  
+                      {showLoading ? (  
+                        <AlarmLoadingAnimation />  
+                      ) : (  
+                        isLoading ? <AlarmLoadingAnimation /> : (
             <AlarmList
               alarms={alarms}
               onDelete={handleDelete}
               onSelectionModeChange={handleSelectionModeChange}
             />
+            )
           )}
         </div>
       </div>
