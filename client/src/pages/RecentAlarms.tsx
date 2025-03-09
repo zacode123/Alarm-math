@@ -20,32 +20,23 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
   const [showNewAlarmForm, setShowNewAlarmForm] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-  // Update parent component's selection mode state
   const handleSelectionModeChange = (mode: boolean) => {
     setIsSelectionMode(mode);
     onSelectionModeChange?.(mode);
   };
 
   const [showLoading, setShowLoading] = useState(true);
-
-useEffect(() => {
-  // Check if animation has been shown already in this session
-  const hasShownAnimation = localStorage.getItem('alarmAnimationShown');
   
-  if (!hasShownAnimation) {
-    // If not shown, set timeout to hide after 2 seconds
-    const timer = setTimeout(() => {
+  useEffect(() => {
+    if (!localStorage.getItem('alarmAnimationShown')) {
+      const timer = setTimeout(() => {
+        setShowLoading(false);    localStorage.setItem('alarmAnimationShown', 'true');
+      }, 3500);
+      return () => clearTimeout(timer);
+    } else {
       setShowLoading(false);
-      // Mark animation as shown for this session
-      localStorage.setItem('alarmAnimationShown', 'true');
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  } else {
-    // If already shown, don't show it again
-    setShowLoading(false);
-  }
-}, []);
+    }
+  }, []);
   
   const handleDelete = (ids: number[]) => {
     ids.forEach(id => deleteAlarm.mutate(id));
@@ -71,9 +62,7 @@ useEffect(() => {
             )
           )}
         </div>
-      </div>
-
-      {/* Floating Action Button for new alarm */}
+      </div>   
       {!isSelectionMode && (
         <motion.div
           className="fixed bottom-20 right-4"
@@ -89,8 +78,6 @@ useEffect(() => {
           </Button>
         </motion.div>
       )}
-
-      {/* New Alarm Dialog */}
       <Dialog open={showNewAlarmForm} onOpenChange={setShowNewAlarmForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0">
           <DialogHeader className="px-6 pt-6 pb-2 flex items-center justify-between border-b relative">
