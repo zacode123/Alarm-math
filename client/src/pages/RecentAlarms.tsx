@@ -30,7 +30,8 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
   useEffect(() => {
     if (!localStorage.getItem('alarmAnimationShown')) {
       const timer = setTimeout(() => {
-        setShowLoading(false);    localStorage.setItem('alarmAnimationShown', 'true');
+        setShowLoading(false);
+        localStorage.setItem('alarmAnimationShown', 'true');
       }, 3500);
       return () => clearTimeout(timer);
     } else {
