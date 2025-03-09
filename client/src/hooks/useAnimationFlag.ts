@@ -6,18 +6,19 @@ const useAnimationFlag = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    timerRef.current = setTimeout(() => {
-      setHasPlayed(true);
-    }, 3500);
+    if (!hasPlayed && !timerRef.current) {
+      timerRef.current = setTimeout(() => {
+        setHasPlayed(true);
+      }, 3500);
+    }
 
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      setHasPlayed(false);
     };
-  }, []);
+  }, [hasPlayed]);
 
   return [hasPlayed, setHasPlayed] as const;
 };
