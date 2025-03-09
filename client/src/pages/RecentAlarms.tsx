@@ -8,6 +8,7 @@ import { NewAlarmForm } from "@/components/NewAlarmForm";
 import { AlarmList } from "@/components/AlarmList";
 import { TabsLayout } from "@/components/layout/TabsLayout";
 import { useToast } from "@/hooks/use-toast";
+import { AlarmLoadingAnimation } from "@/components/AlarmLoadingAnimation";
 
 interface RecentAlarmsProps {
   onSelectionModeChange?: (mode: boolean) => void;
@@ -38,7 +39,7 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
       <div className="p-4 pb-20">
         <div className="space-y-4">
           {isLoading ? (
-            <div className="h-[80vh] flex items-center justify-center text-center text-muted-foreground">Loading alarms...</div>
+            <AlarmLoadingAnimation />
           ) : (
             <AlarmList
               alarms={alarms}
