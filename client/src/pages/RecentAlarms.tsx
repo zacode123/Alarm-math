@@ -25,17 +25,16 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
     onSelectionModeChange?.(mode);
   };
 
-  const [isFirstLoad] = useState(true);
-  const [isAnimating, setIsAnimating] = useState(true);
+  const [hasPlayed, setHasPlayed] = useState(false);
   
   useEffect(() => {
-    if (isFirstLoad && isAnimating) {
+    if (!hasPlayed) {
       const timer = setTimeout(() => {
-        setIsAnimating(false);
+        setHasPlayed(true);
       }, 3500);
       return () => clearTimeout(timer);
     }
-  }, [isFirstLoad]);
+  }, [hasPlayed]);
   
   const handleDelete = (ids: number[]) => {
     ids.forEach(id => deleteAlarm.mutate(id));
@@ -49,7 +48,7 @@ export default function RecentAlarms({ onSelectionModeChange }: RecentAlarmsProp
                 <>  
                   <div className="p-4 pb-20">  
                     <div className="space-y-4">  
-                      {(isFirstLoad && isAnimating) || isLoading ? (
+                      {(!hasPlayed || isLoading) ? (
                         <AlarmLoadingAnimation />
                       ) : (
             <AlarmList
