@@ -4,6 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { initDb } from "./initDb";
 import { pool } from "./db";
 import dotenv from 'dotenv';
+import session from 'express-session';
+import sessionConfig from './session';
 
 // Load environment variables from the appropriate .env file
 const nodeEnv = process.env.NODE_ENV || 'development';
@@ -14,6 +16,7 @@ dotenv.config({ path: '.env' });
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+app.use(session(sessionConfig));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -67,7 +70,7 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    const PORT = process.env.PORT || 5000;
+    const PORT = parseInt(process.env.PORT || '5000', 10);
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server running on http://0.0.0.0:${PORT}`);
     });
