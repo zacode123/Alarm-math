@@ -3,6 +3,13 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initDb } from "./initDb";
 import { pool } from "./db";
+import dotenv from 'dotenv';
+
+// Load environment variables from the appropriate .env file
+const nodeEnv = process.env.NODE_ENV || 'development';
+dotenv.config({ path: `.env.${nodeEnv}` });
+// Fallback to .env if environment-specific file doesn't exist
+dotenv.config({ path: '.env' });
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -60,7 +67,7 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    const PORT = 5000;
+    const PORT = process.env.PORT || 5000;
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server running on http://0.0.0.0:${PORT}`);
     });
