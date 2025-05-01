@@ -1,240 +1,315 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { useDebouncedCallback } from "use-debounce";
+import { motion, useSpring } from "framer-motion";
 
 interface TimePickerProps {
   date: Date;
   setDate: (date: Date) => void;
 }
 
-const generateTimeOptions = () => {
-  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-  const minutes = Array.from({ length: 60 }, (_, i) => i);
-  return { hours, minutes };
-};
-
 export function TimePicker({ date, setDate }: TimePickerProps) {
-  const { hours, minutes } = generateTimeOptions();
-  const [selectedHour, setSelectedHour] = React.useState(date.getHours() % 12 || 12);
-  const [selectedMinute, setSelectedMinute] = React.useState(date.getMinutes());
-  const [isAm, setIsAm] = React.useState(date.getHours() < 12);
+  // Extract time components
+  const hours12 = date.getHours() % 12 || 12;
+  const hours24 = date.getHours();
+  const minutes = date.getMinutes();
+  const isPm = hours24 >= 12;
 
-  const updateTime = React.useCallback((value: number, type: 'hours' | 'minutes' | 'period') => {
+  // Update the date when time components change
+  const updateDate = (
+    newHours: number,
+    newMinutes: number,
+    newIsPm: boolean
+  ) => {
     const newDate = new Date(date);
-    if (type === 'hours') {
-      setSelectedHour(value);
-      newDate.setHours(isAm ? (value === 12 ? 0 : value) : (value === 12 ? 12 : value + 12));
-    } else if (type === 'minutes') {
-      setSelectedMinute(value);
-      newDate.setMinutes(value);
-    } else if (type === 'period') {
-      setIsAm(value === 0);
-      const hour = selectedHour === 12 ? 0 : selectedHour;
-      newDate.setHours(hour + (value === 0 ? 0 : 12));
+    let hours24 = newHours;
+    
+    // Convert from 12-hour to 24-hour
+    if (newHours === 12) {
+      hours24 = newIsPm ? 12 : 0;
+    } else {
+      hours24 = newIsPm ? newHours + 12 : newHours;
     }
+    
+    newDate.setHours(hours24);
+    newDate.setMinutes(newMinutes);
     setDate(newDate);
-  }, [date, setDate, selectedHour, isAm]);
+  };
+
+  // Handle time component changes
+  const handleHourChange = (newHour: number) => {
+    updateDate(newHour, minutes, isPm);
+  };
+
+  const handleMinuteChange = (newMinute: number) => {
+    updateDate(hours12, newMinute, isPm);
+  };
+
+  const handlePeriodChange = (newIsPm: boolean) => {
+    updateDate(hours12, minutes, newIsPm);
+  };
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      <ScrollColumn
-        items={hours}
-        selectedValue={selectedHour}
-        onSelect={(value) => updateTime(value, 'hours')}
-        format={(num) => String(num).padStart(2, '0')}
-        loop
-      />
-
-      <div className="text-4xl font-medium text-primary">:</div>
-
-      <ScrollColumn
-        items={minutes}
-        selectedValue={selectedMinute}
-        onSelect={(value) => updateTime(value, 'minutes')}
-        format={(num) => String(num).padStart(2, '0')}
-        loop
-      />
-
-      <div className="flex flex-col gap-2 ml-4">
-        <button
-          className={cn(
-            "px-4 py-2 rounded-md transition-colors",
-            isAm ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-          )}
-          onClick={() => updateTime(0, 'period')}
-        >
-          AM
-        </button>
-        <button
-          className={cn(
-            "px-4 py-2 rounded-md transition-colors",
-            !isAm ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-          )}
-          onClick={() => updateTime(1, 'period')}
-        >
-          PM
-        </button>
+    <div className="bg-background rounded-xl p-4 shadow-lg w-full max-w-md mx-auto">
+      <div className="flex flex-row justify-center items-center gap-2">
+        {/* Hour wheel */}
+        <WheelPicker
+          items={Array.from({ length: 12 }, (_, i) => i + 1)}
+          selectedItem={hours12}
+          onChange={handleHourChange}
+          formatter={(val) => val.toString().padStart(2, '0')}
+          label="Hour"
+        />
+        
+        <div className="text-4xl font-bold text-primary self-center pb-4">:</div>
+        
+        {/* Minute wheel */}
+        <WheelPicker
+          items={Array.from({ length: 60 }, (_, i) => i)}
+          selectedItem={minutes}
+          onChange={handleMinuteChange}
+          formatter={(val) => val.toString().padStart(2, '0')}
+          label="Minute"
+        />
+        
+        {/* AM/PM selector */}
+        <div className="flex flex-col gap-2 ml-4">
+          <button
+            className={cn(
+              "w-16 px-3 py-2 rounded-xl transition-all duration-200",
+              !isPm 
+                ? "bg-primary text-primary-foreground font-medium shadow-md" 
+                : "bg-background text-muted-foreground hover:bg-secondary"
+            )}
+            onClick={() => handlePeriodChange(false)}
+          >
+            AM
+          </button>
+          <button
+            className={cn(
+              "w-16 px-3 py-2 rounded-xl transition-all duration-200",
+              isPm 
+                ? "bg-primary text-primary-foreground font-medium shadow-md" 
+                : "bg-background text-muted-foreground hover:bg-secondary"
+            )}
+            onClick={() => handlePeriodChange(true)}
+          >
+            PM
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-interface ScrollColumnProps {
-  items: number[];
-  selectedValue: number;
-  onSelect: (value: number) => void;
-  format: (num: number) => string;
-  loop?: boolean;
+interface WheelPickerProps<T> {
+  items: T[];
+  selectedItem: T;
+  onChange: (item: T) => void;
+  formatter: (item: T) => string;
+  label: string;
 }
 
-function ScrollColumn({ items, selectedValue, onSelect, format, loop = false }: ScrollColumnProps) {
-  const columnRef = React.useRef<HTMLDivElement>(null);
+function WheelPicker<T>({
+  items,
+  selectedItem,
+  onChange,
+  formatter,
+  label
+}: WheelPickerProps<T>) {
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const itemHeight = 72;
-  const totalItems = items.length;
-  const extendedItems = loop ? [...items, ...items, ...items] : items;
-  const [isScrolling, setIsScrolling] = React.useState(false);
-  const timeoutRef = React.useRef<NodeJS.Timeout>();
-  const initialScrollDone = React.useRef(false);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [startY, setStartY] = React.useState(0);
+  const [offsetY, setOffsetY] = React.useState(0);
+  const [currentIndex, setCurrentIndex] = React.useState(items.indexOf(selectedItem));
   
-  const getSelectedIndex = React.useCallback(() => {
-    return items.indexOf(selectedValue);
-  }, [items, selectedValue]);
-
-  const scrollToIndex = React.useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
-    if (!columnRef.current) return;
+  // Constants for the wheel
+  const itemHeight = 48;  // Height of each item in pixels
+  const visibleItems = 5; // Number of visible items
+  const totalHeight = itemHeight * items.length;
+  const containerHeight = itemHeight * visibleItems;
+  const maxOffset = 0;
+  const minOffset = -(totalHeight - containerHeight);
+  const halfVisibleItems = Math.floor(visibleItems / 2);
+  
+  // Spring animation for smooth scrolling
+  const springY = useSpring(0, {
+    stiffness: 300,
+    damping: 30,
+    mass: 0.5
+  });
+  
+  // Effect to animate the wheel when currentIndex changes
+  React.useEffect(() => {
+    const targetOffset = -(currentIndex - halfVisibleItems) * itemHeight;
+    springY.set(targetOffset);
+  }, [currentIndex, springY, itemHeight]);
+  
+  // Effect to update offsetY when spring animation changes
+  React.useEffect(() => {
+    return springY.on("change", latest => {
+      setOffsetY(latest);
+    });
+  }, [springY]);
+  
+  // Effect to update selectedItem when currentIndex changes
+  React.useEffect(() => {
+    const index = items.indexOf(selectedItem);
+    if (index !== -1 && index !== currentIndex) {
+      setCurrentIndex(index);
+    }
+  }, [selectedItem, items, currentIndex]);
+  
+  // Calculate the angle for 3D rotation effect
+  const getAngle = (index: number) => {
+    const centerIndex = currentIndex;
+    const diff = index - centerIndex;
+    return diff * 18; // Rotate by 18 degrees per item
+  };
+  
+  // Handle touch/mouse interactions
+  const handleStart = (clientY: number) => {
+    setIsDragging(true);
+    setStartY(clientY);
+  };
+  
+  const handleMove = (clientY: number) => {
+    if (!isDragging) return;
     
-    const element = columnRef.current;
-    const centerOffset = (element.clientHeight - itemHeight) / 2;
-    let targetScrollTop;
+    const deltaY = clientY - startY;
+    let newOffset = offsetY + deltaY;
     
-    if (loop) {
-      // In loop mode, scroll to the middle set of items (second of three sets)
-      targetScrollTop = (index + totalItems) * itemHeight - centerOffset;
-    } else {
-      targetScrollTop = index * itemHeight - centerOffset;
+    // Restrict movement beyond boundaries with resistance
+    if (newOffset > maxOffset) {
+      newOffset = maxOffset + (newOffset - maxOffset) * 0.2;
+    } else if (newOffset < minOffset) {
+      newOffset = minOffset + (newOffset - minOffset) * 0.2;
     }
     
-    element.scrollTo({ top: targetScrollTop, behavior });
-  }, [itemHeight, loop, totalItems]);
-
-  // Initial scroll setup and value change response
+    springY.set(newOffset);
+    setStartY(clientY);
+  };
+  
+  const handleEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    // Snap to the closest item
+    const rawIndex = Math.round(-offsetY / itemHeight) + halfVisibleItems;
+    const clampedIndex = Math.max(0, Math.min(items.length - 1, rawIndex));
+    
+    if (clampedIndex !== currentIndex) {
+      setCurrentIndex(clampedIndex);
+      onChange(items[clampedIndex]);
+    } else {
+      // Still snap to position even if index didn't change
+      const targetOffset = -(clampedIndex - halfVisibleItems) * itemHeight;
+      springY.set(targetOffset);
+    }
+  };
+  
+  // Extend items array to create looping effect
+  const extendedItems = [
+    ...items.slice(Math.max(0, currentIndex - 10), items.length),
+    ...items,
+    ...items.slice(0, Math.min(currentIndex + 10, items.length))
+  ];
+  
+  const baseIndex = Math.max(0, currentIndex - 10);
+  
+  // Event handlers
   React.useEffect(() => {
-    if (!columnRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
     
-    const index = getSelectedIndex();
-    if (index === -1) return;
-    
-    // On first render or when selectedValue changes
-    const behavior = initialScrollDone.current ? "smooth" : "auto";
-    scrollToIndex(index, behavior);
-    initialScrollDone.current = true;
-  }, [selectedValue, getSelectedIndex, scrollToIndex]);
-
-  // Handle continuous scrolling with infinite loop
-  const handleScroll = React.useCallback(() => {
-    if (!columnRef.current || isScrolling) return;
-    
-    const element = columnRef.current;
-    const centerOffset = (element.clientHeight - itemHeight) / 2;
-    const scrollPosition = element.scrollTop + centerOffset;
-    let index = Math.round(scrollPosition / itemHeight) % totalItems;
-    
-    if (index < 0) index += totalItems;
-    
-    // After scrolling stops, snap to closest item
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      const value = items[index];
-      if (value !== selectedValue) {
-        onSelect(value);
-      }
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY;
+      const direction = delta > 0 ? 1 : -1;
       
-      // Snap to position
-      const snapTo = (loop ? index + totalItems : index) * itemHeight - centerOffset;
-      if (Math.abs(element.scrollTop - snapTo) > 1) {
-        setIsScrolling(true);
-        element.scrollTo({ top: snapTo, behavior: "smooth" });
-        setTimeout(() => setIsScrolling(false), 300);
-      }
-      
-      // Handle loop wrapping
-      if (loop) {
-        const thirdHeight = totalItems * itemHeight;
-        if (element.scrollTop < thirdHeight - element.clientHeight) {
-          setIsScrolling(true);
-          element.scrollTo({ top: element.scrollTop + thirdHeight, behavior: "auto" });
-          setTimeout(() => setIsScrolling(false), 50);
-        } else if (element.scrollTop > 2 * thirdHeight) {
-          setIsScrolling(true);
-          element.scrollTo({ top: element.scrollTop - thirdHeight, behavior: "auto" });
-          setTimeout(() => setIsScrolling(false), 50);
-        }
-      }
-    }, 150);
-  }, [items, totalItems, loop, selectedValue, onSelect, itemHeight, isScrolling]);
-
-  // Attach scroll listener
-  React.useEffect(() => {
-    const column = columnRef.current;
-    if (!column) return;
-    
-    const onScroll = () => {
-      if (!isScrolling) {
-        requestAnimationFrame(handleScroll);
+      const newIndex = Math.max(0, Math.min(items.length - 1, currentIndex + direction));
+      if (newIndex !== currentIndex) {
+        setCurrentIndex(newIndex);
+        onChange(items[newIndex]);
       }
     };
     
-    column.addEventListener("scroll", onScroll, { passive: true });
-    return () => column.removeEventListener("scroll", onScroll);
-  }, [handleScroll, isScrolling]);
-
-  // Component cleanup
-  React.useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => container.removeEventListener('wheel', onWheel);
+  }, [currentIndex, items, onChange]);
+  
   return (
-    <div 
-      ref={containerRef}
-      className="h-[216px] w-[80px] overflow-hidden relative border rounded-lg"
-    >
-      {/* Middle indicator */}
-      <div className="absolute inset-x-0 h-[72px] top-1/2 -translate-y-1/2 bg-primary/5 pointer-events-none border-y border-primary/20" />
-      
-      <div
-        ref={columnRef}
-        className="h-full overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-hide"
-        style={{
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
-        <div className="pt-[72px] pb-[72px]"> {/* Padding to center items */}
-          {extendedItems.map((item, index) => (
-            <div
-              key={index}
-              className={cn(
-                "w-full h-[72px] flex items-center justify-center transition-all duration-200 select-none",
-                item === selectedValue
-                  ? "text-primary text-4xl font-semibold"
-                  : "text-muted-foreground/50 text-3xl"
-              )}
-              onClick={() => {
-                if (item !== selectedValue) {
-                  onSelect(item);
-                }
-              }}
-            >
-              {format(item)}
-            </div>
-          ))}
-        </div>
+    <div className="flex flex-col items-center">
+      <div className="text-xs text-muted-foreground mb-1 font-medium">
+        {label}
       </div>
       
+      <div 
+        ref={containerRef}
+        className="w-[70px] h-[240px] relative overflow-hidden rounded-lg bg-secondary/30"
+        onTouchStart={(e) => handleStart(e.touches[0].clientY)}
+        onTouchMove={(e) => handleMove(e.touches[0].clientY)}
+        onTouchEnd={handleEnd}
+        onMouseDown={(e) => handleStart(e.clientY)}
+        onMouseMove={(e) => handleMove(e.clientY)}
+        onMouseUp={handleEnd}
+        onMouseLeave={handleEnd}
+      >
+        {/* Selection indicator */}
+        <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-primary/10 border-y border-primary/30 pointer-events-none z-10" />
+        
+        {/* 3D rendering space for the wheel */}
+        <div
+          className="absolute w-full h-full transform-gpu"
+          style={{
+            perspective: '400px',
+            perspectiveOrigin: 'center',
+            transformStyle: 'preserve-3d'
+          }}
+        >
+          {/* Wheel items with 3D transformation */}
+          <motion.div
+            className="absolute top-0 left-0 w-full scrollbar-hide"
+            style={{ y: springY }}
+          >
+            <div className="pt-[96px] pb-[96px]">
+              {extendedItems.map((item, index) => {
+                const actualIndex = (index + baseIndex) % items.length;
+                const isCurrent = items[currentIndex] === item;
+                const angle = getAngle(index);
+                
+                return (
+                  <div
+                    key={`${index}-${item}`}
+                    className={cn(
+                      "w-full h-[48px] flex items-center justify-center transition-all duration-200 select-none cursor-pointer",
+                      isCurrent ? "text-primary font-semibold" : "text-muted-foreground font-normal"
+                    )}
+                    style={{
+                      transform: `translateZ(${Math.abs(angle) * -1.2}px) rotateX(${angle}deg)`,
+                      opacity: 1 - Math.min(1, Math.abs(angle) / 90)
+                    }}
+                    onClick={() => {
+                      setCurrentIndex(actualIndex);
+                      onChange(items[actualIndex]);
+                    }}
+                  >
+                    <div className={cn(
+                      "text-2xl transition-all",
+                      isCurrent ? "scale-110" : "scale-100"
+                    )}>
+                      {formatter(item)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Gradient overlays for fading effect */}
+        <div className="absolute top-0 left-0 w-full h-[96px] bg-gradient-to-b from-background via-background/95 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-full h-[96px] bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
+      </div>
     </div>
   );
 }
