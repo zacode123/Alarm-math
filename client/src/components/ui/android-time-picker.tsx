@@ -254,7 +254,7 @@ function PickerWheel<T>({
 
       result.push(
         <div 
-          key={`${index}-${value}`} // Added unique key here
+          key={`${currentIndex}-${i}-${String(value)}`}
           className={cn(
             "absolute w-full flex items-center justify-center h-[48px] select-none",
             isSelected 
