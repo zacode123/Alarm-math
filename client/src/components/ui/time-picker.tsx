@@ -48,9 +48,15 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
     updateDate(hours12, minutes, newIsPm);
   };
 
+  // Custom formatter for AM/PM with highlighted style
+  const periodFormatter = (val: string) => {
+    return <span className="font-bold text-primary">{val}</span>;
+  };
+
   return (
-    <div className="bg-background rounded-xl p-4 shadow-lg w-full max-w-md mx-auto">
-      <div className="flex flex-row justify-center items-center gap-2">
+    <div className="bg-background rounded-xl p-5 shadow-lg w-full max-w-md mx-auto">
+      <h2 className="text-lg font-semibold text-center mb-3 text-foreground">Set Alarm Time</h2>
+      <div className="flex flex-row justify-center items-center gap-3">
         {/* Hour wheel */}
         <WheelPicker<number>
           items={Array.from({ length: 12 }, (_, i) => i + 1)}
@@ -61,7 +67,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
           loop={true}
         />
         
-        <div className="text-4xl font-bold text-primary self-center pb-4">:</div>
+        <div className="text-3xl font-bold text-primary self-center pb-4">:</div>
         
         {/* Minute wheel */}
         <WheelPicker<number>
@@ -69,21 +75,44 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
           selectedItem={minutes}
           onChange={handleMinuteChange}
           formatter={(val) => val.toString().padStart(2, '0')}
-          label="Minute"
+          label="Min"
           loop={true}
         />
         
-        {/* AM/PM selector wheel */}
-        <WheelPicker<boolean>
-          items={[false, true]}
-          selectedItem={isPm}
-          onChange={handlePeriodChange}
-          formatter={(val) => val ? "PM" : "AM"}
-          label="Period"
-          loop={true}
-        />
+        {/* AM/PM selector wheel - custom styled with text formatting */}
+        <div className="ml-4">
+          <div className="text-xs text-foreground mb-1 font-medium">
+            Period
+          </div>
+          <div className="bg-primary/10 border-primary/30 border-2 shadow-inner w-[85px] h-[240px] relative overflow-hidden rounded-lg">
+            <AMPMPicker 
+              isPm={isPm} 
+              onChange={handlePeriodChange} 
+            />
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+// Special AM/PM picker with enhanced styling for better visibility
+function AMPMPicker({ 
+  isPm, 
+  onChange 
+}: { 
+  isPm: boolean; 
+  onChange: (isPm: boolean) => void 
+}) {
+  return (
+    <WheelPicker<string>
+      items={["AM", "PM"]}
+      selectedItem={isPm ? "PM" : "AM"}
+      onChange={(val) => onChange(val === "PM")}
+      formatter={(val) => val}
+      label=""
+      loop={true}
+    />
   );
 }
 
@@ -121,11 +150,12 @@ function WheelPicker<T>({
   const containerHeight = itemHeight * visibleItems;
   const halfVisibleItems = Math.floor(visibleItems / 2);
   
-  // Spring animation for smooth scrolling
+  // Spring animation with optimal values for smooth scrolling
   const springY = useSpring(0, {
-    stiffness: 400,
-    damping: 40,
-    mass: 0.8
+    stiffness: 350,
+    damping: 35,
+    mass: 0.7,
+    restSpeed: 0.5
   });
   
   // Handle index wrapping for looping
@@ -245,11 +275,8 @@ function WheelPicker<T>({
       // Calculate the target position
       const targetPosition = -(targetIndex - halfVisibleItems) * itemHeight;
       
-      // Apply spring with smooth inertia-like animation
-      springY.set(targetPosition, {
-        damping: 20,
-        stiffness: 400 * (1 - Math.min(0.8, Math.abs(velocityY)))
-      });
+      // Apply spring animation with smooth movement
+      springY.set(targetPosition);
       
       // Update current index and notify parent
       if (targetIndex !== currentIndex) {
@@ -340,7 +367,7 @@ function WheelPicker<T>({
       
       <div 
         ref={containerRef}
-        className="w-[70px] h-[240px] relative overflow-hidden rounded-lg bg-secondary/30"
+        className="w-[76px] h-[240px] relative overflow-hidden rounded-lg bg-secondary/40 border border-primary/10"
         onTouchStart={(e) => handleStart(e.touches[0].clientY)}
         onTouchMove={(e) => handleMove(e.touches[0].clientY)}
         onTouchEnd={handleEnd}
@@ -350,13 +377,13 @@ function WheelPicker<T>({
         onMouseLeave={handleEnd}
       >
         {/* Selection indicator */}
-        <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-primary/10 border-y border-primary/30 pointer-events-none z-10" />
+        <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-primary/20 border-y border-primary/40 pointer-events-none z-10" />
         
         {/* 3D rendering space for the wheel */}
         <div
           className="absolute w-full h-full transform-gpu"
           style={{
-            perspective: '400px',
+            perspective: '500px',
             perspectiveOrigin: 'center',
             transformStyle: 'preserve-3d'
           }}
@@ -380,18 +407,26 @@ function WheelPicker<T>({
                   // Calculate visual angle based on center position
                   const centerVisualIndex = Math.floor(displayItems.length / 2);
                   const angleDiff = visualIndex - centerVisualIndex;
-                  const angle = angleDiff * 15; // Less aggressive angle for smoother feel
+                  const angle = angleDiff * 18; // More pronounced angle for better 3D effect
+                  
+                  // Calculate distance for depth effect
+                  const depth = Math.abs(angle) * -2.5;
                   
                   return (
                     <div
                       key={`${visualIndex}-${String(item)}`}
                       className={cn(
-                        "w-full h-[48px] flex items-center justify-center transition-all duration-200 select-none cursor-pointer",
-                        isCurrent ? "text-primary font-semibold" : "text-muted-foreground/80 font-normal"
+                        "w-full h-[48px] flex items-center justify-center select-none cursor-pointer",
+                        isCurrent 
+                          ? "text-primary font-bold" 
+                          : Math.abs(angleDiff) <= 1 
+                            ? "text-foreground font-medium" 
+                            : "text-muted-foreground/70 font-normal"
                       )}
                       style={{
-                        transform: `translateZ(${Math.abs(angle) * -1.5}px) rotateX(${angle}deg)`,
-                        opacity: 1 - Math.min(0.8, Math.abs(angle) / 90)
+                        transform: `translateZ(${depth}px) rotateX(${angle}deg)`,
+                        opacity: 1 - Math.min(0.7, Math.abs(angle) / 90),
+                        transition: 'all 0.1s'
                       }}
                       onClick={() => {
                         if (!isCurrent) {
@@ -401,8 +436,8 @@ function WheelPicker<T>({
                       }}
                     >
                       <div className={cn(
-                        "text-2xl transition-all",
-                        isCurrent ? "scale-110" : "scale-100"
+                        "transition-all transform",
+                        isCurrent ? "scale-110 text-3xl" : "text-2xl"
                       )}>
                         {formatter(item)}
                       </div>
@@ -417,18 +452,26 @@ function WheelPicker<T>({
                   const visualIndex = index;
                   const centerVisualIndex = currentIndex + halfVisibleItems;
                   const angleDiff = visualIndex - centerVisualIndex;
-                  const angle = angleDiff * 15;
+                  const angle = angleDiff * 18;
+                  
+                  // Calculate distance for depth effect
+                  const depth = Math.abs(angle) * -2.5;
                   
                   return (
                     <div
                       key={`${index}-${String(item)}`}
                       className={cn(
-                        "w-full h-[48px] flex items-center justify-center transition-all duration-200 select-none cursor-pointer",
-                        isCurrent ? "text-primary font-semibold" : "text-muted-foreground/80 font-normal"
+                        "w-full h-[48px] flex items-center justify-center select-none cursor-pointer",
+                        isCurrent 
+                          ? "text-primary font-bold" 
+                          : Math.abs(angleDiff) <= 1 
+                            ? "text-foreground font-medium" 
+                            : "text-muted-foreground/70 font-normal"
                       )}
                       style={{
-                        transform: `translateZ(${Math.abs(angle) * -1.5}px) rotateX(${angle}deg)`,
-                        opacity: 1 - Math.min(0.8, Math.abs(angle) / 90)
+                        transform: `translateZ(${depth}px) rotateX(${angle}deg)`,
+                        opacity: 1 - Math.min(0.7, Math.abs(angle) / 90),
+                        transition: 'all 0.1s'
                       }}
                       onClick={() => {
                         if (!isCurrent) {
@@ -438,8 +481,8 @@ function WheelPicker<T>({
                       }}
                     >
                       <div className={cn(
-                        "text-2xl transition-all",
-                        isCurrent ? "scale-110" : "scale-100"
+                        "transition-all transform",
+                        isCurrent ? "scale-110 text-3xl" : "text-2xl"
                       )}>
                         {formatter(item)}
                       </div>
