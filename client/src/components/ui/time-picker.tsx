@@ -48,71 +48,72 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
     updateDate(hours12, minutes, newIsPm);
   };
 
-  // Custom formatter for AM/PM with highlighted style
-  const periodFormatter = (val: string) => {
-    return <span className="font-bold text-primary">{val}</span>;
-  };
-
   return (
-    <div className="bg-background rounded-xl p-5 shadow-lg w-full max-w-md mx-auto">
-      <h2 className="text-lg font-semibold text-center mb-3 text-foreground">Set Alarm Time</h2>
-      <div className="flex flex-row justify-center items-center gap-3">
-        {/* Hour wheel */}
-        <WheelPicker<number>
-          items={Array.from({ length: 12 }, (_, i) => i + 1)}
-          selectedItem={hours12}
-          onChange={handleHourChange}
-          formatter={(val) => val.toString().padStart(2, '0')}
-          label="Hour"
-          loop={true}
-        />
+    <div className="bg-background/5 rounded-xl p-6 w-full max-w-md mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4 text-foreground">Set Alarm Time</h2>
+      
+      <div className="flex flex-row justify-center items-center gap-1">
+        {/* Three columns for Hour, Minute, and Period in the Android style */}
+        <div className="flex-1">
+          <div className="text-sm text-center text-muted-foreground/80 mb-2">
+            Hour
+          </div>
+          <div className="relative h-[200px] border border-primary/20 rounded-lg bg-background/5 overflow-hidden">
+            <WheelPicker<number>
+              items={Array.from({ length: 12 }, (_, i) => i + 1)}
+              selectedItem={hours12}
+              onChange={handleHourChange}
+              formatter={(val) => val < 10 ? "0" + val : val.toString()}
+              loop={true}
+              androidStyle={true}
+            />
+            {/* Selection overlay indicator */}
+            <div className="absolute w-full h-[50px] top-1/2 -translate-y-1/2 bg-primary/30 border-y border-primary/40 pointer-events-none" />
+          </div>
+        </div>
         
-        <div className="text-3xl font-bold text-primary self-center pb-4">:</div>
+        {/* Separator */}
+        <div className="text-xl font-bold text-primary self-center mx-1">:</div>
         
-        {/* Minute wheel */}
-        <WheelPicker<number>
-          items={Array.from({ length: 60 }, (_, i) => i)}
-          selectedItem={minutes}
-          onChange={handleMinuteChange}
-          formatter={(val) => val.toString().padStart(2, '0')}
-          label="Min"
-          loop={true}
-        />
+        {/* Minutes column */}
+        <div className="flex-1">
+          <div className="text-sm text-center text-muted-foreground/80 mb-2">
+            Min
+          </div>
+          <div className="relative h-[200px] border border-primary/20 rounded-lg bg-background/5 overflow-hidden">
+            <WheelPicker<number>
+              items={Array.from({ length: 60 }, (_, i) => i)}
+              selectedItem={minutes}
+              onChange={handleMinuteChange}
+              formatter={(val) => val < 10 ? "0" + val : val.toString()}
+              loop={true}
+              androidStyle={true}
+            />
+            {/* Selection overlay indicator */}
+            <div className="absolute w-full h-[50px] top-1/2 -translate-y-1/2 bg-primary/30 border-y border-primary/40 pointer-events-none" />
+          </div>
+        </div>
         
-        {/* AM/PM selector wheel - custom styled with text formatting */}
-        <div className="ml-4">
-          <div className="text-xs text-foreground mb-1 font-medium">
+        {/* Period (AM/PM) column */}
+        <div className="flex-1 ml-2">
+          <div className="text-sm text-center text-muted-foreground/80 mb-2">
             Period
           </div>
-          <div className="bg-primary/10 border-primary/30 border-2 shadow-inner w-[85px] h-[240px] relative overflow-hidden rounded-lg">
-            <AMPMPicker 
-              isPm={isPm} 
-              onChange={handlePeriodChange} 
+          <div className="relative h-[200px] border border-primary/20 rounded-lg bg-background/5 overflow-hidden">
+            <WheelPicker<string>
+              items={["AM", "PM"]}
+              selectedItem={isPm ? "PM" : "AM"}
+              onChange={(val) => handlePeriodChange(val === "PM")}
+              formatter={(val) => val}
+              loop={true}
+              androidStyle={true}
             />
+            {/* Selection overlay indicator */}
+            <div className="absolute w-full h-[50px] top-1/2 -translate-y-1/2 bg-primary/30 border-y border-primary/40 pointer-events-none" />
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-// Special AM/PM picker with enhanced styling for better visibility
-function AMPMPicker({ 
-  isPm, 
-  onChange 
-}: { 
-  isPm: boolean; 
-  onChange: (isPm: boolean) => void 
-}) {
-  return (
-    <WheelPicker<string>
-      items={["AM", "PM"]}
-      selectedItem={isPm ? "PM" : "AM"}
-      onChange={(val) => onChange(val === "PM")}
-      formatter={(val) => val}
-      label=""
-      loop={true}
-    />
   );
 }
 
@@ -121,8 +122,9 @@ interface WheelPickerProps<T> {
   selectedItem: T;
   onChange: (item: T) => void;
   formatter: (item: T) => string;
-  label: string;
+  label?: string;
   loop?: boolean;
+  androidStyle?: boolean;
 }
 
 function WheelPicker<T>({
@@ -130,8 +132,9 @@ function WheelPicker<T>({
   selectedItem,
   onChange,
   formatter,
-  label,
-  loop = false
+  label = "",
+  loop = false,
+  androidStyle = false
 }: WheelPickerProps<T>) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = React.useState(false);
