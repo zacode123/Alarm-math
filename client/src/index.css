@@ -72,6 +72,15 @@
   .toast-info {
     @apply bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30;
   }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
 }
 
 [data-state="open"] {

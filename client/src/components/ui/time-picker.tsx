@@ -1,6 +1,5 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDebouncedCallback } from "use-debounce";
 
 interface TimePickerProps {
@@ -24,13 +23,14 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
     const newDate = new Date(date);
     if (type === 'hours') {
       setSelectedHour(value);
-      newDate.setHours(isAm ? value : (value === 12 ? 12 : value + 12));
+      newDate.setHours(isAm ? (value === 12 ? 0 : value) : (value === 12 ? 12 : value + 12));
     } else if (type === 'minutes') {
       setSelectedMinute(value);
       newDate.setMinutes(value);
     } else if (type === 'period') {
       setIsAm(value === 0);
-      newDate.setHours((selectedHour % 12) + (value === 0 ? 0 : 12));
+      const hour = selectedHour === 12 ? 0 : selectedHour;
+      newDate.setHours(hour + (value === 0 ? 0 : 12));
     }
     setDate(newDate);
   }, [date, setDate, selectedHour, isAm]);
@@ -89,99 +89,152 @@ interface ScrollColumnProps {
 
 function ScrollColumn({ items, selectedValue, onSelect, format, loop = false }: ScrollColumnProps) {
   const columnRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const itemHeight = 72;
   const totalItems = items.length;
   const extendedItems = loop ? [...items, ...items, ...items] : items;
-  const isAdjusting = React.useRef(false);
+  const [isScrolling, setIsScrolling] = React.useState(false);
+  const timeoutRef = React.useRef<NodeJS.Timeout>();
+  const initialScrollDone = React.useRef(false);
+  
+  const getSelectedIndex = React.useCallback(() => {
+    return items.indexOf(selectedValue);
+  }, [items, selectedValue]);
 
-  const debouncedOnSelect = useDebouncedCallback((value: number) => {
-    if (value !== selectedValue) onSelect(value);
-  }, 100);
+  const scrollToIndex = React.useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
+    if (!columnRef.current) return;
+    
+    const element = columnRef.current;
+    const centerOffset = (element.clientHeight - itemHeight) / 2;
+    let targetScrollTop;
+    
+    if (loop) {
+      // In loop mode, scroll to the middle set of items (second of three sets)
+      targetScrollTop = (index + totalItems) * itemHeight - centerOffset;
+    } else {
+      targetScrollTop = index * itemHeight - centerOffset;
+    }
+    
+    element.scrollTo({ top: targetScrollTop, behavior });
+  }, [itemHeight, loop, totalItems]);
 
+  // Initial scroll setup and value change response
+  React.useEffect(() => {
+    if (!columnRef.current) return;
+    
+    const index = getSelectedIndex();
+    if (index === -1) return;
+    
+    // On first render or when selectedValue changes
+    const behavior = initialScrollDone.current ? "smooth" : "auto";
+    scrollToIndex(index, behavior);
+    initialScrollDone.current = true;
+  }, [selectedValue, getSelectedIndex, scrollToIndex]);
+
+  // Handle continuous scrolling with infinite loop
   const handleScroll = React.useCallback(() => {
-    if (!columnRef.current || isAdjusting.current) return;
+    if (!columnRef.current || isScrolling) return;
+    
     const element = columnRef.current;
     const centerOffset = (element.clientHeight - itemHeight) / 2;
     const scrollPosition = element.scrollTop + centerOffset;
     let index = Math.round(scrollPosition / itemHeight) % totalItems;
-
+    
     if (index < 0) index += totalItems;
-
-    clearTimeout((element as any).scrollTimeout);
-    (element as any).scrollTimeout = setTimeout(() => {
-      const snapTo = index * itemHeight - centerOffset;
-      element.scrollTo({ top: snapTo, behavior: "smooth" });
-    }, 150);
-
-    if (loop) {
-      const thirdHeight = totalItems * itemHeight;
-      if (element.scrollTop < thirdHeight - element.clientHeight) {
-        isAdjusting.current = true;
-        element.scrollTop += thirdHeight;
-        isAdjusting.current = false;
-      } else if (element.scrollTop > 2 * thirdHeight) {
-        isAdjusting.current = true;
-        element.scrollTop -= thirdHeight;
-        isAdjusting.current = false;
+    
+    // After scrolling stops, snap to closest item
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      const value = items[index];
+      if (value !== selectedValue) {
+        onSelect(value);
       }
-    }
+      
+      // Snap to position
+      const snapTo = (loop ? index + totalItems : index) * itemHeight - centerOffset;
+      if (Math.abs(element.scrollTop - snapTo) > 1) {
+        setIsScrolling(true);
+        element.scrollTo({ top: snapTo, behavior: "smooth" });
+        setTimeout(() => setIsScrolling(false), 300);
+      }
+      
+      // Handle loop wrapping
+      if (loop) {
+        const thirdHeight = totalItems * itemHeight;
+        if (element.scrollTop < thirdHeight - element.clientHeight) {
+          setIsScrolling(true);
+          element.scrollTo({ top: element.scrollTop + thirdHeight, behavior: "auto" });
+          setTimeout(() => setIsScrolling(false), 50);
+        } else if (element.scrollTop > 2 * thirdHeight) {
+          setIsScrolling(true);
+          element.scrollTo({ top: element.scrollTop - thirdHeight, behavior: "auto" });
+          setTimeout(() => setIsScrolling(false), 50);
+        }
+      }
+    }, 150);
+  }, [items, totalItems, loop, selectedValue, onSelect, itemHeight, isScrolling]);
 
-    debouncedOnSelect(items[index]);
-  }, [items, totalItems, loop, debouncedOnSelect, itemHeight]);
-
+  // Attach scroll listener
   React.useEffect(() => {
     const column = columnRef.current;
     if (!column) return;
-
-    const onScroll = () => requestAnimationFrame(handleScroll);
-    column.addEventListener("scroll", onScroll);
-
+    
+    const onScroll = () => {
+      if (!isScrolling) {
+        requestAnimationFrame(handleScroll);
+      }
+    };
+    
+    column.addEventListener("scroll", onScroll, { passive: true });
     return () => column.removeEventListener("scroll", onScroll);
-  }, [handleScroll]);
+  }, [handleScroll, isScrolling]);
 
+  // Component cleanup
   React.useEffect(() => {
-    if (!columnRef.current) return;
-    const element = columnRef.current;
-    const index = items.indexOf(selectedValue);
-    if (index === -1) return;
-
-    const centerOffset = (element.clientHeight - itemHeight) / 2;
-    let targetScrollTop = index * itemHeight - centerOffset;
-
-    if (loop) {
-      targetScrollTop = (index + totalItems) * itemHeight - centerOffset;
-    }
-
-    if (Math.abs(element.scrollTop - targetScrollTop) > 1) {
-      element.scrollTo({ top: targetScrollTop, behavior: "smooth" });
-    }
-  }, [selectedValue, items, totalItems, itemHeight, loop]);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <ScrollArea className="h-[216px] w-[80px] overflow-hidden">
+    <div 
+      ref={containerRef}
+      className="h-[216px] w-[80px] overflow-hidden relative border rounded-lg"
+    >
+      {/* Middle indicator */}
+      <div className="absolute inset-x-0 h-[72px] top-1/2 -translate-y-1/2 bg-primary/5 pointer-events-none border-y border-primary/20" />
+      
       <div
         ref={columnRef}
-        className="flex flex-col items-center"
+        className="h-full overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-hide"
         style={{
-          overflowY: "auto",
-          height: "216px",
+          WebkitOverflowScrolling: 'touch'
         }}
       >
-        {extendedItems.map((item, index) => (
-          <div
-            key={index}
-            className={cn(
-              "w-full h-[72px] flex items-center justify-center transition-all duration-300 ease-in-out select-none",
-              item === selectedValue
-                ? "text-primary text-4xl font-semibold scale-110"
-                : "text-muted-foreground/30 text-3xl scale-100"
-            )}
-            style={{ minHeight: "72px" }}
-          >
-            {format(item)}
-          </div>
-        ))}
+        <div className="pt-[72px] pb-[72px]"> {/* Padding to center items */}
+          {extendedItems.map((item, index) => (
+            <div
+              key={index}
+              className={cn(
+                "w-full h-[72px] flex items-center justify-center transition-all duration-200 select-none",
+                item === selectedValue
+                  ? "text-primary text-4xl font-semibold"
+                  : "text-muted-foreground/50 text-3xl"
+              )}
+              onClick={() => {
+                if (item !== selectedValue) {
+                  onSelect(item);
+                }
+              }}
+            >
+              {format(item)}
+            </div>
+          ))}
+        </div>
       </div>
-    </ScrollArea>
+      
+    </div>
   );
 }
