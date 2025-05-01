@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { motion, useSpring } from "framer-motion";
+import { motion, useSpring, MotionValue } from "framer-motion";
 
 interface TimePickerProps {
   date: Date;
@@ -52,50 +52,36 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
     <div className="bg-background rounded-xl p-4 shadow-lg w-full max-w-md mx-auto">
       <div className="flex flex-row justify-center items-center gap-2">
         {/* Hour wheel */}
-        <WheelPicker
+        <WheelPicker<number>
           items={Array.from({ length: 12 }, (_, i) => i + 1)}
           selectedItem={hours12}
           onChange={handleHourChange}
           formatter={(val) => val.toString().padStart(2, '0')}
           label="Hour"
+          loop={true}
         />
         
         <div className="text-4xl font-bold text-primary self-center pb-4">:</div>
         
         {/* Minute wheel */}
-        <WheelPicker
+        <WheelPicker<number>
           items={Array.from({ length: 60 }, (_, i) => i)}
           selectedItem={minutes}
           onChange={handleMinuteChange}
           formatter={(val) => val.toString().padStart(2, '0')}
           label="Minute"
+          loop={true}
         />
         
-        {/* AM/PM selector */}
-        <div className="flex flex-col gap-2 ml-4">
-          <button
-            className={cn(
-              "w-16 px-3 py-2 rounded-xl transition-all duration-200",
-              !isPm 
-                ? "bg-primary text-primary-foreground font-medium shadow-md" 
-                : "bg-background text-muted-foreground hover:bg-secondary"
-            )}
-            onClick={() => handlePeriodChange(false)}
-          >
-            AM
-          </button>
-          <button
-            className={cn(
-              "w-16 px-3 py-2 rounded-xl transition-all duration-200",
-              isPm 
-                ? "bg-primary text-primary-foreground font-medium shadow-md" 
-                : "bg-background text-muted-foreground hover:bg-secondary"
-            )}
-            onClick={() => handlePeriodChange(true)}
-          >
-            PM
-          </button>
-        </div>
+        {/* AM/PM selector wheel */}
+        <WheelPicker<boolean>
+          items={[false, true]}
+          selectedItem={isPm}
+          onChange={handlePeriodChange}
+          formatter={(val) => val ? "PM" : "AM"}
+          label="Period"
+          loop={true}
+        />
       </div>
     </div>
   );
@@ -107,6 +93,7 @@ interface WheelPickerProps<T> {
   onChange: (item: T) => void;
   formatter: (item: T) => string;
   label: string;
+  loop?: boolean;
 }
 
 function WheelPicker<T>({
@@ -114,35 +101,59 @@ function WheelPicker<T>({
   selectedItem,
   onChange,
   formatter,
-  label
+  label,
+  loop = false
 }: WheelPickerProps<T>) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = React.useState(false);
   const [startY, setStartY] = React.useState(0);
   const [offsetY, setOffsetY] = React.useState(0);
   const [currentIndex, setCurrentIndex] = React.useState(items.indexOf(selectedItem));
+  const [lastDeltaTime, setLastDeltaTime] = React.useState(0);
+  const [velocityY, setVelocityY] = React.useState(0);
+  const lastY = React.useRef(0);
+  const lastTime = React.useRef(0);
   
   // Constants for the wheel
   const itemHeight = 48;  // Height of each item in pixels
   const visibleItems = 5; // Number of visible items
   const totalHeight = itemHeight * items.length;
   const containerHeight = itemHeight * visibleItems;
-  const maxOffset = 0;
-  const minOffset = -(totalHeight - containerHeight);
   const halfVisibleItems = Math.floor(visibleItems / 2);
   
   // Spring animation for smooth scrolling
   const springY = useSpring(0, {
-    stiffness: 300,
-    damping: 30,
-    mass: 0.5
+    stiffness: 400,
+    damping: 40,
+    mass: 0.8
   });
+  
+  // Handle index wrapping for looping
+  const wrapIndex = (index: number): number => {
+    if (!loop) return Math.max(0, Math.min(items.length - 1, index));
+    
+    const len = items.length;
+    return ((index % len) + len) % len; // Proper modulo for negative numbers
+  };
+  
+  // Get true scroll bounds based on loop setting
+  const getScrollBounds = () => {
+    if (loop) {
+      // When looping, allow "infinite" scrolling
+      return { min: -Number.MAX_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER };
+    } else {
+      // When not looping, restrict to actual item bounds
+      const maxOffset = halfVisibleItems * itemHeight;
+      const minOffset = -((items.length - 1) * itemHeight) + (halfVisibleItems * itemHeight);
+      return { min: minOffset, max: maxOffset };
+    }
+  };
   
   // Effect to animate the wheel when currentIndex changes
   React.useEffect(() => {
     const targetOffset = -(currentIndex - halfVisibleItems) * itemHeight;
     springY.set(targetOffset);
-  }, [currentIndex, springY, itemHeight]);
+  }, [currentIndex, springY, itemHeight, halfVisibleItems]);
   
   // Effect to update offsetY when spring animation changes
   React.useEffect(() => {
@@ -160,73 +171,157 @@ function WheelPicker<T>({
   }, [selectedItem, items, currentIndex]);
   
   // Calculate the angle for 3D rotation effect
-  const getAngle = (index: number) => {
-    const centerIndex = currentIndex;
-    const diff = index - centerIndex;
-    return diff * 18; // Rotate by 18 degrees per item
+  const getAngle = (visualIndex: number, centerIndex: number) => {
+    const diff = visualIndex - centerIndex;
+    return diff * 16; // Rotate by 16 degrees per item
   };
   
   // Handle touch/mouse interactions
   const handleStart = (clientY: number) => {
     setIsDragging(true);
     setStartY(clientY);
+    lastY.current = clientY;
+    lastTime.current = Date.now();
+    setVelocityY(0);
+    springY.set(offsetY); // Stop any current animations
   };
   
   const handleMove = (clientY: number) => {
     if (!isDragging) return;
     
-    const deltaY = clientY - startY;
-    let newOffset = offsetY + deltaY;
+    const currentTime = Date.now();
+    const deltaTime = currentTime - lastTime.current;
+    const deltaY = clientY - lastY.current;
     
-    // Restrict movement beyond boundaries with resistance
-    if (newOffset > maxOffset) {
-      newOffset = maxOffset + (newOffset - maxOffset) * 0.2;
-    } else if (newOffset < minOffset) {
-      newOffset = minOffset + (newOffset - minOffset) * 0.2;
+    // Calculate velocity for inertia
+    if (deltaTime > 0) {
+      // Smoother velocity calculation with weight
+      const newVelocity = deltaY / deltaTime;
+      setVelocityY(prevVelocity => prevVelocity * 0.7 + newVelocity * 0.3);
+      setLastDeltaTime(deltaTime);
     }
     
-    springY.set(newOffset);
+    // Apply scroll movement
+    const moveDelta = clientY - startY;
+    const newOffset = offsetY + (moveDelta * 1.2); // Increase sensitivity
+    
+    // Apply scroll bounds with elasticity when not looping
+    const { min, max } = getScrollBounds();
+    let boundedOffset = newOffset;
+    
+    if (!loop) {
+      if (newOffset > max) {
+        boundedOffset = max + (newOffset - max) * 0.2;
+      } else if (newOffset < min) {
+        boundedOffset = min + (newOffset - min) * 0.2;
+      }
+    }
+    
+    springY.set(boundedOffset);
     setStartY(clientY);
+    
+    // Update for next velocity calculation
+    lastY.current = clientY;
+    lastTime.current = currentTime;
   };
   
   const handleEnd = () => {
     if (!isDragging) return;
     setIsDragging(false);
     
-    // Snap to the closest item
-    const rawIndex = Math.round(-offsetY / itemHeight) + halfVisibleItems;
-    const clampedIndex = Math.max(0, Math.min(items.length - 1, rawIndex));
-    
-    if (clampedIndex !== currentIndex) {
-      setCurrentIndex(clampedIndex);
-      onChange(items[clampedIndex]);
+    // Apply inertia
+    if (Math.abs(velocityY) > 0.1) {
+      // Calculate how far it would go with inertia
+      const inertiaDistance = velocityY * lastDeltaTime * 8; // Amplify effect
+      const inertiaOffset = offsetY + inertiaDistance;
+      
+      // Determine the target index after inertia
+      const rawInertiaIndex = -Math.round(inertiaOffset / itemHeight) + halfVisibleItems;
+      const targetIndex = wrapIndex(rawInertiaIndex);
+      
+      // Apply spring with inertia feeling
+      springY.set(offsetY, false); // Stop any current animation
+      
+      // Calculate the target position
+      const targetPosition = -(targetIndex - halfVisibleItems) * itemHeight;
+      
+      // Apply spring with smooth inertia-like animation
+      springY.set(targetPosition, {
+        damping: 20,
+        stiffness: 400 * (1 - Math.min(0.8, Math.abs(velocityY)))
+      });
+      
+      // Update current index and notify parent
+      if (targetIndex !== currentIndex) {
+        const wrappedIndex = wrapIndex(targetIndex);
+        setCurrentIndex(wrappedIndex);
+        onChange(items[wrappedIndex]);
+      }
     } else {
-      // Still snap to position even if index didn't change
-      const targetOffset = -(clampedIndex - halfVisibleItems) * itemHeight;
-      springY.set(targetOffset);
+      // No inertia, just snap to closest
+      const rawIndex = Math.round(-offsetY / itemHeight) + halfVisibleItems;
+      const targetIndex = wrapIndex(rawIndex);
+      
+      if (targetIndex !== currentIndex) {
+        setCurrentIndex(targetIndex);
+        onChange(items[targetIndex]);
+      }
+      
+      // Snap animation
+      const snapOffset = -(targetIndex - halfVisibleItems) * itemHeight;
+      springY.set(snapOffset);
     }
+    
+    // Reset velocity
+    setVelocityY(0);
   };
   
-  // Extend items array to create looping effect
-  const extendedItems = [
-    ...items.slice(Math.max(0, currentIndex - 10), items.length),
-    ...items,
-    ...items.slice(0, Math.min(currentIndex + 10, items.length))
-  ];
+  // Define a type for display items
+  interface DisplayItem<T> {
+    item: T;
+    visualIndex: number;
+    realIndex: number;
+  }
   
-  const baseIndex = Math.max(0, currentIndex - 10);
+  // Generate display items for the wheel
+  const generateDisplayItems = (): Array<T | DisplayItem<T>> => {
+    if (!loop) return items;
+    
+    // For loop mode, we create a circular array with the current selection centered
+    const repeats = Math.ceil(visibleItems * 2 / items.length);
+    const result: DisplayItem<T>[] = [];
+    
+    // Create repeats * items.length elements with current index centered
+    const centerOffset = Math.floor(repeats / 2) * items.length;
+    const startIndex = currentIndex - centerOffset;
+    
+    for (let i = 0; i < repeats * items.length; i++) {
+      const index = wrapIndex(startIndex + i);
+      result.push({
+        item: items[index],
+        visualIndex: i,
+        realIndex: index
+      });
+    }
+    
+    return result;
+  };
   
-  // Event handlers
+  const displayItems = generateDisplayItems();
+  
+  // Event handlers for mouse wheel
   React.useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      
+      // Reduce sensitivity on wheel scroll
       const delta = e.deltaY;
       const direction = delta > 0 ? 1 : -1;
       
-      const newIndex = Math.max(0, Math.min(items.length - 1, currentIndex + direction));
+      const newIndex = wrapIndex(currentIndex + direction);
       if (newIndex !== currentIndex) {
         setCurrentIndex(newIndex);
         onChange(items[newIndex]);
@@ -235,7 +330,7 @@ function WheelPicker<T>({
     
     container.addEventListener('wheel', onWheel, { passive: false });
     return () => container.removeEventListener('wheel', onWheel);
-  }, [currentIndex, items, onChange]);
+  }, [currentIndex, items, onChange, loop, wrapIndex]);
   
   return (
     <div className="flex flex-col items-center">
@@ -272,35 +367,85 @@ function WheelPicker<T>({
             style={{ y: springY }}
           >
             <div className="pt-[96px] pb-[96px]">
-              {extendedItems.map((item, index) => {
-                const actualIndex = (index + baseIndex) % items.length;
-                const isCurrent = items[currentIndex] === item;
-                const angle = getAngle(index);
-                
-                return (
-                  <div
-                    key={`${index}-${item}`}
-                    className={cn(
-                      "w-full h-[48px] flex items-center justify-center transition-all duration-200 select-none cursor-pointer",
-                      isCurrent ? "text-primary font-semibold" : "text-muted-foreground font-normal"
-                    )}
-                    style={{
-                      transform: `translateZ(${Math.abs(angle) * -1.2}px) rotateX(${angle}deg)`,
-                      opacity: 1 - Math.min(1, Math.abs(angle) / 90)
-                    }}
-                    onClick={() => {
-                      setCurrentIndex(actualIndex);
-                      onChange(items[actualIndex]);
-                    }}
-                  >
-                    <div className={cn(
-                      "text-2xl transition-all",
-                      isCurrent ? "scale-110" : "scale-100"
-                    )}>
-                      {formatter(item)}
+              {displayItems.map((displayItem, index) => {
+                // Handle different types based on loop mode
+                if (loop) {
+                  // In loop mode, displayItem is a DisplayItem<T>
+                  const dItem = displayItem as DisplayItem<T>;
+                  const item = dItem.item;
+                  const realIndex = dItem.realIndex;
+                  const visualIndex = dItem.visualIndex;
+                  const isCurrent = realIndex === currentIndex;
+                  
+                  // Calculate visual angle based on center position
+                  const centerVisualIndex = Math.floor(displayItems.length / 2);
+                  const angleDiff = visualIndex - centerVisualIndex;
+                  const angle = angleDiff * 15; // Less aggressive angle for smoother feel
+                  
+                  return (
+                    <div
+                      key={`${visualIndex}-${String(item)}`}
+                      className={cn(
+                        "w-full h-[48px] flex items-center justify-center transition-all duration-200 select-none cursor-pointer",
+                        isCurrent ? "text-primary font-semibold" : "text-muted-foreground/80 font-normal"
+                      )}
+                      style={{
+                        transform: `translateZ(${Math.abs(angle) * -1.5}px) rotateX(${angle}deg)`,
+                        opacity: 1 - Math.min(0.8, Math.abs(angle) / 90)
+                      }}
+                      onClick={() => {
+                        if (!isCurrent) {
+                          setCurrentIndex(realIndex);
+                          onChange(items[realIndex]);
+                        }
+                      }}
+                    >
+                      <div className={cn(
+                        "text-2xl transition-all",
+                        isCurrent ? "scale-110" : "scale-100"
+                      )}>
+                        {formatter(item)}
+                      </div>
                     </div>
-                  </div>
-                );
+                  );
+                } else {
+                  // In non-loop mode, displayItem is just T
+                  const item = displayItem as T;
+                  const isCurrent = items[currentIndex] === item;
+                  
+                  // Calculate visual angle for standard mode
+                  const visualIndex = index;
+                  const centerVisualIndex = currentIndex + halfVisibleItems;
+                  const angleDiff = visualIndex - centerVisualIndex;
+                  const angle = angleDiff * 15;
+                  
+                  return (
+                    <div
+                      key={`${index}-${String(item)}`}
+                      className={cn(
+                        "w-full h-[48px] flex items-center justify-center transition-all duration-200 select-none cursor-pointer",
+                        isCurrent ? "text-primary font-semibold" : "text-muted-foreground/80 font-normal"
+                      )}
+                      style={{
+                        transform: `translateZ(${Math.abs(angle) * -1.5}px) rotateX(${angle}deg)`,
+                        opacity: 1 - Math.min(0.8, Math.abs(angle) / 90)
+                      }}
+                      onClick={() => {
+                        if (!isCurrent) {
+                          setCurrentIndex(index);
+                          onChange(item);
+                        }
+                      }}
+                    >
+                      <div className={cn(
+                        "text-2xl transition-all",
+                        isCurrent ? "scale-110" : "scale-100"
+                      )}>
+                        {formatter(item)}
+                      </div>
+                    </div>
+                  );
+                }
               })}
             </div>
           </motion.div>
