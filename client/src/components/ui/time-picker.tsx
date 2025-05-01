@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { motion, useSpring, MotionValue } from "framer-motion";
+import { AndroidTimePicker } from "./android-time-picker";
 
 interface TimePickerProps {
   date: Date;
@@ -8,6 +9,12 @@ interface TimePickerProps {
 }
 
 export function TimePicker({ date, setDate }: TimePickerProps) {
+  // Use our new Android-style time picker
+  return <AndroidTimePicker date={date} setDate={setDate} />;
+}
+
+// Original TimePicker implementation kept for reference
+function OldTimePicker({ date, setDate }: TimePickerProps) {
   // Extract time components
   const hours12 = date.getHours() % 12 || 12;
   const hours24 = date.getHours();
