@@ -8,8 +8,8 @@ export async function initDb() {
     // Test connection first
     const isConnected = await testConnection();
     if (!isConnected) {
-      console.log('Database connection failed. Please check your DATABASE_URL for Supabase.');
-      console.log('Expected format: postgresql://[user]:[password]@[host]/[database]');
+      console.log('💡 For Supabase: Get connection string from Project Settings → Database');
+      console.log('💡 Format: postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres');
       throw new Error('Database connection failed');
     }
 

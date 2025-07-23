@@ -31,10 +31,15 @@ async function testConnection() {
   try {
     client = await pool.connect();
     const result = await client.query('SELECT NOW()');
-    console.log('Database connected successfully at:', result.rows[0].now);
+    console.log('✅ Database connected successfully');
     return true;
   } catch (error) {
-    console.error('Error testing database connection:', error);
+    const dbUrl = process.env.DATABASE_URL || '';
+    const dbType = dbUrl.includes('supabase.co') ? 'Supabase' : 
+                   dbUrl.includes('neon.tech') ? 'NeonDB' : 'PostgreSQL';
+    
+    console.log(`❌ ${dbType} connection failed`);
+    console.log('Please verify your DATABASE_URL is correct');
     return false;
   } finally {
     if (client) client.release();

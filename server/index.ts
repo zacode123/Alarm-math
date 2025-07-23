@@ -52,7 +52,7 @@ app.use((req, res, next) => {
   try {
     // Initialize database before starting the server
     await initDb();
-    log("Database initialized successfully");
+    log("✅ Database and tables ready");
 
     const server = registerRoutes(app);
 
