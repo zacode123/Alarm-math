@@ -1,6 +1,5 @@
-import { alarms, audioFiles, type Alarm, type InsertAlarm, type Audio, type InsertAudio } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { type Alarm, type InsertAlarm, type Audio, type InsertAudio } from "@shared/schema";
+import { supabase } from "./db";
 
 export interface IStorage {
   getAlarms(): Promise<Alarm[]>;
@@ -17,90 +16,137 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getAlarms(): Promise<Alarm[]> {
-    return await db.select().from(alarms);
+    const { data, error } = await supabase
+      .from('alarms')
+      .select('*')
+      .order('id', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching alarms:', error);
+      return [];
+    }
+    
+    return data || [];
   }
 
   async createAlarm(insertAlarm: InsertAlarm): Promise<Alarm> {
-    const [alarm] = await db
-      .insert(alarms)
-      .values({
+    const { data, error } = await supabase
+      .from('alarms')
+      .insert({
         ...insertAlarm,
         created: Math.floor(Date.now() / 1000)
       })
-      .returning();
-    return alarm;
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating alarm:', error);
+      throw new Error("Failed to create alarm");
+    }
+    
+    return data;
   }
 
   async updateAlarm(id: number, updates: Partial<InsertAlarm>): Promise<Alarm> {
-    const [updated] = await db
-      .update(alarms)
-      .set(updates)
-      .where(eq(alarms.id, id))
-      .returning();
+    const { data, error } = await supabase
+      .from('alarms')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (!updated) {
+    if (error) {
+      console.error('Error updating alarm:', error);
       throw new Error("Alarm not found");
     }
 
-    return updated;
+    return data;
   }
 
   async deleteAlarm(id: number): Promise<void> {
-    const [deleted] = await db
-      .delete(alarms)
-      .where(eq(alarms.id, id))
-      .returning();
+    const { error } = await supabase
+      .from('alarms')
+      .delete()
+      .eq('id', id);
 
-    if (!deleted) {
+    if (error) {
+      console.error('Error deleting alarm:', error);
       throw new Error("Alarm not found");
     }
   }
 
   // Audio file methods
   async getAudioFiles(): Promise<Audio[]> {
-    return await db.select().from(audioFiles);
+    const { data, error } = await supabase
+      .from('audio_files')
+      .select('*')
+      .order('id', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching audio files:', error);
+      return [];
+    }
+    
+    return data || [];
   }
 
   async getAudioFile(id: number): Promise<Audio | undefined> {
-    const [audio] = await db
-      .select()
-      .from(audioFiles)
-      .where(eq(audioFiles.id, id));
-    return audio;
+    const { data, error } = await supabase
+      .from('audio_files')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching audio file:', error);
+      return undefined;
+    }
+    
+    return data;
   }
 
   async createAudioFile(insertAudio: InsertAudio): Promise<Audio> {
-    const [audio] = await db
-      .insert(audioFiles)
-      .values({
+    const { data, error } = await supabase
+      .from('audio_files')
+      .insert({
         ...insertAudio,
         created: Math.floor(Date.now() / 1000)
       })
-      .returning();
-    return audio;
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating audio file:', error);
+      throw new Error("Failed to create audio file");
+    }
+    
+    return data;
   }
 
   async updateAudioFile(id: number, updates: Partial<InsertAudio>): Promise<Audio> {
-    const [updated] = await db
-      .update(audioFiles)
-      .set(updates)
-      .where(eq(audioFiles.id, id))
-      .returning();
+    const { data, error } = await supabase
+      .from('audio_files')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (!updated) {
+    if (error) {
+      console.error('Error updating audio file:', error);
       throw new Error("Audio file not found");
     }
 
-    return updated;
+    return data;
   }
 
   async deleteAudioFile(id: number): Promise<void> {
-    const [deleted] = await db
-      .delete(audioFiles)
-      .where(eq(audioFiles.id, id))
-      .returning();
+    const { error } = await supabase
+      .from('audio_files')
+      .delete()
+      .eq('id', id);
 
-    if (!deleted) {
+    if (error) {
+      console.error('Error deleting audio file:', error);
       throw new Error("Audio file not found");
     }
   }
