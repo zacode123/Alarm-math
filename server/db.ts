@@ -1,4 +1,5 @@
-import { Pool } from 'pg';
+import pkg from 'pg';
+const { Pool } = pkg;
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
@@ -8,13 +9,13 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create a connection pool for PostgreSQL
+// Create a connection pool for Supabase PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   connectionTimeoutMillis: 10000,
   max: 20,
   idleTimeoutMillis: 30000,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: { rejectUnauthorized: false } // Supabase requires SSL
 });
 
 // Add error handler to the pool
@@ -31,16 +32,17 @@ async function testConnection() {
     client = await pool.connect();
     const result = await client.query('SELECT NOW()');
     console.log('Database connected successfully at:', result.rows[0].now);
+    return true;
   } catch (error) {
     console.error('Error testing database connection:', error);
-    throw error;
+    return false;
   } finally {
     if (client) client.release();
   }
 }
 
-// Initial connection test
-testConnection().catch(console.error);
+// Export connection test function for use in init
+export { testConnection };
 
 export const db = drizzle(pool, { schema });
 export { pool };

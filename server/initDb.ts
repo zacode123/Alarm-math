@@ -1,9 +1,17 @@
-import { db } from "./db";
+import { db, testConnection } from "./db";
 import { sql } from "drizzle-orm";
 
 export async function initDb() {
   try {
     console.log('Starting database initialization...');
+    
+    // Test connection first
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      console.log('Database connection failed. Please check your DATABASE_URL for Supabase.');
+      console.log('Expected format: postgresql://[user]:[password]@[host]/[database]');
+      throw new Error('Database connection failed');
+    }
 
     // Create alarms table
     await db.execute(sql`
