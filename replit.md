@@ -19,6 +19,10 @@ An advanced web-based alarm clock application that transforms morning routines i
 - **Database**: Drizzle ORM with PostgreSQL schemas
 
 ## Recent Changes
+- **2025-07-23**: Fixed time picker styling issues - converted hardcoded dark theme colors to responsive theme variables
+- **2025-07-23**: Updated storage layer from Drizzle ORM to Supabase client due to missing DATABASE_URL
+- **2025-07-23**: Removed problematic session configuration that caused server startup failures
+- **2025-07-23**: Enhanced time picker with improved inertia handling and sound preview functionality
 - **2025-01-23**: Migrated from NeonDB to Supabase PostgreSQL
 - **2025-01-23**: Fixed database connection issues and updated to use standard PostgreSQL driver
 - **2025-01-23**: Added proper TypeScript imports for pg package

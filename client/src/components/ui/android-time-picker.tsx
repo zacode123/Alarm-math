@@ -1,13 +1,18 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { motion, useSpring, MotionValue } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Volume2 } from "lucide-react";
 
 interface TimePickerProps {
   date: Date;
   setDate: (date: Date) => void;
+  onTimeUpdate?: () => void;
+  showSoundPreview?: boolean;
+  onSoundPreview?: () => void;
 }
 
-export function AndroidTimePicker({ date, setDate }: TimePickerProps) {
+export function AndroidTimePicker({ date, setDate, onTimeUpdate, showSoundPreview, onSoundPreview }: TimePickerProps) {
   // Extract time components
   const hours12 = date.getHours() % 12 || 12;
   const hours24 = date.getHours();
@@ -33,6 +38,7 @@ export function AndroidTimePicker({ date, setDate }: TimePickerProps) {
     newDate.setHours(hours24);
     newDate.setMinutes(newMinutes);
     setDate(newDate);
+    onTimeUpdate?.();
   };
 
   // Handle time component changes
@@ -49,16 +55,16 @@ export function AndroidTimePicker({ date, setDate }: TimePickerProps) {
   };
 
   return (
-    <div className="bg-black rounded-xl p-4 shadow-lg w-full max-w-md mx-auto">
-      <h2 className="text-xl font-semibold text-center mb-4 text-white">Set Alarm Time</h2>
+    <div className="bg-background border border-border rounded-xl p-4 shadow-lg w-full max-w-md mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4 text-foreground">Set Alarm Time</h2>
 
       <div className="flex flex-row justify-center items-center gap-2">
         {/* Hour column */}
         <div className="flex-1">
-          <div className="text-sm text-center text-slate-400 mb-2">
+          <div className="text-sm text-center text-muted-foreground mb-2">
             Hour
           </div>
-          <div className="relative h-[180px] overflow-hidden rounded-lg border border-purple-900/30 bg-black">
+          <div className="relative h-[180px] overflow-hidden rounded-lg border border-border bg-background">
             <PickerWheel
               items={Array.from({ length: 12 }, (_, i) => i + 1)}
               currentValue={hours12}
@@ -66,19 +72,19 @@ export function AndroidTimePicker({ date, setDate }: TimePickerProps) {
               formatValue={(val) => val < 10 ? "0" + val : val.toString()}
             />
             {/* Selection highlight */}
-            <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-purple-900/30 border-y border-purple-800/70 pointer-events-none z-10" />
+            <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-primary/20 border-y border-primary/40 pointer-events-none z-10" />
           </div>
         </div>
 
         {/* Separator */}
-        <div className="text-2xl font-bold text-purple-500 self-center px-1">:</div>
+        <div className="text-2xl font-bold text-primary self-center px-1">:</div>
 
         {/* Minutes column */}
         <div className="flex-1">
-          <div className="text-sm text-center text-slate-400 mb-2">
+          <div className="text-sm text-center text-muted-foreground mb-2">
             Min
           </div>
-          <div className="relative h-[180px] overflow-hidden rounded-lg border border-purple-900/30 bg-black">
+          <div className="relative h-[180px] overflow-hidden rounded-lg border border-border bg-background">
             <PickerWheel
               items={Array.from({ length: 60 }, (_, i) => i)}
               currentValue={minutes}
@@ -86,16 +92,16 @@ export function AndroidTimePicker({ date, setDate }: TimePickerProps) {
               formatValue={(val) => val < 10 ? "0" + val : val.toString()}
             />
             {/* Selection highlight */}
-            <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-purple-900/30 border-y border-purple-800/70 pointer-events-none z-10" />
+            <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-primary/20 border-y border-primary/40 pointer-events-none z-10" />
           </div>
         </div>
 
         {/* Period column */}
         <div className="flex-1">
-          <div className="text-sm text-center text-slate-400 mb-2">
+          <div className="text-sm text-center text-muted-foreground mb-2">
             Period
           </div>
-          <div className="relative h-[180px] overflow-hidden rounded-lg border border-purple-900/30 bg-black">
+          <div className="relative h-[180px] overflow-hidden rounded-lg border border-border bg-background">
             <PickerWheel
               items={["AM", "PM"]}
               currentValue={isPm ? "PM" : "AM"}
@@ -103,10 +109,25 @@ export function AndroidTimePicker({ date, setDate }: TimePickerProps) {
               formatValue={(val) => val}
             />
             {/* Selection highlight */}
-            <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-purple-900/30 border-y border-purple-800/70 pointer-events-none z-10" />
+            <div className="absolute w-full h-[48px] top-1/2 -translate-y-1/2 bg-primary/20 border-y border-primary/40 pointer-events-none z-10" />
           </div>
         </div>
       </div>
+      
+      {/* Sound Preview Button */}
+      {showSoundPreview && onSoundPreview && (
+        <div className="mt-4 text-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSoundPreview}
+            className="text-primary border-primary hover:bg-primary/10"
+          >
+            <Volume2 className="h-4 w-4 mr-2" />
+            Preview Sound
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -143,9 +164,10 @@ function PickerWheel<T>({
 
   // Spring animation for smooth scrolling
   const springY = useSpring(0, {
-    stiffness: 300,
-    damping: 30,
-    restSpeed: 0.1
+    stiffness: 400,
+    damping: 35,
+    restSpeed: 0.01,
+    restDelta: 0.01
   });
 
   // Wrapping index for circular scrolling
@@ -214,8 +236,8 @@ function PickerWheel<T>({
     // Calculate inertia
     const centerOffset = Math.floor(visibleItems / 2);
 
-    // Add inertia effect
-    const inertia = velocityY * 300; // Amplify the inertia effect
+    // Add inertia effect with better control
+    const inertia = Math.min(Math.max(velocityY * 150, -200), 200); // Limited inertia
     const predictedOffset = offsetY + inertia;
 
     // Find the closest item to snap to after inertia
@@ -256,10 +278,10 @@ function PickerWheel<T>({
         <div 
           key={`${currentIndex}-${i}-${String(value)}`}
           className={cn(
-            "absolute w-full flex items-center justify-center h-[48px] select-none",
+            "absolute w-full flex items-center justify-center h-[48px] select-none transition-colors",
             isSelected 
-              ? "text-white text-xl font-semibold" 
-              : "text-gray-500 text-lg font-normal"
+              ? "text-foreground text-xl font-semibold" 
+              : "text-muted-foreground text-lg font-normal"
           )}
           style={{
             transform: `translateY(${position + offsetY + centerOffset * itemHeight}px)`,

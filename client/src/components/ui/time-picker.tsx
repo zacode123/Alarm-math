@@ -6,11 +6,20 @@ import { AndroidTimePicker } from "./android-time-picker";
 interface TimePickerProps {
   date: Date;
   setDate: (date: Date) => void;
+  onTimeUpdate?: () => void;
+  showSoundPreview?: boolean;
+  onSoundPreview?: () => void;
 }
 
-export function TimePicker({ date, setDate }: TimePickerProps) {
+export function TimePicker({ date, setDate, onTimeUpdate, showSoundPreview, onSoundPreview }: TimePickerProps) {
   // Use our new Android-style time picker
-  return <AndroidTimePicker date={date} setDate={setDate} />;
+  return <AndroidTimePicker 
+    date={date} 
+    setDate={setDate} 
+    onTimeUpdate={onTimeUpdate}
+    showSoundPreview={showSoundPreview}
+    onSoundPreview={onSoundPreview}
+  />;
 }
 
 // Original TimePicker implementation kept for reference
