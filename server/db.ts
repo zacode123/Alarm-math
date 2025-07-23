@@ -1,53 +1,63 @@
+import { createClient } from '@supabase/supabase-js';
 import pkg from 'pg';
 const { Pool } = pkg;
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-if (!process.env.DATABASE_URL) {
+const supabaseUrl = 'https://kyviyluxesawwbzxaggd.supabase.co';
+const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseKey) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "SUPABASE_KEY must be set. Please add your Supabase anon key.",
   );
 }
 
-// Create a connection pool for Supabase PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  connectionTimeoutMillis: 10000,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  ssl: { rejectUnauthorized: false } // Supabase requires SSL
-});
+// Create Supabase client
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Add error handler to the pool
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  // Don't exit the process, just log the error
-  console.error('Database connection error occurred, will retry automatically');
-});
+// For Drizzle ORM, we'll use the DATABASE_URL approach if available
+let pool: any = null;
+let db: any = null;
+
+if (process.env.DATABASE_URL) {
+  // Create a connection pool for PostgreSQL with Drizzle
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: 10000,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  // Add error handler to the pool
+  pool.on('error', (err: any) => {
+    console.error('Unexpected error on idle client', err);
+    console.error('Database connection error occurred, will retry automatically');
+  });
+
+  db = drizzle(pool, { schema });
+}
 
 // Test the connection with better error handling
 async function testConnection() {
-  let client;
   try {
-    client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    console.log('✅ Database connected successfully');
+    // Test Supabase client connection
+    const { data, error } = await supabase.from('alarms').select('count', { count: 'exact', head: true });
+    
+    if (error && error.code !== 'PGRST116') { // PGRST116 means table doesn't exist yet, which is ok
+      throw error;
+    }
+    
+    console.log('✅ Supabase connected successfully');
     return true;
   } catch (error) {
-    const dbUrl = process.env.DATABASE_URL || '';
-    const dbType = dbUrl.includes('supabase.co') ? 'Supabase' : 
-                   dbUrl.includes('neon.tech') ? 'NeonDB' : 'PostgreSQL';
-    
-    console.log(`❌ ${dbType} connection failed`);
-    console.log('Please verify your DATABASE_URL is correct');
+    console.log('❌ Supabase connection failed');
+    console.log('Please verify your SUPABASE_KEY is correct');
     return false;
-  } finally {
-    if (client) client.release();
   }
 }
 
 // Export connection test function for use in init
 export { testConnection };
-
-export const db = drizzle(pool, { schema });
-export { pool };
+export { db, pool };

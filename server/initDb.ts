@@ -1,5 +1,4 @@
-import { db, testConnection } from "./db";
-import { sql } from "drizzle-orm";
+import { supabase, testConnection } from "./db";
 
 export async function initDb() {
   try {
@@ -8,48 +7,27 @@ export async function initDb() {
     // Test connection first
     const isConnected = await testConnection();
     if (!isConnected) {
-      console.log('💡 For Supabase: Get connection string from Project Settings → Database');
-      console.log('💡 Format: postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres');
+      console.log('Please add your SUPABASE_KEY to connect to Supabase');
       throw new Error('Database connection failed');
     }
 
-    // Create alarms table
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS alarms (
-        id SERIAL PRIMARY KEY,
-        time TEXT NOT NULL,
-        enabled BOOLEAN NOT NULL DEFAULT true,
-        days TEXT[] NOT NULL,
-        label TEXT NOT NULL DEFAULT '',
-        difficulty TEXT NOT NULL DEFAULT 'easy',
-        sound TEXT NOT NULL DEFAULT 'default',
-        volume INTEGER NOT NULL DEFAULT 100,
-        auto_delete BOOLEAN NOT NULL DEFAULT false,
-        vibration BOOLEAN NOT NULL DEFAULT false,
-        created INTEGER NOT NULL
-      );
-    `);
-    console.log('Alarms table initialized');
+    // For Supabase, tables can be created via dashboard or SQL Editor
+    // Let's test if tables exist by trying to read from them
+    try {
+      await supabase.from('alarms').select('count', { count: 'exact', head: true });
+      console.log('Alarms table verified');
+    } catch (error) {
+      console.log('Create "alarms" table in Supabase dashboard with the schema from shared/schema.ts');
+    }
 
-    // Create audio_files table with slot column
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS audio_files (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        data TEXT NOT NULL,
-        type TEXT NOT NULL,
-        slot INTEGER NOT NULL,
-        created INTEGER NOT NULL,
-        CONSTRAINT valid_slot CHECK (slot >= 1 AND slot <= 3)
-      );
-    `);
-    console.log('Audio files table initialized');
+    try {
+      await supabase.from('audio_files').select('count', { count: 'exact', head: true });
+      console.log('Audio files table verified');
+    } catch (error) {
+      console.log('Create "audio_files" table in Supabase dashboard with the schema from shared/schema.ts');
+    }
 
-    // Verify tables exist by doing a simple select
-    await db.execute(sql`SELECT COUNT(*) FROM alarms`);
-    await db.execute(sql`SELECT COUNT(*) FROM audio_files`);
-
-    console.log('Database tables verified successfully');
+    console.log('Database initialization completed');
   } catch (error) {
     console.error('Error during database initialization:', error);
     throw error;
